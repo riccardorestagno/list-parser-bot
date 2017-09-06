@@ -1,5 +1,3 @@
-# BuzzFeed-Reddit-Bot
-
 Description
 ===========
 
@@ -10,9 +8,12 @@ Dependencies
 =================
 Supported Python versions: 3.4.0+ 
 
-BeautifulSoup (https://www.crummy.com/software/BeautifulSoup/)
-langdetect (https://pypi.python.org/pypi/langdetect?)
+BeautifulSoup (https://www.crummy.com/software/BeautifulSoup)
+
+langdetect (https://pypi.python.org/pypi/langdetect)
+
 PRAW (https://github.com/praw-dev/praw)
+
 urllib.request (included in Python 3.6+ default library)
 
 
@@ -23,7 +24,7 @@ The script begins by parsing https://www.buzzfeed.com/archive/ [current-date-EST
 
 Script repeats every 4 hours.
 
-  
+
 Author
 ==============
 Rick Restagno
