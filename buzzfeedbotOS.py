@@ -26,6 +26,7 @@ def check_for_numbered_points(link_to_check):
 	for title in soup.find_all('h3'):
 		for number in title.find_all('span', attrs={'class': 'subbuzz__number'}):
 			i+=1
+	session.close()
 	if i > 0:
 		return (True)
 	else:
@@ -95,6 +96,7 @@ def article_info(date):
 						break
 		except lang_detect_exception.LangDetectException:
 			continue
+	session.close()
 
 '''Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
 Also checks to make sure  '''			
@@ -126,6 +128,7 @@ def clickbait_meat(link_to_check, total_points):
 						top_x_final += str(i) + '. '+ article.text  + '\n'
 				i+=1
 		bullet_point = False
+	session.close()
 	if total_points != i-1:
 		top_x_final = ''
 	return(top_x_final)
