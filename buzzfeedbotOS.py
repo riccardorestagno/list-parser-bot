@@ -64,8 +64,9 @@ The two if-statements below check if (1) the aretile starts with a number, (2) t
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
 (5) If the article title doesn't contain any keywords listed below
 If all these conditions are met, this module will return the corresponding link and headline of the article. '''
-def article_info(date):
-	break_words = [' pictures', ' photos', ' gifs', 'twitter', 'must see', 'tweets', 'memes']
+def article_info(date, error):
+	break_words = [' pictures', ' photos', ' gifs', 'images', \
+		       'twitter', 'must see', 'tweets', 'memes', 'instagram']
 	session = requests.Session()
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
@@ -73,7 +74,10 @@ def article_info(date):
 		#End script if post was already made longer than one hour ago
 		post_made = post_made_check(article_to_open.text)
 		if post_made == True:
-			continue
+			if error == True:
+				continue
+			elif error == False:
+				break
 		lc_art_title = article_to_open.text.lower()
 		try:
 			if (article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith('top')) \
@@ -95,12 +99,12 @@ def article_info(date):
 						break
 		except lang_detect_exception.LangDetectException:
 			continue
-	session.close #Necessary or else will use the same archive that was originally loaded without the updated articles
 
 '''Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure  '''			
+Also checks to make sure  the number of subpoints in the article is equal to the numbe rthe atricle title starts with'''			
 def clickbait_meat(link_to_check, total_points):
 	i=1
+	this_when_counter = 0
 	top_x_final = ''
 	top_x_final_temp = ''
 	bullet_point = False
@@ -117,14 +121,27 @@ def clickbait_meat(link_to_check, total_points):
 					return ''
 				else:
 					top_x_final_temp = top_x_final
+					if this_when_counter == 3:
+						this_when_counter = 0
+						return ''
+					if article.text.startswith('When') or article.text.startswith('This'):
+						this_when_counter += 1
+					else:
+						this_when_counter = 0
 					try:
 						for link in article.find_all('a', href=True):
-							top_x_final += str(i) + '. [' + article.text +']('+ link['href']+')' + '\n'
+							if article.text.startswith(str(i)):
+								top_x_final += '[' + article.text +']('+ link['href']+')' + '\n'
+							else:
+								top_x_final += str(i) + '. [' + article.text +']('+ link['href']+')' + '\n'
 							break
 					except KeyError:
 						pass
 					if top_x_final_temp == top_x_final:
-						top_x_final += str(i) + '. '+ article.text  + '\n'
+						if article.text.startswith(str(i)):
+							top_x_final += article.text  + '\n'
+						else:
+							top_x_final += str(i) + '. '+ article.text  + '\n'
 				i+=1
 		bullet_point = False
 	if total_points != i-1:
@@ -132,6 +149,7 @@ def clickbait_meat(link_to_check, total_points):
 	return(top_x_final)
 
 if __name__ == "__main__":
+	error_occured = False
 	start_time = round(time.time(), 2)
 	now = datetime.datetime.now()
 	leading_zero_date = now.strftime("%Y/%m/%d")
@@ -139,11 +157,19 @@ if __name__ == "__main__":
 	while True:
 		try:
 			print('Searching first link')
-			article_info(leading_zero_date)
-			
-			print('Searching second link')
-			non_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/', 1)
-			article_info(non_leading_zero_date)
+			article_info(leading_zero_date, error_occured)
+
+
+			remove_one_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/', 1)
+			if leading_zero_date != remove_one_leading_zero_date:
+					print('Searching second link')
+					article_info(remove_one_leading_zero_date, error_occured)
+
+			remove_all_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/')
+			if remove_one_leading_zero_date != remove_all_leading_zero_date:
+					print('Searching third link')
+					article_info(remove_all_leading_zero_date, error_occured)
+			error_occured = False
 
 		except (requests.exceptions.RequestException, prawcore.exceptions.ResponseException, \
 		prawcore.exceptions.RequestException) as e:
@@ -153,13 +179,10 @@ if __name__ == "__main__":
 			time.sleep(15*60)
 			leading_zero_date = now.strftime("%Y/%m/%d")
 			start_time = round(time.time(), 2)
+			error_occured = True
 			continue
+			
 		print('Script ran for ' + str(round(((time.time()-start_time)/60),2))+ ' minutes' )
-		print('Script sleeping for 4 hours')
 		print(current_time_eastern())
-		
-		time.sleep(4*60*60) #Runs script every 4 hours
-		
-		print('Restarting Script')
-		start_time = round(time.time())
-		leading_zero_date = now.strftime("%Y/%m/%d")
+			
+		break
