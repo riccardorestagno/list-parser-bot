@@ -19,7 +19,7 @@ def reddit_bot(headline, main_text, link):
 def check_for_numbered_points(link_to_check):	
 	"""Checks if there are numbered bullet points in the article. If there is at least one, returns true, 
 	if there are none, returns false""" 
-	i=0
+
 	session = requests.Session()
 	clickbait_article = session.get(link_to_check)
 	soup = BeautifulSoup(clickbait_article.content, 'html.parser')
@@ -27,6 +27,7 @@ def check_for_numbered_points(link_to_check):
 		for number in title.find_all('span', attrs={'class': 'subbuzz__number'}):
 			return (True)
 		
+	return (False)
 
 def current_time_eastern():
 	"""Gets current time in EST"""
