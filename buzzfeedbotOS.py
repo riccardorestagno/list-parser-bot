@@ -6,8 +6,8 @@ import requests
 import praw
 import prawcore
 
-'''Module that takes the title, main text and link to article and posts directly to reddit '''
 def reddit_bot(headline, main_text, link):
+	"""Module that takes the title, main text and link to article and posts directly to reddit"""
 	reddit = praw.Reddit(client_id='',
 					client_secret= '',
 					user_agent='BuzzFeed bot',
@@ -16,9 +16,9 @@ def reddit_bot(headline, main_text, link):
 
 	reddit.subreddit('buzzfeedbot').submit(title=headline, selftext=main_text+'\n'+link)
 
-'''Checks if there are numbered bullet points in the article. If there is at least one, returns true, 
-if there are none, returns false''' 
-def check_for_numbered_points(link_to_check):
+def check_for_numbered_points(link_to_check):	
+	"""Checks if there are numbered bullet points in the article. If there is at least one, returns true, 
+	if there are none, returns false""" 
 	i=0
 	session = requests.Session()
 	clickbait_article = session.get(link_to_check)
@@ -31,8 +31,9 @@ def check_for_numbered_points(link_to_check):
 	else:
 		return (False)
 		
-'''Gets current time in EST'''
+
 def current_time_eastern():
+	"""Gets current time in EST"""
 	from time import gmtime, strftime
 	time_diff = 4
 	gm_time = strftime("%#H:%M:%S", gmtime())
@@ -44,9 +45,9 @@ def current_time_eastern():
 	es_time = est_hour + ':'+ min_secs
 	return es_time
 	
-'''Checks if the post has already been submitted 
-Returns True if post was submitted already and returns False otherwise'''
+
 def post_made_check(post_title):
+	"""Checks if the post has already been submitted. Returns True if post was submitted already and returns False otherwise"""
 	post_made = False
 	reddit = praw.Reddit(client_id='',
 					client_secret= '',
@@ -59,12 +60,13 @@ def post_made_check(post_title):
 			break
 	return (post_made)
 
-'''Gets the link to the article that will be posted on the sub.
+
+def article_info(date, error):
+	"""Gets the link to the article that will be posted on the sub.
 The two if-statements below check if (1) the aretile starts with a number, (2) the post hasn't been made already,
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
 (5) If the article title doesn't contain any keywords listed below
-If all these conditions are met, this module will return the corresponding link and headline of the article. '''
-def article_info(date, error):
+If all these conditions are met, this module will return the corresponding link and headline of the article."""
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
 		       'twitter', 'must see', 'tweets', 'memes', 'instagram']
 	session = requests.Session()
@@ -99,10 +101,10 @@ def article_info(date, error):
 						break
 		except lang_detect_exception.LangDetectException:
 			continue
-
-'''Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure  the number of subpoints in the article is equal to the numbe rthe atricle title starts with'''			
+			
 def clickbait_meat(link_to_check, total_points):
+	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
+Also checks to make sure  the number of subpoints in the article is equal to the numbe rthe atricle title starts with"""
 	i=1
 	this_when_counter = 0
 	top_x_final = ''
