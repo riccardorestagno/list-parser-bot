@@ -26,10 +26,8 @@ def check_for_numbered_points(link_to_check):
 	for title in soup.find_all('h3'):
 		for number in title.find_all('span', attrs={'class': 'subbuzz__number'}):
 			i+=1
-	if i > 0:
-		return (True)
-	else:
-		return (False)
+			break
+	return (i>0)
 		
 
 def current_time_eastern():
@@ -61,7 +59,7 @@ def post_made_check(post_title):
 	return (post_made)
 
 
-def article_info(date, error):
+def article_info(date):
 	"""Gets the link to the article that will be posted on the sub.
 The two if-statements below check if (1) the aretile starts with a number, (2) the post hasn't been made already,
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
@@ -76,10 +74,7 @@ If all these conditions are met, this module will return the corresponding link 
 		#End script if post was already made longer than one hour ago
 		post_made = post_made_check(article_to_open.text)
 		if post_made == True:
-			if error == True:
-				continue
-			elif error == False:
-				break
+			continue
 		lc_art_title = article_to_open.text.lower()
 		try:
 			if (article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith('top')) \
@@ -91,12 +86,12 @@ If all these conditions are met, this module will return the corresponding link 
 					try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
 						article_text_to_use = clickbait_meat(top_x_link, no_of_points[0])
 						if article_text_to_use == '':
-							break
+							pass
 						else:
 							reddit_bot(article_to_open.text, article_text_to_use, top_x_link)
 							print(article_to_open.text)
 							time.sleep(1)
-							break
+						break
 					except IndexError:
 						break
 		except lang_detect_exception.LangDetectException:
@@ -151,7 +146,6 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 	return(top_x_final)
 
 if __name__ == "__main__":
-	error_occured = False
 	start_time = round(time.time(), 2)
 	now = datetime.datetime.now()
 	leading_zero_date = now.strftime("%Y/%m/%d")
@@ -159,19 +153,18 @@ if __name__ == "__main__":
 	while True:
 		try:
 			print('Searching first link')
-			article_info(leading_zero_date, error_occured)
+			article_info(leading_zero_date)
 
 
 			remove_one_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/', 1)
 			if leading_zero_date != remove_one_leading_zero_date:
 					print('Searching second link')
-					article_info(remove_one_leading_zero_date, error_occured)
+					article_info(remove_one_leading_zero_date)
 
 			remove_all_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/')
 			if remove_one_leading_zero_date != remove_all_leading_zero_date:
 					print('Searching third link')
-					article_info(remove_all_leading_zero_date, error_occured)
-			error_occured = False
+					article_info(remove_all_leading_zero_date)
 
 		except (requests.exceptions.RequestException, prawcore.exceptions.ResponseException, \
 		prawcore.exceptions.RequestException) as e:
@@ -181,7 +174,6 @@ if __name__ == "__main__":
 			time.sleep(15*60)
 			leading_zero_date = now.strftime("%Y/%m/%d")
 			start_time = round(time.time(), 2)
-			error_occured = True
 			continue
 			
 		print('Script ran for ' + str(round(((time.time()-start_time)/60),2))+ ' minutes' )
