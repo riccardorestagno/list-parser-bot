@@ -25,9 +25,7 @@ def check_for_numbered_points(link_to_check):
 	soup = BeautifulSoup(clickbait_article.content, 'html.parser')
 	for title in soup.find_all('h3'):
 		for number in title.find_all('span', attrs={'class': 'subbuzz__number'}):
-			i+=1
-			break
-	return (i>0)
+			return (True)
 		
 
 def current_time_eastern():
