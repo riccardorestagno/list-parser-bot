@@ -28,33 +28,26 @@ def check_for_numbered_points(link_to_check):
 			return (True)
 		
 	return (False)
-
-def current_time_eastern():
-	"""Gets current time in EST"""
-	from time import gmtime, strftime
-	time_diff = 4
-	gm_time = strftime("%#H:%M:%S", gmtime())
-	gm_hour, min_secs =  gm_time.split(':', 1)
-	if int(gm_hour)>= time_diff:
-		est_hour = str(int(gm_hour)-time_diff)
-	else:
-		est_hour = str(int(gm_hour)+24-time_diff)
-	es_time = est_hour + ':'+ min_secs
-	return es_time
 	
-
-def post_made_check(post_title):
+def post_made_check(post_title, subpoints):
 	"""Checks if the post has already been submitted. Returns True if post was submitted already and returns False otherwise"""
 	post_made = False
 	reddit = praw.Reddit(client_id='',
-					client_secret= '',
-					user_agent='BuzzFeed bot')
+			client_secret= '',
+			user_agent='BuzzFeed bot')
 	subreddit = reddit.subreddit('buzzfeedbot')
 	submissions = subreddit.new(limit=40)
 	for submission in submissions:
-		if submission.title == post_title:
+		if submission.title.lower() == post_title:
 			post_made = True
 			break
+		subpoints_to_check = [int(s) for s in submission.title.split() if s.isdigit()]
+		if subpoints_to_check == subpoints:
+			sameWords = set.intersection(set(post_title.split(" ")), set(submission.title.lower().split(" ")))
+			numberOfWords = len(sameWords)
+			if numberOfWords >=4:
+				post_made = True
+				break
 	return (post_made)
 
 
@@ -70,31 +63,39 @@ If all these conditions are met, this module will return the corresponding link 
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
 	for article_to_open in soup.find_all('li', attrs={'class': 'bf_dom'}):
-		#End script if post was already made longer than one hour ago
-		post_made = post_made_check(article_to_open.text)
-		if post_made == True:
-			continue
-		lc_art_title = article_to_open.text.lower()
 		try:
-			if (article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith('top')) \
-			and detect(article_to_open.text) == 'en' and not any(words in lc_art_title for words in break_words):
-	
-				no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
-				for link in article_to_open.find_all('a', href=True):
-					top_x_link = 'https://www.buzzfeed.com' + link['href']
-					try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
-						article_text_to_use = clickbait_meat(top_x_link, no_of_points[0])
-						if article_text_to_use == '':
-							pass
-						else:
-							reddit_bot(article_to_open.text, article_text_to_use, top_x_link)
-							print(article_to_open.text)
-							time.sleep(1)
-						break
-					except IndexError:
-						break
+			if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith('top')) \
+			and detect(article_to_open.text) == 'en'):
+				continue
 		except lang_detect_exception.LangDetectException:
 			continue
+		
+		article_title_lowercase = article_to_open.text.lower()
+		if any(words in article_title_lowercase for words in break_words):
+			continue
+			
+		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+		post_made = post_made_check(article_title_lowercase, no_of_points)
+		if post_made == True:
+			continue
+
+		for link in article_to_open.find_all('a', href=True):
+			top_x_link = 'https://www.buzzfeed.com' + link['href']
+			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+				article_text_to_use = clickbait_meat(top_x_link, no_of_points[0])
+				if article_text_to_use == '':
+					pass
+				else:
+					reddit_bot(article_to_open.text, article_text_to_use, top_x_link)
+					post_limit+=1
+					print(article_to_open.text)
+					if post_limit == 3:
+						post_limit = 0
+						return
+					time.sleep(1)
+				break
+			except IndexError:
+				break
 			
 def clickbait_meat(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
@@ -152,17 +153,19 @@ if __name__ == "__main__":
 	while True:
 		try:
 			print('Searching first link')
+			article_info("")
+			
+			print('Searching second link')
 			article_info(leading_zero_date)
-
-
+			
 			remove_one_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/', 1)
 			if leading_zero_date != remove_one_leading_zero_date:
-					print('Searching second link')
+					print('Searching third link')
 					article_info(remove_one_leading_zero_date)
 
 			remove_all_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/')
 			if remove_one_leading_zero_date != remove_all_leading_zero_date:
-					print('Searching third link')
+					print('Searching fourth link')
 					article_info(remove_all_leading_zero_date)
 
 		except (requests.exceptions.RequestException, prawcore.exceptions.ResponseException, \
@@ -176,6 +179,5 @@ if __name__ == "__main__":
 			continue
 			
 		print('Script ran for ' + str(round(((time.time()-start_time)/60),2))+ ' minutes' )
-		print(current_time_eastern())
 			
 		break
