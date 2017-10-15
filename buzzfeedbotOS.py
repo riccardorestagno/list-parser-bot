@@ -15,19 +15,7 @@ def reddit_bot(headline, main_text, link):
 					password='')
 
 	reddit.subreddit('buzzfeedbot').submit(title=headline, selftext=main_text+'\n'+link)
-
-def check_for_numbered_points(link_to_check):	
-	"""Checks if there are numbered bullet points in the article. If there is at least one, returns true, 
-	if there are none, returns false""" 
-
-	session = requests.Session()
-	clickbait_article = session.get(link_to_check)
-	soup = BeautifulSoup(clickbait_article.content, 'html.parser')
-	for title in soup.find_all('h3'):
-		for number in title.find_all('span', attrs={'class': 'subbuzz__number'}):
-			return (True)
-		
-	return (False)
+	
 	
 def post_made_check(post_title, subpoints):
 	"""Checks if the post has already been submitted. Returns True if post was submitted already and returns False otherwise"""
@@ -104,42 +92,38 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 	this_when_counter = 0
 	top_x_final = ''
 	top_x_final_temp = ''
-	bullet_point = False
 	session = requests.Session()
 	clickbait_article = session.get(link_to_check)
 	soup = BeautifulSoup(clickbait_article.content, 'html.parser')
-	any_numbered_points = check_for_numbered_points(link_to_check)
+
 	for title in soup.find_all('h3'):
-		for number in title.find_all('span', attrs={'class': 'subbuzz__number'}):
-			bullet_point = True
-		if bullet_point == True or any_numbered_points == False:
-			for article in title.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
-				if len(article.text)<4 or article.text.endswith(':'):
+		for article in title.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
+			if len(article.text)<4 or article.text.endswith(':'):
+				return ''
+			else:
+				top_x_final_temp = top_x_final
+				if this_when_counter == 3:
+					this_when_counter = 0
 					return ''
+				if article.text.startswith('When') or article.text.startswith('This'):
+					this_when_counter += 1
 				else:
-					top_x_final_temp = top_x_final
-					if this_when_counter == 3:
-						this_when_counter = 0
-						return ''
-					if article.text.startswith('When') or article.text.startswith('This'):
-						this_when_counter += 1
-					else:
-						this_when_counter = 0
-					try:
-						for link in article.find_all('a', href=True):
-							if article.text.startswith(str(i)+'.') or article.text.startswith(str(i)+')'):
-								top_x_final += '[' + article.text +']('+ link['href']+')' + '\n'
-							else:
-								top_x_final += str(i) + '. [' + article.text +']('+ link['href']+')' + '\n'
-							break
-					except KeyError:
-						pass
-					if top_x_final_temp == top_x_final:
+					this_when_counter = 0
+				try:
+					for link in article.find_all('a', href=True):
 						if article.text.startswith(str(i)+'.') or article.text.startswith(str(i)+')'):
-							top_x_final += article.text  + '\n'
+							top_x_final += '[' + article.text +']('+ link['href']+')' + '\n'
 						else:
-							top_x_final += str(i) + '. '+ article.text  + '\n'
-				i+=1
+							top_x_final += str(i) + '. [' + article.text +']('+ link['href']+')' + '\n'
+						break
+				except KeyError:
+					pass
+				if top_x_final_temp == top_x_final:
+					if article.text.startswith(str(i)+'.') or article.text.startswith(str(i)+')'):
+						top_x_final += article.text  + '\n'
+					else:
+						top_x_final += str(i) + '. '+ article.text  + '\n'
+			i+=1
 		bullet_point = False
 	if total_points != i-1:
 		top_x_final = ''
