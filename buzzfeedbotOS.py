@@ -45,6 +45,8 @@ The two if-statements below check if (1) the aretile starts with a number, (2) t
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
 (5) If the article title doesn't contain any keywords listed below
 If all these conditions are met, this module will return the corresponding link and headline of the article."""
+	
+	post_limit = 0
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
 		       'twitter', 'must see', 'tweets', 'memes', 'instagram']
 	session = requests.Session()
@@ -97,6 +99,16 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 	soup = BeautifulSoup(clickbait_article.content, 'html.parser')
 
 	for title in soup.find_all('h3'):
+		
+		subpoint_check = False
+	
+		for subpoint in title.find_all('span', attrs={'class': 'subbuzz__number'}):
+			subpoint_check = True
+			break
+		
+		if subpoint_check == False:
+			continue
+			
 		for article in title.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
 			if len(article.text)<4 or article.text.endswith(':'):
 				return ''
@@ -105,7 +117,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 				if this_when_counter == 3:
 					this_when_counter = 0
 					return ''
-				if article.text.startswith(('When ', 'This ', 'A ')):
+				if article.text.startswith(('When ', 'This ')):
 					this_when_counter += 1
 				else:
 					this_when_counter = 0
@@ -124,7 +136,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					else:
 						top_x_final += str(i) + '. '+ article.text  + '\n'
 			i+=1
-		bullet_point = False
+
 	if total_points != i-1:
 		top_x_final = ''
 	return(top_x_final)
