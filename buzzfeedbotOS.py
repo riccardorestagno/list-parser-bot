@@ -1,6 +1,6 @@
 from bs4 import BeautifulSoup
 from langdetect import detect, lang_detect_exception
-import datetime
+from datetime import date, timedelta
 import time
 import requests
 import praw
@@ -18,7 +18,8 @@ def reddit_bot(headline, main_text, link):
 	
 	
 def post_made_check(post_title, subpoints):
-	"""Checks if the post has already been submitted. Returns True if post was submitted already and returns False otherwise"""
+	"""Checks if the post has already been submitted. 
+Returns True if post was submitted already and returns False otherwise"""
 	post_made = False
 	reddit = praw.Reddit(client_id='',
 			client_secret= '',
@@ -44,11 +45,13 @@ def article_info(date):
 The two if-statements below check if (1) the aretile starts with a number, (2) the post hasn't been made already,
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
 (5) If the article title doesn't contain any keywords listed below
-If all these conditions are met, this module will return the corresponding link and headline of the article."""
+If all these conditions are met, this module will get the articles text using the article_text() module
+and then posts the corresponding text to reddit using the reddit_bot() module"""
 	
 	post_limit = 0
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
-		       'twitter', 'must see', 'tweets', 'memes', 'instagram']
+		       'twitter', 'must see', 'tweets', 'memes',\
+		       'instagram', 'tumblr']
 	session = requests.Session()
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
@@ -79,15 +82,15 @@ If all these conditions are met, this module will return the corresponding link 
 					reddit_bot(article_to_open.text, article_text_to_use, top_x_link)
 					post_limit+=1
 					print(article_to_open.text)
-					if post_limit == 3:
-						post_limit = 0
-						return
+					if post_limit == 1:
+						return post_limit
 					time.sleep(1)
 				break
 			except IndexError:
 				break
-			
-def clickbait_meat(link_to_check, total_points):
+	return post_limit
+
+def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
 Also checks to make sure  the number of subpoints in the article is equal to the numbe rthe atricle title starts with"""
 	i=1
@@ -142,38 +145,37 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 	return(top_x_final)
 
 if __name__ == "__main__":
+	post_made = 0
 	start_time = round(time.time(), 2)
-	now = datetime.datetime.now()
-	leading_zero_date = now.strftime("%Y/%m/%d")
+	yesterday = date.today() - timedelta(1)
+	leading_zero_date = yesterday.strftime("%Y/%m/%d")
 
 	while True:
 		try:
+			
 			print('Searching first link')
-			article_info("")
+			post_made = article_info(leading_zero_date)
 			
-			print('Searching second link')
-			article_info(leading_zero_date)
-			
-			remove_one_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/', 1)
-			if leading_zero_date != remove_one_leading_zero_date:
-					print('Searching third link')
-					article_info(remove_one_leading_zero_date)
+			remove_one_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
+			if leading_zero_date != remove_one_leading_zero_date and posts_made == 0:
+				print('Searching second link')
+				article_info(remove_one_leading_zero_date)
 
-			remove_all_leading_zero_date = now.strftime("%Y/%m/%d").replace('/0', '/')
-			if remove_one_leading_zero_date != remove_all_leading_zero_date:
-					print('Searching fourth link')
-					article_info(remove_all_leading_zero_date)
+			remove_all_leading_zero_date = leading_zero_date.replace('/0', '/')
+			if remove_one_leading_zero_date != remove_all_leading_zero_date and posts_made == 0:
+				print('Searching third link')
+				article_info(remove_all_leading_zero_date)
 
 		except (requests.exceptions.RequestException, prawcore.exceptions.ResponseException, \
 		prawcore.exceptions.RequestException) as e:
 			print('Connection Error! Script will restart soon')
 			print(e)
-			print('Script ran for ' + str((round(time.time())-start_time)/60)+ ' minutes' )
+			print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
 			time.sleep(15*60)
-			leading_zero_date = now.strftime("%Y/%m/%d")
+			leading_zero_date = yesterday.strftime("%Y/%m/%d")
 			start_time = round(time.time(), 2)
 			continue
 			
-		print('Script ran for ' + str(round(((time.time()-start_time)/60),2))+ ' minutes' )
+		print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
 			
 		break
