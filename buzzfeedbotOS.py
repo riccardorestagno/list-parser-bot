@@ -57,7 +57,7 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
 	for article_to_open in soup.find_all('li', attrs={'class': 'bf_dom'}):
 		try:
-			if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith('top')) \
+			if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
 			and detect(article_to_open.text) == 'en'):
 				continue
 		except lang_detect_exception.LangDetectException:
