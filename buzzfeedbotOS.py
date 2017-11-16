@@ -126,7 +126,11 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					this_when_counter = 0
 				try:
 					for link in article.find_all('a', href=True):
-						if article.text.startswith(str(i)+'.') or article.text.startswith(str(i)+')'):
+						if 'amazon' in link['href']: #removes buzzfeed tag in all amazon links
+							link_to_use, _ = link['href'].split('?')
+						else:
+							link_to_use = link['href']
+						if article.text.startswith((str(i)+'.', str(i)+')')):
 							top_x_final += '[' + article.text +']('+ link['href']+')' + '\n'
 						else:
 							top_x_final += str(i) + '. [' + article.text +']('+ link['href']+')' + '\n'
@@ -134,7 +138,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 				except KeyError:
 					pass
 				if top_x_final_temp == top_x_final:
-					if article.text.startswith(str(i)+'.') or article.text.startswith(str(i)+')'):
+					if article.text.startswith((str(i)+'.', str(i)+')')):
 						top_x_final += article.text  + '\n'
 					else:
 						top_x_final += str(i) + '. '+ article.text  + '\n'
