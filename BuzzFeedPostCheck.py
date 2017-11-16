@@ -89,7 +89,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 				try:
 					for link in article.find_all('a', href=True):
 						if 'amazon' in link['href']: #removes buzzfeed tag in all amazon links
-							link_to_use, _ = link['href'].split('?')
+							link_to_use, _ = link['href'].split('?', 1)
 						else:
 							link_to_use = link['href']
 						if article.text.startswith((str(i)+'.' , str(i)+')')):
