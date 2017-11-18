@@ -90,8 +90,8 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					for link in article.find_all('a', href=True):
 						link_to_use = link['href']
 						
-						if link_to_use.startswith('http:') and 'https:' in link_to_use: #removes redirect link if there is any
-							link_to_use = 'https:' + link_to_use.split('https:', 1)[1]
+						if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use): #removes redirect link if there is any
+							link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
 						if 'amazon' in link['href']: #removes buzzfeed tag in all amazon links
 							link_to_use = link_to_use.split('?', 1)[0]
 						if article.text.startswith((str(i)+'.' , str(i)+')')):
