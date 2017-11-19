@@ -82,7 +82,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 				if this_when_counter == 3:
 					this_when_counter = 0
 					return ''
-				if article.text.startswith(('When ', 'This ')):
+				if article.text.startswith(('When ', 'This ', , 'And this ')):
 					this_when_counter += 1
 				else:
 					this_when_counter = 0
