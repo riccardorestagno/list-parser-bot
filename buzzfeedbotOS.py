@@ -156,33 +156,18 @@ if __name__ == "__main__":
 	start_time = round(time.time(), 2)
 	yesterday = date.today() - timedelta(1)
 	leading_zero_date = yesterday.strftime("%Y/%m/%d")
+		
+	print('Searching first link')
+	post_made = article_info(leading_zero_date)
 
-	while True:
-		try:
-			
-			print('Searching first link')
-			post_made = article_info(leading_zero_date)
-			
-			remove_one_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
-			if leading_zero_date != remove_one_leading_zero_date and posts_made == 0:
-				print('Searching second link')
-				article_info(remove_one_leading_zero_date)
+	remove_one_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
+	if leading_zero_date != remove_one_leading_zero_date and posts_made == 0:
+		print('Searching second link')
+		article_info(remove_one_leading_zero_date)
+		
+	remove_all_leading_zero_date = leading_zero_date.replace('/0', '/')
+	if remove_one_leading_zero_date != remove_all_leading_zero_date and posts_made == 0:
+		print('Searching third link')
+		article_info(remove_all_leading_zero_date)
 
-			remove_all_leading_zero_date = leading_zero_date.replace('/0', '/')
-			if remove_one_leading_zero_date != remove_all_leading_zero_date and posts_made == 0:
-				print('Searching third link')
-				article_info(remove_all_leading_zero_date)
-
-		except (requests.exceptions.RequestException, prawcore.exceptions.ResponseException, \
-		prawcore.exceptions.RequestException) as e:
-			print('Connection Error! Script will restart soon')
-			print(e)
-			print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
-			time.sleep(15*60)
-			leading_zero_date = yesterday.strftime("%Y/%m/%d")
-			start_time = round(time.time(), 2)
-			continue
-			
-		print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
-			
-		break
+	print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
