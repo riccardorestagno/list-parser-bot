@@ -60,18 +60,18 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 			try:
 				if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
 				and detect(article_to_open.text) == 'en'):
-					continue
+					break
 			except lang_detect_exception.LangDetectException:
-				continue
+				break
 
 			article_title_lowercase = article_to_open.text.lower()
 			if any(words in article_title_lowercase for words in break_words):
-				continue
+				break
 
 			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
 			post_made = post_made_check(article_title_lowercase, no_of_points)
 			if post_made == True:
-				continue
+				break
 
 			top_x_link = 'https://www.buzzfeed.com' + link['href']
 			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
