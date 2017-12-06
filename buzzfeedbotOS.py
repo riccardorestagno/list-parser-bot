@@ -55,24 +55,24 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	session = requests.Session()
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
-	for article_to_open in soup.find_all('li', attrs={'class': 'bf_dom'}):
-		try:
-			if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
-			and detect(article_to_open.text) == 'en'):
+	for link in soup.find_all('a', href=True):
+		for article_to_open in link.find_all('h2', attrs={'class': 'xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
+			try:
+				if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
+				and detect(article_to_open.text) == 'en'):
+					continue
+			except lang_detect_exception.LangDetectException:
 				continue
-		except lang_detect_exception.LangDetectException:
-			continue
-		
-		article_title_lowercase = article_to_open.text.lower()
-		if any(words in article_title_lowercase for words in break_words):
-			continue
-			
-		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
-		post_made = post_made_check(article_title_lowercase, no_of_points)
-		if post_made == True:
-			continue
 
-		for link in article_to_open.find_all('a', href=True):
+			article_title_lowercase = article_to_open.text.lower()
+			if any(words in article_title_lowercase for words in break_words):
+				continue
+
+			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+			post_made = post_made_check(article_title_lowercase, no_of_points)
+			if post_made == True:
+				continue
+
 			top_x_link = 'https://www.buzzfeed.com' + link['href']
 			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
 				article_text_to_use = clickbait_meat(top_x_link, no_of_points[0])
