@@ -16,7 +16,32 @@ def reddit_bot(headline, main_text, link):
 
 	reddit.subreddit('buzzfeedbot').submit(title=headline, selftext=main_text+'\n'+link)
 	
+def total_articles_today(link_completed_count = 0, article_completed_count = 0, modify = False):
+	""" Saves the progress of amount of links already searched through in an external file if modify = true
+		Returns the current progress of the amount of links/articles already searched if modify = false"""
+		
+	filepath = r'C:\Users\Riccardo\Desktop\Python Scripts\BuzzFeed Reddit Bot\Posts_Made_Today.txt'
 	
+	if modify == False:
+		with open(filepath, 'r') as file:
+			links_searched, articles_searched = file.read().split('\n')
+		return int(links_searched), int(articles_searched)
+	
+	else:
+		with open(filepath, 'w') as file:
+			file.write(str(link_completed_count) + '\n' + str(article_completed_count))
+		return 0, 0
+
+def post_reset():
+	"""Resets total articles searched file if post is run at the beginning of the day"""
+	import datetime
+	current_time = datetime.datetime.now().time()
+	min_time = datetime.time(2, 55)
+	max_time = datetime.time(3, 5)
+	if current_time >= min_time and current_time <= max_time:
+		total_articles_today(0, 0, True)
+		print('reset done')
+		
 def post_made_check(post_title, subpoints):
 	"""Checks if the post has already been submitted. 
 Returns True if post was submitted already and returns False otherwise"""
@@ -37,10 +62,10 @@ Returns True if post was submitted already and returns False otherwise"""
 			if numberOfWords >=4:
 				post_made = True
 				break
-	return (post_made)
+	return post_made
 
 
-def article_info(date):
+def article_info(date, link_count, start_iter):
 	"""Gets the link to the article that will be posted on the sub.
 The two if-statements below check if (1) the aretile starts with a number, (2) the post hasn't been made already,
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
@@ -48,14 +73,15 @@ The two if-statements below check if (1) the aretile starts with a number, (2) t
 If all these conditions are met, this module will get the articles text using the article_text() module
 and then posts the corresponding text to reddit using the reddit_bot() module"""
 	
-	post_limit = 0
+	current_iter = 0
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
 		       'twitter', 'must see', 'tweets', 'memes',\
 		       'instagram', 'tumblr']
 	session = requests.Session()
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
-	for link in soup.find_all('a', href=True):
+	for link in list(soup.find_all('a', attrs={'class': 'link-gray'}, href=True))[start_iter:]:
+		current_iter += 1
 		for article_to_open in link.find_all('h2', attrs={'class': 'xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
 			try:
 				if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
@@ -80,15 +106,15 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 					pass
 				else:
 					reddit_bot(article_to_open.text, article_text_to_use, top_x_link)
-					post_limit+=1
 					print(article_to_open.text)
-					if post_limit == 1:
-						return post_limit
-					time.sleep(1)
+					start_iter += current_iter
+					current_iter = 0
+					unused_value = total_articles_today(article_completed_count = start_iter, modify = True)[0]
+					return
 				break
 			except IndexError:
 				break
-	return post_limit
+	unused_value = total_articles_today(link_completed_count = link_count + 1, article_completed_count = 0, modify = True)[0]
 
 def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
@@ -149,25 +175,31 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 
 	if total_points != i-1:
 		top_x_final = ''
-	return(top_x_final)
+	return top_x_final
 
 if __name__ == "__main__":
-	post_made = 0
+
 	start_time = round(time.time(), 2)
 	yesterday = date.today() - timedelta(1)
 	leading_zero_date = yesterday.strftime("%Y/%m/%d")
+	post_reset()
+	
+	complete_links_searched, article_count = total_articles_today()
 		
-	print('Searching first link')
-	post_made = article_info(leading_zero_date)
+	if complete_links_searched == 0:
+		print('Searching first link')
+		article_info(leading_zero_date, complete_links_searched, article_count)
+		complete_links_searched, article_count = total_articles_today()
 
 	remove_one_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
-	if leading_zero_date != remove_one_leading_zero_date and posts_made == 0:
+	if complete_links_searched == 1 and leading_zero_date != remove_one_leading_zero_date:
 		print('Searching second link')
-		article_info(remove_one_leading_zero_date)
+		article_info(remove_one_leading_zero_date, complete_links_searched, article_count)
+		complete_links_searched, article_count = total_articles_today()
 		
 	remove_all_leading_zero_date = leading_zero_date.replace('/0', '/')
-	if remove_one_leading_zero_date != remove_all_leading_zero_date and posts_made == 0:
+	if complete_links_searched == 2 and remove_one_leading_zero_date != remove_all_leading_zero_date:
 		print('Searching third link')
-		article_info(remove_all_leading_zero_date)
+		article_info(remove_one_leading_zero_date, complete_links_searched, article_count)
 
-	print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
+	print('Script ran for ' + str(round(((time.time()-start_time)),2)) + ' seconds' )
