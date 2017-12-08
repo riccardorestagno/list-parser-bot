@@ -177,38 +177,39 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 		top_x_final = ''
 	return top_x_final
 
+def urls_to_search():
+
+	i=0
+	tmp_date = ''
+	yesterday = date.today() - timedelta(1)
+	leading_zero_date = yesterday.strftime("%Y/%m/%d")
+	diff_date_formats = [leading_zero_date, leading_zero_date.replace('/0', '/', 1), \
+						leading_zero_date.replace('/0', '/'), '/'.join(leading_zero_date.rsplit('/0', 1))]
+	
+	for date_format in diff_date_formats:
+	
+		if date_format == tmp_date:
+			break
+			
+		complete_links_searched, article_count = total_articles_today()
+		
+		if complete_links_searched > i:
+			i+=1
+			continue
+			
+		print('Searching link ' + str(i+1))
+		
+		if article_info(date_format, complete_links_searched, article_count) == True:
+			break
+			
+		tmp_date = date_format
+		
 if __name__ == "__main__":
 
 	start_time = round(time.time(), 2)
-	yesterday = date.today() - timedelta(1)
-	leading_zero_date = yesterday.strftime("%Y/%m/%d")
+	
 	post_reset()
 	
-	complete_links_searched, article_count = total_articles_today()
-		
-	if complete_links_searched == 0:
-		print('Searching first link')
-		article_info(leading_zero_date, complete_links_searched, article_count)
-		complete_links_searched, article_count = total_articles_today()
-
-	remove_first_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
-	
-	if complete_links_searched == 1 and leading_zero_date != remove_first_leading_zero_date:
-		print('Searching second link')
-		article_info(remove_first_leading_zero_date, complete_links_searched, article_count)
-		complete_links_searched, article_count = total_articles_today()
-		
-	remove_all_leading_zero_date = leading_zero_date.replace('/0', '/')
-	
-	if complete_links_searched == 2 and remove_first_leading_zero_date != remove_all_leading_zero_date:
-		print('Searching third link')
-		article_info(remove_one_leading_zero_date, complete_links_searched, article_count)
-		complete_links_searched, article_count = total_articles_today()
-		
-	remove_last_leading_zero_date = '/'.join(leading_zero_date.rsplit('/0', 1)) #Solution for a reverse remove
-	
-	if complete_links_searched == 3 and remove_all_leading_zero_date != remove_last_leading_zero_date:
-		print('Searching fourth link')
-		article_info(remove_last_leading_zero_date, complete_links_searched, article_count)
+	urls_to_search()
 
 	print('Script ran for ' + str(round(((time.time()-start_time)),2)) + ' seconds' )
