@@ -191,15 +191,24 @@ if __name__ == "__main__":
 		article_info(leading_zero_date, complete_links_searched, article_count)
 		complete_links_searched, article_count = total_articles_today()
 
-	remove_one_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
-	if complete_links_searched == 1 and leading_zero_date != remove_one_leading_zero_date:
+	remove_first_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
+	
+	if complete_links_searched == 1 and leading_zero_date != remove_first_leading_zero_date:
 		print('Searching second link')
-		article_info(remove_one_leading_zero_date, complete_links_searched, article_count)
+		article_info(remove_first_leading_zero_date, complete_links_searched, article_count)
 		complete_links_searched, article_count = total_articles_today()
 		
 	remove_all_leading_zero_date = leading_zero_date.replace('/0', '/')
-	if complete_links_searched == 2 and remove_one_leading_zero_date != remove_all_leading_zero_date:
+	
+	if complete_links_searched == 2 and remove_first_leading_zero_date != remove_all_leading_zero_date:
 		print('Searching third link')
 		article_info(remove_one_leading_zero_date, complete_links_searched, article_count)
+		complete_links_searched, article_count = total_articles_today()
+		
+	remove_last_leading_zero_date = '/'.join(leading_zero_date.rsplit('/0', 1)) #Solution for a reverse remove
+	
+	if complete_links_searched == 3 and remove_all_leading_zero_date != remove_last_leading_zero_date:
+		print('Searching fourth link')
+		article_info(remove_last_leading_zero_date, complete_links_searched, article_count)
 
 	print('Script ran for ' + str(round(((time.time()-start_time)),2)) + ' seconds' )
