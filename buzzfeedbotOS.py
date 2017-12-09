@@ -160,9 +160,9 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 						link_to_use = link_to_use.replace(')', r'\)') 
 						
 						if article.text.startswith((str(i)+'.', str(i)+')')):
-							top_x_final += article.text + ' [Link](' + link_to_use + ')' + '\n'
+							top_x_final += '[' + article.text + '](' + link_to_use + ')' + '\n'
 						else:
-							top_x_final += str(i) + '. ' + article.text + ' [Link](' + link_to_use + ')' + '\n'
+							top_x_final += str(i) + '. ' + '[' + article.text + '](' + link_to_use + ')' + '\n'
 						break
 				except KeyError:
 					pass
