@@ -152,17 +152,17 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					this_when_counter = 0
 				try:
 					for link in article.find_all('a', href=True):
-						link_to_use = link['href']
+						link_to_use = link['href'].split('?', 1)[0]
 						
 						if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use): #removes redirect link if there is any
 							link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
-						if 'amazon' in link['href']: #removes buzzfeed tag in all amazon links
-							link_to_use = link_to_use.split('?', 1)[0]
-							
+						
+						link_to_use = link_to_use.replace(')', r'\)') 
+						
 						if article.text.startswith((str(i)+'.', str(i)+')')):
-							top_x_final += '[' + article.text +']('+ link['href']+')' + '\n'
+							top_x_final += article.text + ' [Link](' + link_to_use + ')' + '\n'
 						else:
-							top_x_final += str(i) + '. [' + article.text +']('+ link['href']+')' + '\n'
+							top_x_final += str(i) + '. ' + article.text + ' [Link](' + link_to_use + ')' + '\n'
 						break
 				except KeyError:
 					pass
@@ -195,6 +195,7 @@ def urls_to_search():
 		
 		if complete_links_searched > i:
 			i+=1
+			tmp_date = date_format
 			continue
 			
 		print('Searching link ' + str(i+1))
