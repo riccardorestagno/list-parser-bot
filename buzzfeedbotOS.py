@@ -152,7 +152,10 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					this_when_counter = 0
 				try:
 					for link in article.find_all('a', href=True):
-						link_to_use = link['href'].split('?', 1)[0]
+						if 'youtube' not in link['href']:
+							link_to_use = link['href'].split('?', 1)[0]
+						else:
+							link_to_use = link['href']
 						
 						if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use): #removes redirect link if there is any
 							link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
