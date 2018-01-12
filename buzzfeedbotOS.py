@@ -6,7 +6,7 @@ import requests
 import praw
 import prawcore
 
-def reddit_bot(headline, main_text, link):
+def reddit_bot(headline, main_text, link, my_subreddit, website):
 	"""Module that takes the title, main text and link to article and posts directly to reddit"""
 	reddit = praw.Reddit(client_id='',
 					client_secret= '',
@@ -14,7 +14,7 @@ def reddit_bot(headline, main_text, link):
 					username='autobuzzfeedbot',
 					password='')
 
-	reddit.subreddit('buzzfeedbot').submit(title=headline, selftext=main_text+'\n'+link)
+	reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n'+link)#.mod.flair(text=website)
 	
 def total_articles_today(link_completed_count = 0, article_completed_count = 0, modify = False):
 	""" Saves the progress of amount of links already searched through in an external file if modify = true
@@ -42,14 +42,14 @@ def post_reset():
 		total_articles_today(0, 0, True)
 		print('reset done')
 		
-def post_made_check(post_title, subpoints):
+def post_made_check(post_title, subpoints, my_subreddit):
 	"""Checks if the post has already been submitted. 
 Returns True if post was submitted already and returns False otherwise"""
 	post_made = False
 	reddit = praw.Reddit(client_id='',
 			client_secret= '',
 			user_agent='BuzzFeed bot')
-	subreddit = reddit.subreddit('buzzfeedbot')
+	subreddit = reddit.subreddit(my_subreddit)
 	submissions = subreddit.new(limit=40)
 	for submission in submissions:
 		if submission.title.lower() == post_title:
@@ -76,36 +76,37 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	current_iter = 0
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
 		       'twitter', 'must see', 'tweets', 'memes',\
-		       'instagram', 'tumblr']
+		       'instagram', 'tumblr', 'gifts', 'walmart']
 	session = requests.Session()
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
-	for link in list(soup.find_all('a', attrs={'class': 'link-gray'}, href=True))[start_iter:]:
+	for article_to_open in list(soup.find_all('li', attrs={'class': 'bf_dom'}))[start_iter:]:
 		current_iter += 1
-		for article_to_open in link.find_all('h2', attrs={'class': 'xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
-			try:
-				if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
-				and detect(article_to_open.text) == 'en'):
-					break
-			except lang_detect_exception.LangDetectException:
-				break
 
-			article_title_lowercase = article_to_open.text.lower()
-			if any(words in article_title_lowercase for words in break_words):
-				break
+		try:
+			if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
+			and detect(article_to_open.text) == 'en'):
+				continue
+		except lang_detect_exception.LangDetectException:
+			continue
 
-			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
-			post_made = post_made_check(article_title_lowercase, no_of_points)
-			if post_made == True:
-				break
+		article_title_lowercase = article_to_open.text.lower()
+		if any(words in article_title_lowercase for words in break_words):
+			continue
 
+		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+		post_made = post_made_check(article_title_lowercase, no_of_points, my_subreddit)
+		if post_made == True:
+			continue
+		
+		for link in article_to_open.find_all('a', href=True):
 			top_x_link = 'https://www.buzzfeed.com' + link['href']
 			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
 				article_text_to_use = clickbait_meat(top_x_link, no_of_points[0])
 				if article_text_to_use == '':
 					pass
 				else:
-					reddit_bot(article_to_open.text, article_text_to_use, top_x_link)
+					reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website)
 					print(article_to_open.text)
 					start_iter += current_iter
 					current_iter = 0
@@ -210,10 +211,11 @@ def urls_to_search():
 		
 if __name__ == "__main__":
 
+	my_subreddit = 'buzzfeedbot'
+	website = 'BuzzFeed'
+	
 	start_time = round(time.time(), 2)
-	
 	post_reset()
-	
 	urls_to_search()
 
 	print('Script ran for ' + str(round(((time.time()-start_time)),2)) + ' seconds' )
