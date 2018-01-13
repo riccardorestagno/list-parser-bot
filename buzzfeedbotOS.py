@@ -76,7 +76,7 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	current_iter = 0
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
 		       'twitter', 'must see', 'tweets', 'memes',\
-		       'instagram', 'tumblr', 'gifts', 'walmart']
+		       'instagram', 'tumblr']
 	session = requests.Session()
 	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
 	soup = BeautifulSoup(daily_archive.content, 'html.parser')
@@ -173,7 +173,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					this_when_counter = 0
 				try:
 					for link in article.find_all('a', href=True):
-						if 'youtube' not in link['href']:
+						if 'amazon' in link['href']:
 							link_to_use = link['href'].split('?', 1)[0]
 						else:
 							link_to_use = link['href']
