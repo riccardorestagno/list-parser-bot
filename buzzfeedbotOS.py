@@ -102,10 +102,11 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 		for link in article_to_open.find_all('a', href=True):
 			top_x_link = 'https://www.buzzfeed.com' + link['href']
 			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
-				article_text_to_use = clickbait_meat(top_x_link, no_of_points[0])
+				article_text_to_use = article_text(top_x_link, no_of_points[0])
 				if article_text_to_use == '':
-					pass
-				else:
+					article_text_to_use = paragraph_article_text(top_x_link, no_of_points[0])
+								
+				if article_text_to_use != '':
 					reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website)
 					print(article_to_open.text)
 					start_iter += current_iter
@@ -116,6 +117,25 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 			except IndexError:
 				break
 	unused_value = total_articles_today(link_completed_count = link_count + 1, article_completed_count = 0, modify = True)[0]
+
+def paragraph_article_text(link_to_check, total_points):
+	i=1
+	top_x_final = ''
+	session = requests.Session()
+	article = session.get(link_to_check)
+	soup = BeautifulSoup(article.content, 'html.parser')
+
+	for subpoint in soup.find_all('p'):
+		try:
+			if subpoint.text[0].isdigit():
+				top_x_final += subpoint.text  + '\n'
+				i+=1
+		except IndexError:
+			continue
+	
+	if total_points != i-1:
+		top_x_final = ''
+	return top_x_final
 
 def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
