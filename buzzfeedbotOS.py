@@ -83,18 +83,21 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	for link in list(soup.find_all('a', attrs={'class': 'link-gray'}, href=True))[start_iter:]:
 		current_iter += 1
 		for article_to_open in link.find_all('h2', attrs={'class': 'xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
+			
 			try:
-				if not ((article_to_open.text[0].isdigit() or article_to_open.text.lower().startswith(('top', 'the'))) \
-				and detect(article_to_open.text) == 'en'):
+				if not detect(article_to_open.text) == 'en':
 					break
 			except lang_detect_exception.LangDetectException:
 				break
-
+			
+			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+			if not no_of_points:
+				break
+				
 			article_title_lowercase = article_to_open.text.lower()
 			if any(words in article_title_lowercase for words in break_words):
 				break
-
-			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+				
 			post_made = post_made_check(article_title_lowercase, no_of_points, my_subreddit)
 			if post_made == True:
 				break
