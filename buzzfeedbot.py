@@ -6,7 +6,14 @@ import requests
 import praw
 import prawcore
 
-def reddit_bot(headline, main_text, link, my_subreddit, website):
+def soup_session(link):
+	"""BeautifulSoup session"""
+	session = requests.Session()
+	daily_archive = session.get(link)
+	soup = BeautifulSoup(daily_archive.content, 'html.parser')
+	return soup
+
+def reddit_bot(headline, main_text, link, my_subreddit, website_name):
 	"""Module that takes the title, main text and link to article and posts directly to reddit"""
 	reddit = praw.Reddit(client_id='',
 					client_secret= '',
@@ -14,7 +21,7 @@ def reddit_bot(headline, main_text, link, my_subreddit, website):
 					username='autobuzzfeedbot',
 					password='')
 
-	reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n'+link)#.mod.flair(text=website)
+	reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n'+link).mod.flair(text=website_name)
 	
 def total_articles_today(link_completed_count = 0, article_completed_count = 0, modify = False):
 	""" Saves the progress of amount of links already searched through in an external file if modify = true
@@ -77,9 +84,9 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	break_words = [' pictures', ' photos', ' gifs', 'images', \
 		       'twitter', 'must see', 'tweets', 'memes',\
 		       'instagram', 'tumblr']
-	session = requests.Session()
-	daily_archive = session.get('https://www.buzzfeed.com/archive/' + date )
-	soup = BeautifulSoup(daily_archive.content, 'html.parser')
+	
+	soup = soup_session(archive_link + date)
+	
 	for link in list(soup.find_all('a', attrs={'class': 'link-gray'}, href=True))[start_iter:]:
 		current_iter += 1
 		for article_to_open in link.find_all('h2', attrs={'class': 'xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
@@ -103,6 +110,7 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 				break
 		
 			top_x_link = 'https://www.buzzfeed.com' + link['href']
+			
 			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
 				article_text_to_use = article_text(top_x_link, no_of_points[0])
 				if article_text_to_use == '':
@@ -121,11 +129,12 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 	unused_value = total_articles_today(link_completed_count = link_count + 1, article_completed_count = 0, modify = True)[0]
 
 def paragraph_article_text(link_to_check, total_points):
+	"""Parses list articles that are in paragraph form (have the 'p' HTML tag)"""
+
 	i=1
 	top_x_final = ''
-	session = requests.Session()
-	article = session.get(link_to_check)
-	soup = BeautifulSoup(article.content, 'html.parser')
+	
+	soup = soup_session(link_to_check)
 
 	for subpoint in soup.find_all('p'):
 		try:
@@ -146,9 +155,8 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 	this_when_counter = 0
 	top_x_final = ''
 	top_x_final_temp = ''
-	session = requests.Session()
-	clickbait_article = session.get(link_to_check)
-	soup = BeautifulSoup(clickbait_article.content, 'html.parser')
+	
+	soup = soup_session(link_to_check)
 
 	for title in soup.find_all('h3'):
 		
@@ -235,6 +243,7 @@ if __name__ == "__main__":
 
 	my_subreddit = 'buzzfeedbot'
 	website = 'BuzzFeed'
+	archive_link = 'https://www.buzzfeed.com/archive/'
 	
 	start_time = round(time.time(), 2)
 	post_reset()
