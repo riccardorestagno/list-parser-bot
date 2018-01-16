@@ -28,10 +28,12 @@ def article_info():
 		
 		
 		try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+			
 			article_text_to_use = article_text(top_x_link, no_of_points[0])
 			if article_text_to_use == '':
-				pass
-			else:	
+				article_text_to_use = buzzfeedbot.paragraph_article_text(top_x_link, no_of_points[0])
+				
+			if article_text_to_use != '':
 				print(top_x_link)
 				print(article_to_open.text)
 				buzzfeedbot.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website)
