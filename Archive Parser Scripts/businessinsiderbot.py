@@ -13,9 +13,12 @@ def article_info():
 	for link in soup.find_all('h3'):
 		
 		article_to_open = link.find('a', href=True)
-
-		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
 		
+		try:
+			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+		except AttributeError:
+			continue
+			
 		if not no_of_points:
 			continue
 		
