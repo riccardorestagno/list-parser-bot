@@ -10,8 +10,10 @@ def article_info():
 	
 	soup = buzzfeedbot.soup_session(archive_link)
 
-	for article_to_open in soup.find_all('a', attrs={'class': 'title-link'}):
+	for link in soup.find_all('h3'):
 		
+		article_to_open = link.find('a', href=True)
+
 		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
 		
 		if not no_of_points:
@@ -24,7 +26,7 @@ def article_info():
 		if post_made == True:
 			continue
 		
-		top_x_link = 'http://www.businessinsider.com' + article_to_open['href']
+		top_x_link = article_to_open['href']
 		
 		
 		try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
@@ -71,7 +73,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
 if __name__ == "__main__":
 	my_subreddit = 'buzzfeedbot'
 	website = 'Business Insider'
-	archive_link = 'http://www.businessinsider.com/archives'
+	archive_link = 'http://www.businessinsider.com/latest'
 	
 	start_time = round(time.time(), 2)
 	
