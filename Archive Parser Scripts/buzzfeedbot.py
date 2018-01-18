@@ -201,7 +201,9 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 				except KeyError:
 					pass
 				if top_x_final_temp == top_x_final:
-					if article.text.startswith((str(i)+'.', str(i)+')')):
+					if article.text.startswith(str(i)+')'):
+						article.text.replace(str(i)+')', str(i)+'.')
+					if article.text.startswith(str(i)+'.'):
 						top_x_final += article.text  + '\n'
 					else:
 						top_x_final += str(i) + '. '+ article.text  + '\n'
