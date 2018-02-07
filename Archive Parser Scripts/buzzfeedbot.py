@@ -139,7 +139,7 @@ def paragraph_article_text(link_to_check, total_points):
 	for subpoint in soup.find_all('p'):
 		try:
 			if subpoint.text[0].isdigit():
-				top_x_final += subpoint.text  + '\n'
+				top_x_final += subpoint.text.replace(')', '.', 1)  + '\n'
 				i+=1
 		except IndexError:
 			continue
