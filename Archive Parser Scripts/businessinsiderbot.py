@@ -23,6 +23,8 @@ def article_info():
 			continue
 		
 		article_title_lowercase = article_to_open.text.lower()
+		if any(words in article_title_lowercase for words in buzzfeedbot.break_words):
+			continue
 			
 		post_made = buzzfeedbot.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
 		
