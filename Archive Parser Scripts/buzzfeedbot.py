@@ -4,11 +4,10 @@ from datetime import date, timedelta
 import time
 import requests
 import praw
-import prawcore
 
 break_words = [' pictures', ' photos', ' gifs', 'images', \
-		       'twitter', 'must see', 'tweets', 'memes',\
-		       'instagram', 'tumblr', 'gifts', 'products']
+		'twitter', 'must see', 'tweets', 'memes',\
+		'instagram', 'tumblr', 'gifts', 'products']
 
 def soup_session(link):
 	"""BeautifulSoup session"""
@@ -27,7 +26,7 @@ def reddit_bot(headline, main_text, link, my_subreddit, website_name):
 
 	reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n'+link).mod.flair(text=website_name)
 	
-def total_articles_today(link_completed_count = 0, article_completed_count = 0, modify = False):
+def total_articles_today(article_completed_count = 0, modify = False):
 	""" Saves the progress of amount of links already searched through in an external file if modify = true
 		Returns the current progress of the amount of links/articles already searched if modify = false"""
 		
@@ -35,13 +34,13 @@ def total_articles_today(link_completed_count = 0, article_completed_count = 0, 
 	
 	if modify == False:
 		with open(filepath, 'r') as file:
-			links_searched, articles_searched = file.read().split('\n')
-		return int(links_searched), int(articles_searched)
+			articles_searched = file.read()
+		return int(articles_searched)
 	
 	else:
 		with open(filepath, 'w') as file:
-			file.write(str(link_completed_count) + '\n' + str(article_completed_count))
-		return 0, 0
+			file.write(str(article_completed_count))
+		return 0
 
 def post_reset():
 	"""Resets total articles searched file if post is run at the beginning of the day"""
@@ -50,7 +49,7 @@ def post_reset():
 	min_time = datetime.time(2, 55)
 	max_time = datetime.time(3, 5)
 	if current_time >= min_time and current_time <= max_time:
-		total_articles_today(0, 0, True)
+		total_articles_today(0, True)
 		print('reset done')
 		
 def post_made_check(post_title, subpoints, my_subreddit):
@@ -76,7 +75,7 @@ Returns True if post was submitted already and returns False otherwise"""
 	return post_made
 
 
-def article_info(date, link_count, start_iter):
+def article_info(date, start_iter):
 	"""Gets the link to the article that will be posted on the sub.
 The two if-statements below check if (1) the aretile starts with a number, (2) the post hasn't been made already,
 (3) the articles language is in english, and (4) if the articles main points actually have text and not images.
@@ -121,13 +120,12 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 					reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website)
 					print(article_to_open.text)
 					start_iter += current_iter
-					current_iter = 0
-					unused_value = total_articles_today(article_completed_count = start_iter, modify = True)[0]
+					unused_value = total_articles_today(article_completed_count = start_iter, modify = True)
 					return
 				break
 			except IndexError:
 				break
-	unused_value = total_articles_today(link_completed_count = link_count + 1, article_completed_count = 0, modify = True)[0]
+	unused_value = total_articles_today(start_iter + current_iter, modify = True)
 
 def paragraph_article_text(link_to_check, total_points):
 	"""Parses list articles that are in paragraph form (have the 'p' HTML tag)"""
@@ -214,33 +212,16 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 		top_x_final = ''
 	return top_x_final
 
-def urls_to_search():
+def url_to_search():
+	""" Gets URL of the archive of yesterdays data"""
 
 	i=0
-	tmp_date = ''
 	yesterday = date.today() - timedelta(1)
-	leading_zero_date = yesterday.strftime("%Y/%m/%d")
-	diff_date_formats = [leading_zero_date, leading_zero_date.replace('/0', '/', 1), \
-						leading_zero_date.replace('/0', '/'), '/'.join(leading_zero_date.rsplit('/0', 1))]
-	
-	for date_format in diff_date_formats:
-	
-		if date_format == tmp_date:
-			break
-			
-		complete_links_searched, article_count = total_articles_today()
-		
-		if complete_links_searched > i:
-			i+=1
-			tmp_date = date_format
-			continue
-			
-		print('Searching link ' + str(i+1))
-		
-		if article_info(date_format, complete_links_searched, article_count) == True:
-			break
-			
-		tmp_date = date_format
+	formatted_date = yesterday.strftime("%Y/%m/%d")
+
+	article_count = total_articles_today()
+
+	article_info(formatted_date, article_count)
 		
 if __name__ == "__main__":
 
@@ -250,6 +231,8 @@ if __name__ == "__main__":
 	
 	start_time = round(time.time(), 2)
 	post_reset()
-	urls_to_search()
+	
+	print('Searching Yesterdays Archive')
+	url_to_search()
 
 	print('Script ran for ' + str(round(((time.time()-start_time)),2)) + ' seconds' )
