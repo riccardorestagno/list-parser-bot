@@ -6,6 +6,10 @@ import requests
 import praw
 import prawcore
 
+break_words = [' pictures', ' photos', ' gifs', 'images', \
+		       'twitter', 'must see', 'tweets', 'memes',\
+		       'instagram', 'tumblr', 'gifts', 'products']
+
 def soup_session(link):
 	"""BeautifulSoup session"""
 	session = requests.Session()
@@ -81,9 +85,6 @@ If all these conditions are met, this module will get the articles text using th
 and then posts the corresponding text to reddit using the reddit_bot() module"""
 	
 	current_iter = 0
-	break_words = [' pictures', ' photos', ' gifs', 'images', \
-		       'twitter', 'must see', 'tweets', 'memes',\
-		       'instagram', 'tumblr']
 	
 	soup = soup_session(archive_link + date)
 	
@@ -139,7 +140,7 @@ def paragraph_article_text(link_to_check, total_points):
 	for subpoint in soup.find_all('p'):
 		try:
 			if subpoint.text[0].isdigit():
-				top_x_final += subpoint.text.replace(')', '.', 1)  + '\n'
+				top_x_final += subpoint.text.replace(')', '. ', 1)  + '\n'
 				i+=1
 		except IndexError:
 			continue
@@ -202,7 +203,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					pass
 				if top_x_final_temp == top_x_final:
 					if article.text.startswith(str(i)+')'):
-						article.text.replace(str(i)+')', str(i)+'.')
+						article.text.replace(str(i)+')', str(i)+'. ')
 					if article.text.startswith(str(i)+'.'):
 						top_x_final += article.text  + '\n'
 					else:
