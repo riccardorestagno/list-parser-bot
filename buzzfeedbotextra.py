@@ -11,7 +11,7 @@ def paragraph_article_text(link_to_check, point_no):
 	try:
 		subpoint = list(soup.find_all('div', class_="subbuzz__description"))[point_no]
 	except IndexError:
-		return "Pass"
+		return "No extra information available"
 	
 	for description in subpoint.find_all('p'):
 		details += description.text + "\n\n"
