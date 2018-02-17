@@ -1,8 +1,4 @@
-from bs4 import BeautifulSoup
-from datetime import date, timedelta
 import time
-import requests
-import praw
 import buzzfeedbot
 
 def article_info():
