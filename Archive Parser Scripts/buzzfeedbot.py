@@ -69,7 +69,10 @@ Returns True if post was submitted already and returns False otherwise"""
 		if submission.title.lower() == post_title:
 			post_made = True
 			break
-		subpoints_to_check = [int(s) for s in submission.title.split() if s.isdigit()][0]
+		try:
+			subpoints_to_check = [int(s) for s in submission.title.split() if s.isdigit()][0]
+		except IndexError:
+			continue
 		if subpoints_to_check == subpoints:
 			sameWords = set.intersection(set(post_title.split()), set(submission.title.lower().split()))
 			numberOfWords = len(sameWords)
