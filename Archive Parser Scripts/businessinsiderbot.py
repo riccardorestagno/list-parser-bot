@@ -58,7 +58,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
 	
 	soup = buzzfeedbot.soup_session(link_to_check)
 		
-	for article_point in soup.find_all('h3', attrs={'class': 'slide-title'}):
+	for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 				
 		if article_point.text[1] == '.' or article_point.text[2] == '.':
 			top_x_final += article_point.text  + '\n'
