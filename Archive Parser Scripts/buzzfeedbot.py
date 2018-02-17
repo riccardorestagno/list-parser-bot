@@ -9,6 +9,16 @@ break_words = [' pictures', ' photos', ' gifs', 'images', \
 		'twitter', 'must see', 'tweets', 'memes',\
 		'instagram', 'tumblr', 'gifts', 'products']
 
+def connect_to_reddit():
+	
+	reddit = praw.Reddit(client_id='',
+			client_secret= '',
+			user_agent='BuzzFeed bot',
+			username='autobuzzfeedbot',
+			password='')
+
+	return reddit
+
 def soup_session(link):
 	"""BeautifulSoup session"""
 	session = requests.Session()
@@ -18,11 +28,7 @@ def soup_session(link):
 
 def reddit_bot(headline, main_text, link, my_subreddit, website_name):
 	"""Module that takes the title, main text and link to article and posts directly to reddit"""
-	reddit = praw.Reddit(client_id='',
-					client_secret= '',
-					user_agent='BuzzFeed bot',
-					username='autobuzzfeedbot',
-					password='')
+	reddit = connect_to_reddit()
 
 	reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n'+link).mod.flair(text=website_name)
 	
@@ -56,9 +62,7 @@ def post_made_check(post_title, subpoints, my_subreddit):
 	"""Checks if the post has already been submitted. 
 Returns True if post was submitted already and returns False otherwise"""
 	post_made = False
-	reddit = praw.Reddit(client_id='',
-			client_secret= '',
-			user_agent='BuzzFeed bot')
+	reddit = connect_to_reddit()
 	subreddit = reddit.subreddit(my_subreddit)
 	submissions = subreddit.new(limit=40)
 	for submission in submissions:
