@@ -7,9 +7,12 @@ def paragraph_article_text(link_to_check, point_no):
 	
 	print(link_to_check)
 	soup = buzzfeedbot.soup_session(link_to_check)
+	start = soup.find_all('span', attrs={'class': 'subbuzz__number'})[point_no].parent.parent
 	
 	try:
-		subpoint = list(soup.find_all('div', class_="subbuzz__description"))[point_no]
+		subpoint = start.find('div', class_="subbuzz__description")
+		if subpoint == None:	
+			return "No extra information available"
 	except IndexError:
 		return "No extra information available"
 	
