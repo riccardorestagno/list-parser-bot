@@ -60,7 +60,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
 		
 	for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 				
-		if article_point.text[1] == '.' or article_point.text[2] == '.':
+		if article_point.text[0].isdigit() and (article_point.text[1] == '.' or article_point.text[2] == '.'):
 			top_x_final += article_point.text  + '\n'
 		else:
 			top_x_final += str(i) + '. '+ article_point.text  + '\n'
