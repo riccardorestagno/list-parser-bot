@@ -33,7 +33,7 @@ The script parses https://www.buzzfeed.com/archive/ [yesterdays-date-EST] and fi
 
 ### Business Insider Archive:
 
-Run-time: Bi-hourly (:20 / :40) 
+Run-time: Bi-hourly (:20 / :50) 
 
 The script parses http://www.businessinsider.com/latest and searches for the most recent Business Insider article written. If the article being searched matches the post requirements from BuzzFeed's script, then the same procedure from BuzzFeed's script is used to post the article to Reddit. Only one article is posted per run-time.
 
