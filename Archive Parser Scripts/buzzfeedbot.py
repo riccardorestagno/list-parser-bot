@@ -52,8 +52,8 @@ def post_reset():
 	"""Resets total articles searched file if post is run at the beginning of the day"""
 	import datetime
 	current_time = datetime.datetime.now().time()
-	min_time = datetime.time(2, 55)
-	max_time = datetime.time(3, 5)
+	min_time = datetime.time(4, 55)
+	max_time = datetime.time(5, 5)
 	if current_time >= min_time and current_time <= max_time:
 		total_articles_today(0, True)
 		print('reset done')
