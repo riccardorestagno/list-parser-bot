@@ -12,11 +12,11 @@ break_words = ['pictures', 'photos', 'gifs', 'images',
 
 def connect_to_reddit():
 
-    reddit = praw.Reddit(client_id='7bc9Dub6wtN_Ug',
-                         client_secret= 't-hjo-D0nKpLbmb97v_GJeFydk0',
+    reddit = praw.Reddit(client_id='',
+                         client_secret= '',
                          user_agent='BuzzFeed bot',
-                         username='autobuzzfeedbot',
-                         password='thisisabot5')
+                         username='',
+                         password='')
     return reddit
 
 
