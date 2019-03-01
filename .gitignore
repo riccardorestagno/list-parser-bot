@@ -1,1 +1,7 @@
-
+.git/
+.idea/
+__pycache__/
+credentials.py
+Subreddit Images/
+Naut-for-reddit-master/
+*.JPG

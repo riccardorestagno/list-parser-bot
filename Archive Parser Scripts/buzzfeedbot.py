@@ -4,6 +4,7 @@ from datetime import date, timedelta
 import time
 import requests
 import praw
+import credentials
 
 break_words = ['pictures', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',
@@ -12,11 +13,11 @@ break_words = ['pictures', 'photos', 'gifs', 'images',
 
 def connect_to_reddit():
 
-    reddit = praw.Reddit(client_id='',
-                         client_secret= '',
-                         user_agent='BuzzFeed bot',
-                         username='',
-                         password='')
+    reddit = praw.Reddit(client_id=credentials.CLIENT_ID,
+                         client_secret=credentials.CLIENT_SECRET,
+                         user_agent=credentials.USER_AGENT,
+                         username=credentials.USERNAME,
+                         password=credentials.PASSWORD)
     return reddit
 
 
