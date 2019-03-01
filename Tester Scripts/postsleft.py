@@ -4,13 +4,15 @@ from datetime import date, timedelta
 import time
 import requests
 import praw
+import credentials
 
-def total_articles_today(link_completed_count = 0, article_completed_count = 0, modify = False):
+
+def total_articles_today(link_completed_count = 0, article_completed_count=0, modify=False):
 	"""Things to do:
 		RESET TO 0, 0 WHEN ITS A NEW DAY"""
-	filepath = r'C:\Users\Riccardo\Desktop\Python Scripts\BuzzFeed Reddit Bot\Posts_Made_Today.txt'
+	filepath = r'C:\Users\Riccardo\Desktop\Python_Scripts\BuzzFeed Reddit Bot\Posts_Made_Today.txt'
 	
-	if modify == False:
+	if not modify:
 		with open(filepath, 'r') as file:
 			links_searched, articles_searched = file.read().split('\n')
 		return int(links_searched), int(articles_searched)
@@ -19,23 +21,25 @@ def total_articles_today(link_completed_count = 0, article_completed_count = 0, 
 		with open(filepath, 'w') as file:
 			file.write(str(link_completed_count) + '\n' + str(article_completed_count))
 
+
 def post_reset():
 	import datetime
 	current_time = datetime.datetime.now().time()
 	min_time = datetime.time(2, 55)
 	max_time = datetime.time(3, 5)
-	if current_time >= min_time and current_time <= max_time:
+	if min_time <= current_time <= max_time:
 		total_articles_today(0, 0, True)
 		print('reset done')
-		
+
+
 def post_made_check(post_title, subpoints):
 	"""Checks if the post has already been submitted. 
 Returns True if post was submitted already and returns False otherwise"""
 	
 	post_made = False
-	reddit = praw.Reddit(client_id='7bc9Dub6wtN_Ug',
-					client_secret= 't-hjo-D0nKpLbmb97v_GJeFydk0',
-					user_agent='BuzzFeed bot')
+	reddit = praw.Reddit(client_id=credentials.CLIENT_ID,
+						 client_secret=credentials.CLIENT_SECRET,
+						 user_agent=credentials.USER_AGENT)
 	subreddit = reddit.subreddit('buzzfeedbot')
 	submissions = subreddit.new(limit=40)
 	for submission in submissions:
@@ -44,12 +48,13 @@ Returns True if post was submitted already and returns False otherwise"""
 			break
 		subpoints_to_check = [int(s) for s in submission.title.split() if s.isdigit()]
 		if subpoints_to_check == subpoints:
-			sameWords = set.intersection(set(post_title.split(" ")), set(submission.title.lower().split(" ")))
-			numberOfWords = len(sameWords)
-			if numberOfWords >=4:
+			same_words = set.intersection(set(post_title.split(" ")), set(submission.title.lower().split(" ")))
+			number_of_words = len(same_words)
+			if number_of_words >= 4:
 				post_made = True
 				break
-	return (post_made)
+	return post_made
+
 
 def article_info(date, link_count, start_iter):
 	"""Gets the link to the article that will be posted on the sub.
@@ -79,14 +84,18 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 			article_title_lowercase = article_to_open.text.lower()
 			if any(words in article_title_lowercase for words in break_words):
 				break
-				
-			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article 
+
+			# Records number of points in the article
+			no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()]
 			post_made = post_made_check(article_title_lowercase, no_of_points)
 			if post_made == True:
 				break
 				
 			top_x_link = 'https://www.buzzfeed.com' + link['href']
-			try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+
+			# Avoids rare case of when there is an index error
+			# (occurs when article starts with number immediately followed by a symbol)
+			try:
 				article_text_to_use = article_text(top_x_link, no_of_points[0])
 				if article_text_to_use == '':
 					pass
@@ -102,6 +111,7 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 				break
 				
 	total_articles_today(link_completed_count = link_count + 1, article_completed_count = 0, modify = True)[0]
+
 
 def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
@@ -144,7 +154,7 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 						
 						if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use): #removes redirect link if there is any
 							link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
-						if 'amazon' in link['href']: #removes buzzfeed tag in all amazon links
+						if 'amazon' in link['href']:  # removes buzzfeed tag in all amazon links
 							link_to_use = link_to_use.split('?', 1)[0]
 						link_to_use = link_to_use.replace(')', r'\)')
 						if article.text.startswith((str(i)+'.' , str(i)+')')):
