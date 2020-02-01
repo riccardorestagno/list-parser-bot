@@ -13,7 +13,7 @@ def article_info():
         article_to_open = link.find('a', href=True)
 
         try:
-            no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article
+            no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()]  # Records number of points in the article
         except AttributeError:
             continue
 
@@ -32,7 +32,8 @@ def article_info():
 
         top_x_link = article_to_open['href']
 
-        try: # Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+        # Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+        try:
             article_text_to_use = article_text(top_x_link, no_of_points[0])
             if article_text_to_use == '':
                 article_text_to_use = list_parser_helper_functions.paragraph_article_text(top_x_link, no_of_points[0])
@@ -62,7 +63,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
     for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 
         if article_point.text[0].isdigit() and (article_point.text[1] == '.' or article_point.text[2] == '.'):
-            top_x_final = article_point + '\n' + top_x_final
+            top_x_final = article_point.text + '\n' + top_x_final
         else:
             top_x_final = str(i) + '. ' + article_point.text + '\n' + top_x_final
 
@@ -72,7 +73,8 @@ Also checks to make sure  the number of sub-points in the article is equal to th
         top_x_final = list_parser_helper_functions.chronological_list_maker(top_x_final, i)
 
     if total_points != i-1:
-        top_x_final = ''
+        return ''
+
     return top_x_final
 
 

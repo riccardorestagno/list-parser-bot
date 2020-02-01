@@ -10,7 +10,9 @@ def reddit_bot(headline, main_text, link):
 
     reddit = praw.Reddit(client_id=CLIENT_ID,
                          client_secret=CLIENT_SECRET,
-                         user_agent=USER_AGENT)
+                         user_agent=USER_AGENT,
+                         username=USERNAME,
+                         password=PASSWORD)
 
     reddit.subreddit('buzzfeedbot').submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')
 
@@ -22,7 +24,9 @@ Returns True if post was submitted already and returns False otherwise"""
     post_made = False
     reddit = praw.Reddit(client_id=CLIENT_ID,
                          client_secret=CLIENT_SECRET,
-                         user_agent=USER_AGENT)
+                         user_agent=USER_AGENT,
+                         username=USERNAME,
+                         password=PASSWORD)
 
     subreddit = reddit.subreddit('buzzfeedbot')
     submissions = subreddit.new(limit=40)

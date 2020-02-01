@@ -12,7 +12,9 @@ BREAK_WORDS = ['pictures', 'photos', 'gifs', 'images',
 def connect_to_reddit():
     return praw.Reddit(client_id=CLIENT_ID,
                        client_secret=CLIENT_SECRET,
-                       user_agent=USER_AGENT)
+                       user_agent=USER_AGENT,
+                       username=USERNAME,
+                       password=PASSWORD)
 
 
 def soup_session(link):
