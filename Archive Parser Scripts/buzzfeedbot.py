@@ -34,14 +34,15 @@ def reddit_bot(headline, main_text, link, my_subreddit, website_name):
 
     reddit = connect_to_reddit()
 
-    reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')').mod.flair(text=website_name)
+    reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')').\
+        mod.flair(text=website_name)
 
 
 def total_articles_today(article_completed_count=0, modify=False):
     """ Saves the progress of amount of links already searched through in an external file if modify = true
         Returns the current progress of the amount of links/articles already searched if modify = false"""
 
-    filepath = r'C:\Users\Riccardo\Desktop\Python Scripts\BuzzFeed Reddit Bot\Posts_Made_Today.txt'
+    filepath = r'C:\Users\Riccardo\Desktop\Python_Scripts\BuzzFeed Reddit Bot\Posts_Made_Today.txt'
 
     if not modify:
         with open(filepath, 'r') as file:
@@ -103,7 +104,7 @@ Returns True if post was submitted already and returns False otherwise"""
         if subpoints_to_check == subpoints:
             same_words = set.intersection(set(post_title.split()), set(submission.title.lower().split()))
             number_of_words = len(same_words)
-            if number_of_words >=4:
+            if number_of_words >= 4:
                 post_made = True
                 break
     return post_made
@@ -121,47 +122,54 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
 
     soup = soup_session(archive_link + article_date)
 
-    for link in list(soup.find_all('a', attrs={'class': 'link-gray'}, href=True))[start_iter:]:
-        current_iter += 1
-        for article_to_open in link.find_all('h2', attrs={'class': 'xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
+    for block in soup.find_all('div', attrs={'data-buzzblock': 'story-card'})[start_iter:]:
 
-            try:
-                if not detect(article_to_open.text) == 'en':
+        for link in list(block.find_all('a', href=True)):
+            current_iter += 1
+            print(link['href'])
+            time.sleep(3)
+            for article_to_open in link.find_all('h2', attrs={'class': 'link-gray xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
+
+                try:
+                    if not detect(article_to_open.text) == 'en':
+                        break
+                except lang_detect_exception.LangDetectException:
                     break
-            except lang_detect_exception.LangDetectException:
-                break
 
-            no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] #Records number of points in the article
-            if not no_of_points:
-                break
+                # Records number of points in the article
+                no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()]
+                if not no_of_points:
+                    break
 
-            article_title_lowercase = article_to_open.text.lower()
-            if any(words in article_title_lowercase for words in break_words):
-                break
-            try:
-                post_made = post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
-            except IndexError:
-                post_made = post_made_check(article_title_lowercase, 0, my_subreddit)
+                article_title_lowercase = article_to_open.text.lower()
+                if any(words in article_title_lowercase for words in break_words):
+                    break
+                try:
+                    post_made = post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
+                except IndexError:
+                    post_made = post_made_check(article_title_lowercase, 0, my_subreddit)
 
-            if post_made:
-                break
+                if post_made:
+                    break
 
-            top_x_link = 'https://www.buzzfeed.com' + link['href']
+                top_x_link = 'https://www.buzzfeed.com' + link['href']
 
-            try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
-                article_text_to_use = article_text(top_x_link, no_of_points[0])
-                if article_text_to_use == '':
-                    article_text_to_use = paragraph_article_text(top_x_link, no_of_points[0])
+                # Avoids rare case of when there is an index error
+                # (occurs when article starts with number immediately followed by a symbol)
+                try:
+                    article_text_to_use = article_text(top_x_link, no_of_points[0])
+                    if article_text_to_use == '':
+                        article_text_to_use = paragraph_article_text(top_x_link, no_of_points[0])
 
-                if article_text_to_use != '':
-                    reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website_name)
-                    print(article_to_open.text)
-                    start_iter += current_iter
-                    total_articles_today(start_iter, modify=True)
-                    return
-                break
-            except IndexError:
-                break
+                    if article_text_to_use != '':
+                        reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website_name)
+                        print(article_to_open.text)
+                        start_iter += current_iter
+                        total_articles_today(start_iter, modify=True)
+                        return
+                    break
+                except IndexError:
+                    break
 
     total_articles_today(start_iter + current_iter, modify=True)
 
@@ -189,7 +197,7 @@ def paragraph_article_text(link_to_check, total_points):
 
 def article_text(link_to_check, total_points):
     """Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure  the number of sub-points in the article is equal to the number the article title starts with"""
+Also checks to make sure the number of sub-points in the article is equal to the number the article title starts with"""
 
     i = 1
     this_when_counter = 0
@@ -210,7 +218,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
             continue
 
         for article in title.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
-            if len(article.text)<4 or article.text.endswith(':'):
+            if len(article.text) < 4 or article.text.endswith(':'):
                 return ''
             else:
                 top_x_final_temp = top_x_final
@@ -228,12 +236,13 @@ Also checks to make sure  the number of sub-points in the article is equal to th
                         else:
                             link_to_use = link['href']
 
-                        if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use): #removes redirect link if there is any
+                        # removes redirect link if there is any
+                        if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
                             link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
 
                         link_to_use = link_to_use.replace(')', r'\)')
 
-                        if article.text.startswith((str(i)+'.' , str(i)+')')):
+                        if article.text.startswith((str(i)+'.', str(i)+')')):
                             top_x_final += '[' + article.text + '](' + link_to_use + ')' + '\n'
                         else:
                             top_x_final += str(i) + '. ' + '[' + article.text + '](' + link_to_use + ')' + '\n'
@@ -244,9 +253,9 @@ Also checks to make sure  the number of sub-points in the article is equal to th
                     if article.text.startswith(str(i)+')'):
                         article.text.replace(str(i)+')', str(i)+'. ')
                     if article.text.startswith(str(i)+'.'):
-                        top_x_final += article.text  + '\n'
+                        top_x_final += article.text + '\n'
                     else:
-                        top_x_final += str(i) + '. '+ article.text  + '\n'
+                        top_x_final += str(i) + '. ' + article.text + '\n'
             i += 1
 
     if total_points != i-1:
@@ -277,5 +286,4 @@ if __name__ == "__main__":
     print('Searching Yesterdays Archive')
     url_to_search()
 
-    print('Script ran for ' + str(round(((time.time()-start_time)),2)) + ' seconds')
-
+    print('Script ran for ' + str(round((time.time() - start_time), 2)) + ' seconds')
