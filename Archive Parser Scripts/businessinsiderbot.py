@@ -1,11 +1,12 @@
 import time
-import buzzfeedbot
+
+import list_parser_helper_functions
 
 
 def article_info():
     """Gets the link to the article that will be posted on the sub"""
 
-    soup = buzzfeedbot.soup_session(archive_link)
+    soup = list_parser_helper_functions.soup_session(archive_link)
 
     for link in soup.find_all('h3'):
 
@@ -21,24 +22,24 @@ def article_info():
 
         article_title_lowercase = article_to_open.text.lower()
 
-        if any(words in article_title_lowercase for words in buzzfeedbot.break_words):
+        if any(words in article_title_lowercase for words in list_parser_helper_functions.BREAK_WORDS):
             continue
 
-        post_made = buzzfeedbot.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
+        post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
 
         if post_made:
             continue
 
         top_x_link = article_to_open['href']
 
-        try: #Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+        try: # Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
             article_text_to_use = article_text(top_x_link, no_of_points[0])
             if article_text_to_use == '':
-                article_text_to_use = buzzfeedbot.paragraph_article_text(top_x_link, no_of_points[0])
+                article_text_to_use = list_parser_helper_functions.paragraph_article_text(top_x_link, no_of_points[0])
             if article_text_to_use != '':
                 print(top_x_link)
                 print(article_to_open.text)
-                buzzfeedbot.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website_name)
+                list_parser_helper_functions.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website_name)
 
                 return True
 
@@ -56,7 +57,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
     i = 1
     top_x_final = ''
 
-    soup = buzzfeedbot.soup_session(link_to_check)
+    soup = list_parser_helper_functions.soup_session(link_to_check)
 
     for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 
@@ -68,7 +69,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
         i += 1
 
     if top_x_final.startswith(str(i-1)):
-        top_x_final = buzzfeedbot.chronological_list_maker(top_x_final, i)
+        top_x_final = list_parser_helper_functions.chronological_list_maker(top_x_final, i)
 
     if total_points != i-1:
         top_x_final = ''

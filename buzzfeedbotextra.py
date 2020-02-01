@@ -1,4 +1,4 @@
-import buzzfeedbot
+import list_parser_helper_functions
 	
 
 def paragraph_article_text(link_to_check, point_no):
@@ -6,12 +6,12 @@ def paragraph_article_text(link_to_check, point_no):
 	details = ''
 	
 	print(link_to_check)
-	soup = buzzfeedbot.soup_session(link_to_check)
+	soup = list_parser_helper_functions.soup_session(link_to_check)
 	start = soup.find_all('span', attrs={'class': 'subbuzz__number'})[point_no].parent.parent
 	
 	try:
 		subpoint = start.find('div', class_="subbuzz__description")
-		if subpoint == None:	
+		if subpoint is None:
 			return "No extra information available"
 	except IndexError:
 		return "No extra information available"
@@ -26,7 +26,7 @@ def paragraph_article_text(link_to_check, point_no):
 
 def check_inbox():
 
-	reddit = buzzfeedbot.connect_to_reddit()
+	reddit = list_parser_helper_functions.connect_to_reddit()
 	
 	bot_inbox = reddit.inbox.unread(limit=None)
 	unread_messages = []
@@ -40,7 +40,8 @@ def check_inbox():
 		unread_messages.append(message)
 		
 	reddit.inbox.mark_read(unread_messages)
-			
+
+
 def get_details(post_text, comment_text):
 		
 	link = post_text.split('[Link to article](')[1].rsplit(')', 1)[0]
