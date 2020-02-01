@@ -47,54 +47,54 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
     print(archive_link + article_date)
     soup = list_parser_helper_functions.soup_session(archive_link + article_date)
 
-    for block in soup.find_all('div', attrs={'data-buzzblock': 'story-card'})[start_iter:]:
+    for block in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[start_iter:]:
 
-        for link in list(block.find_all('a', href=True)):
+        for article in list(block.find_all('a', href=True)):
             current_iter += 1
-            print(link['href'])
+            print(article['href'])
             time.sleep(3)
-            for article_to_open in link.find_all('h2', attrs={'class': 'link-gray xs-mb05 xs-pt05 sm-pt0 xs-text-4 sm-text-2 bold'}):
 
-                try:
-                    if not detect(article_to_open.text) == 'en':
-                        break
-                except lang_detect_exception.LangDetectException:
+            try:
+                if not detect(article.text) == 'en':
                     break
+            except lang_detect_exception.LangDetectException:
+                break
 
-                # Records number of points in the article
-                no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()]
-                if not no_of_points:
-                    break
+            # Records number of points in the article
+            no_of_points = [int(s) for s in article.text.split() if s.isdigit()]
+            if not no_of_points:
+                break
 
-                article_title_lowercase = article_to_open.text.lower()
-                if any(words in article_title_lowercase for words in list_parser_helper_functions.BREAK_WORDS):
-                    break
-                try:
-                    post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
-                except IndexError:
-                    post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, 0, my_subreddit)
+            article_title_lowercase = article.text.lower()
+            if any(words in article_title_lowercase for words in list_parser_helper_functions.BREAK_WORDS):
+                break
+            try:
+                post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
+            except IndexError:
+                post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, 0, my_subreddit)
 
-                if post_made:
-                    break
+            if post_made:
+                break
 
-                top_x_link = 'https://www.buzzfeed.com' + link['href']
+            top_x_link = article['href']
 
-                # Avoids rare case of when there is an index error
-                # (occurs when article starts with number immediately followed by a symbol)
-                try:
-                    article_text_to_use = article_text(top_x_link, no_of_points[0])
-                    if article_text_to_use == '':
-                        article_text_to_use = list_parser_helper_functions.paragraph_article_text(top_x_link, no_of_points[0])
+            # Avoids rare case of when there is an index error
+            # (occurs when article starts with number immediately followed by a symbol)
+            try:
+                article_text_to_use = article_text(top_x_link, no_of_points[0])
+                if article_text_to_use == '':
+                    article_text_to_use = list_parser_helper_functions.paragraph_article_text(top_x_link, no_of_points[0])
 
-                    if article_text_to_use != '':
-                        list_parser_helper_functions.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website_name)
-                        print(article_to_open.text)
-                        start_iter += current_iter
-                        total_articles_today(start_iter, modify=True)
-                        return
-                    break
-                except IndexError:
-                    break
+                if article_text_to_use != '':
+                    list_parser_helper_functions.reddit_bot(article.text, article_text_to_use, top_x_link, my_subreddit, website_name)
+                    print(article.text)
+                    start_iter += current_iter
+                    total_articles_today(start_iter, modify=True)
+                    return
+                break
+            except IndexError:
+                break
+            break  # Only finds first link
 
     total_articles_today(start_iter + current_iter, modify=True)
 
@@ -109,7 +109,7 @@ Also checks to make sure the number of sub-points in the article is equal to the
 
     soup = list_parser_helper_functions.soup_session(link_to_check)
 
-    for title in soup.find_all('h3'):
+    for title in soup.find_all('h2'):
 
         subpoint_check = False
 
