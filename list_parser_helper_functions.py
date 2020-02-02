@@ -4,7 +4,7 @@ import praw
 
 from credentials import *
 
-BREAK_WORDS = ['pictures', 'photos', 'gifs', 'images',
+BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',
                'instagram', 'tumblr', 'gifts', 'products']
 

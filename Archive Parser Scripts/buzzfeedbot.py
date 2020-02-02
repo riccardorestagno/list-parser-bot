@@ -6,32 +6,29 @@ import list_parser_helper_functions
 from credentials import *
 
 
-def total_articles_today(article_completed_count=0, modify=False):
-    """ Saves the progress of amount of links already searched through in an external file if modify = true
-        Returns the current progress of the amount of links/articles already searched if modify = false"""
+def get_total_articles_searched_today(current_date):
+    """Gets the number of articles the bot already searched today"""
 
     filepath = FILEPATH
 
-    if not modify:
-        with open(filepath, 'r') as file:
-            articles_searched = file.read()
-        return int(articles_searched)
+    with open(filepath, 'r') as file:
+        if current_date != file.readline().strip():
+            set_total_articles_searched_today(current_date, 0)
+            return 0
+        for i, line in enumerate(file):
+            if i == 0:  # Second line since first line was read above
+                return int(line)
 
-    else:
-        with open(filepath, 'w') as file:
-            file.write(str(article_completed_count))
-        return 0
+    return 0
 
 
-def post_reset():
-    """Resets total articles searched file if post is run at the beginning of the day"""
-    import datetime
-    current_time = datetime.datetime.now().time()
-    min_time = datetime.time(2, 55)
-    max_time = datetime.time(3, 5)
-    if min_time <= current_time <= max_time:
-        total_articles_today(0, True)
-        print('reset done')
+def set_total_articles_searched_today(current_date, article_completed_count=0):
+    """Modifies the file to contain the current archive date and the number of articles already searched"""
+
+    filepath = FILEPATH
+
+    with open(filepath, 'w') as file:
+        file.write(current_date + '\n' + str(article_completed_count) + '\n')
 
 
 def article_info(article_date, start_iter):
@@ -89,14 +86,13 @@ and then posts the corresponding text to reddit using the reddit_bot() module"""
                     list_parser_helper_functions.reddit_bot(article.text, article_text_to_use, top_x_link, my_subreddit, website_name)
                     print(article.text)
                     start_iter += current_iter
-                    total_articles_today(start_iter, modify=True)
+                    set_total_articles_searched_today(article_date, start_iter)
                     return
-                break
             except IndexError:
-                break
+                pass
             break  # Only finds first link
 
-    total_articles_today(start_iter + current_iter, modify=True)
+    set_total_articles_searched_today(article_date, start_iter + current_iter)
 
 
 def article_text(link_to_check, total_points):
@@ -173,7 +169,7 @@ def url_to_search():
     yesterday = date.today() - timedelta(1)
     date_format = yesterday.strftime("%Y/%m/%d")
 
-    article_count = total_articles_today()
+    article_count = get_total_articles_searched_today(date_format)
 
     article_info(date_format, article_count)
 
@@ -185,8 +181,6 @@ if __name__ == "__main__":
     archive_link = 'https://www.buzzfeed.com/archive/'
 
     start_time = round(time.time(), 2)
-
-    post_reset()
 
     print('Searching Yesterdays Archive')
     url_to_search()

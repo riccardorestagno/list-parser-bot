@@ -1,0 +1,4 @@
+praw
+langdetect
+bs4
+requests
