@@ -56,7 +56,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 
 def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure  the number of sub-points in the article is equal to the number the article title starts with"""
+Also checks to make sure  the number of list elements in the article is equal to the number the article title starts with"""
 	
 	i = 1
 	this_when_counter = 0
@@ -70,7 +70,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
 				continue
 		except IndexError:
 			continue
-		if len(article.text)<4 or article.text.endswith(':'):
+		if len(article.text) < 4 or article.text.endswith(':'):
 			return ''
 		else:
 			
@@ -85,16 +85,17 @@ Also checks to make sure  the number of sub-points in the article is equal to th
 			if article.text.startswith((str(i)+'.', str(i)+')')):
 				top_x_final += article.text + '\n'
 			else:
-				top_x_final += str(i) + '. '+ article.text  + '\n'
+				top_x_final += str(i) + '. ' + article.text  + '\n'
 		i += 1
 
 	if total_points != i-1:
 		top_x_final = ''
+
 	return top_x_final
 
 
 def compare_date(link):
-	""" Compares the date the article was written with todays date"""
+	""" Compares the date the article was written with today's date"""
 
 	soup = list_parser_helper_functions.soup_session(link)
 	

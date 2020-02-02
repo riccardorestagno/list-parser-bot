@@ -34,7 +34,7 @@ def reddit_bot(headline, main_text, link, my_subreddit, website_name):
         mod.flair(text=website_name)
 
 
-def post_made_check(post_title, subpoints, my_subreddit):
+def post_made_check(post_title, list_elements, my_subreddit):
     """Checks if the post has already been submitted.
 Returns True if post was submitted already and returns False otherwise"""
 
@@ -47,10 +47,10 @@ Returns True if post was submitted already and returns False otherwise"""
             post_made = True
             break
         try:
-            subpoints_to_check = [int(s) for s in submission.title.split() if s.isdigit()][0]
+            list_elements_to_check = [int(s) for s in submission.title.split() if s.isdigit()][0]
         except IndexError:
             continue
-        if subpoints_to_check == subpoints:
+        if list_elements_to_check == list_elements:
             same_words = set.intersection(set(post_title.split()), set(submission.title.lower().split()))
             number_of_words = len(same_words)
             if number_of_words >= 4:
@@ -67,10 +67,10 @@ def paragraph_article_text(link_to_check, total_points):
 
     soup = soup_session(link_to_check)
 
-    for subpoint in soup.find_all('p'):
+    for list_element in soup.find_all('p'):
         try:
-            if subpoint.text[0].isdigit():
-                top_x_final += subpoint.text.replace(')', '. ', 1) + '\n'
+            if list_element.text[0].isdigit():
+                top_x_final += list_element.text.replace(')', '. ', 1) + '\n'
                 i += 1
         except IndexError:
             continue

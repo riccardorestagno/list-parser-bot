@@ -13,11 +13,11 @@ def article_info():
         article_to_open = link.find('a', href=True)
 
         try:
-            no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()]  # Records number of points in the article
+            no_of_elements = [int(s) for s in article_to_open.text.split() if s.isdigit()]  # Records number of points in the article
         except AttributeError:
             continue
 
-        if not no_of_points:
+        if not no_of_elements:
             continue
 
         article_title_lowercase = article_to_open.text.lower()
@@ -25,22 +25,22 @@ def article_info():
         if any(words in article_title_lowercase for words in list_parser_helper_functions.BREAK_WORDS):
             continue
 
-        post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
+        post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_elements[0], my_subreddit)
 
         if post_made:
             continue
 
-        top_x_link = article_to_open['href']
+        list_article_link = article_to_open['href']
 
         # Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
         try:
-            article_text_to_use = article_text(top_x_link, no_of_points[0])
+            article_text_to_use = article_text(list_article_link, no_of_elements[0])
             if article_text_to_use == '':
-                article_text_to_use = list_parser_helper_functions.paragraph_article_text(top_x_link, no_of_points[0])
+                article_text_to_use = list_parser_helper_functions.paragraph_article_text(list_article_link, no_of_elements[0])
             if article_text_to_use != '':
-                print(top_x_link)
+                print(list_article_link)
                 print(article_to_open.text)
-                list_parser_helper_functions.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website_name)
+                list_parser_helper_functions.reddit_bot(article_to_open.text, article_text_to_use, list_article_link, my_subreddit, website_name)
 
                 return True
 
@@ -51,31 +51,31 @@ def article_info():
     return False
 
 
-def article_text(link_to_check, total_points):
+def article_text(link_to_check, total_elements):
     """Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
 Also checks to make sure  the number of sub-points in the article is equal to the number the article title starts with"""
 
-    i = 1
-    top_x_final = ''
+    list_counter = 1
+    full_list = ''
 
     soup = list_parser_helper_functions.soup_session(link_to_check)
 
     for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 
         if article_point.text[0].isdigit() and (article_point.text[1] == '.' or article_point.text[2] == '.'):
-            top_x_final = article_point.text + '\n' + top_x_final
+            full_list = article_point.text + '\n' + full_list
         else:
-            top_x_final = str(i) + '. ' + article_point.text + '\n' + top_x_final
+            full_list = str(list_counter) + '. ' + article_point.text + '\n' + full_list
 
-        i += 1
+        list_counter += 1
 
-    if top_x_final.startswith(str(i-1)):
-        top_x_final = list_parser_helper_functions.chronological_list_maker(top_x_final, i)
+    if full_list.startswith(str(list_counter-1)):
+        full_list = list_parser_helper_functions.chronological_list_maker(full_list, list_counter)
 
-    if total_points != i-1:
+    if total_elements != list_counter-1:
         return ''
 
-    return top_x_final
+    return full_list
 
 
 if __name__ == "__main__":
