@@ -4,7 +4,7 @@ from datetime import date, timedelta
 import time
 import requests
 import praw
-import credentials
+from app import credentials
 
 
 def total_articles_today(link_completed_count = 0, article_completed_count=0, modify=False):
@@ -38,8 +38,8 @@ Returns True if post was submitted already and returns False otherwise"""
 	
 	post_made = False
 	reddit = praw.Reddit(client_id=credentials.CLIENT_ID,
-						 client_secret=credentials.CLIENT_SECRET,
-						 user_agent=credentials.USER_AGENT)
+                         client_secret=credentials.CLIENT_SECRET,
+                         user_agent=credentials.USER_AGENT)
 	subreddit = reddit.subreddit('buzzfeedbot')
 	submissions = subreddit.new(limit=40)
 	for submission in submissions:
@@ -117,10 +117,9 @@ def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
 Also checks to make sure  the number of subpoints in the article is equal to the number the atricle title starts with"""
 	
-	i=1
+	i = 1
 	this_when_counter = 0
 	top_x_final = ''
-	top_x_final_temp = ''
 	session = requests.Session()
 	article = session.get(link_to_check)
 	soup = BeautifulSoup(article.content, 'html.parser')
@@ -133,16 +132,15 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 			subpoint_check = True
 			break
 		
-		if subpoint_check == False:
+		if not subpoint_check:
 			continue
 			
 		for article in title.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
-			if len(article.text)<4 or article.text.endswith(':'):
+			if len(article.text) < 4 or article.text.endswith(':'):
 				return ''
 			else:
 				top_x_final_temp = top_x_final
 				if this_when_counter == 3:
-					this_when_counter = 0
 					return ''
 				if article.text.startswith(('When ', 'This ', 'And this ')):
 					this_when_counter += 1
@@ -151,8 +149,9 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 				try:
 					for link in article.find_all('a', href=True):
 						link_to_use = link['href']
-						
-						if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use): #removes redirect link if there is any
+
+						# removes redirect link if there is any
+						if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
 							link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
 						if 'amazon' in link['href']:  # removes buzzfeed tag in all amazon links
 							link_to_use = link_to_use.split('?', 1)[0]
@@ -168,12 +167,14 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 					if article.text.startswith((str(i)+'.' , str(i)+')')):
 						top_x_final += article.text  + '\n'
 					else:
-						top_x_final += str(i) + '. '+ article.text  + '\n'
+						top_x_final += str(i) + '. ' + article.text + '\n'
 			i+=1
 
 	if total_points != i-1:
 		top_x_final = ''
-	return(top_x_final)
+
+	return top_x_final
+
 
 if __name__ == "__main__":
 
@@ -191,7 +192,7 @@ if __name__ == "__main__":
 		
 	remove_one_leading_zero_date = leading_zero_date.replace('/0', '/', 1)
 	
-	#POST MADE BOOLEAN NO LONGER NECESSARY CUZ OF COMPLETED LINKS SEARCHED
+	# POST MADE BOOLEAN NO LONGER NECESSARY CUZ OF COMPLETED LINKS SEARCHED
 	if complete_links_searched == 1 and leading_zero_date != remove_one_leading_zero_date:
 		print('Searching second link')
 		article_info(remove_one_leading_zero_date, complete_links_searched, article_count)
@@ -202,4 +203,4 @@ if __name__ == "__main__":
 		print('Searching third link')
 		article_info(remove_all_leading_zero_date, complete_links_searched, article_count)
 
-	print('Script ran for ' + str(round(((time.time()-start_time)),2))+ ' seconds' )
+	print('Script ran for ' + str(round(((time.time()-start_time)), 2)) + ' seconds')

@@ -1,6 +1,6 @@
 from twilio.rest import Client
 import praw
-from credentials import *
+from os import environ
 
 
 def send_text(text_body):
@@ -17,9 +17,12 @@ def send_text(text_body):
 
 if __name__ == "__main__":
     keyword = False
-    reddit = praw.Reddit(client_id=CLIENT_ID,
-                         client_secret=CLIENT_SECRET,
-                         user_agent=USER_AGENT)
+    reddit = praw.Reddit(client_id=environ["CLIENT_ID"],
+                         client_secret=environ["CLIENT_SECRET"],
+                         user_agent=environ["USER_AGENT"],
+                         username=environ["USERNAME"],
+                         password=environ["PASSWORD"])
+
     subreddit = reddit.subreddit('askreddit')
     submissions = subreddit.new(limit=100)
     for submission in submissions:

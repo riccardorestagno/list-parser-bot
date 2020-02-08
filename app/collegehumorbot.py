@@ -1,7 +1,7 @@
 from datetime import date, timedelta
 import time
 
-import list_parser_helper_functions
+import app.helper_scripts.list_parser_helper_methods as helper_methods
 
 
 def article_info():
@@ -12,7 +12,7 @@ The three if-statements below check if (1) the article starts with a number, (2)
 If all these conditions are met, this module will get the articles text using the article_text() module
 and then posts the corresponding text to Reddit using the reddit_bot() module"""
 	
-	soup = list_parser_helper_functions.soup_session(archive_link)
+	soup = helper_methods.soup_session(archive_link)
 
 	for article_to_open in soup.find_all('h3', attrs={'class': 'title'}):
 		
@@ -22,10 +22,10 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 			continue
 		
 		article_title_lowercase = article_to_open.text.lower()
-		if any(words in article_title_lowercase for words in list_parser_helper_functions.BREAK_WORDS):
+		if any(words in article_title_lowercase for words in helper_methods.BREAK_WORDS):
 			continue
 			
-		post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
+		post_made = helper_methods.post_made_check(article_title_lowercase, no_of_points[0], my_subreddit)
 		
 		if post_made:
 			continue
@@ -43,7 +43,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 					print(top_x_link)
 					print(article_to_open.text)
 					print(article_text_to_use)
-					list_parser_helper_functions.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website)
+					helper_methods.reddit_bot(article_to_open.text, article_text_to_use, top_x_link, my_subreddit, website)
 					
 					return True
 				
@@ -62,7 +62,7 @@ Also checks to make sure  the number of list elements in the article is equal to
 	this_when_counter = 0
 	top_x_final = ''
 
-	soup = list_parser_helper_functions.soup_session(link_to_check)
+	soup = helper_methods.soup_session(link_to_check)
 		
 	for article in soup.find_all('h2'):
 		try:
@@ -97,7 +97,7 @@ Also checks to make sure  the number of list elements in the article is equal to
 def compare_date(link):
 	""" Compares the date the article was written with today's date"""
 
-	soup = list_parser_helper_functions.soup_session(link)
+	soup = helper_methods.soup_session(link)
 	
 	todays_date = (date.today() - timedelta(0)).strftime("%B %#d, %Y")  # The # is platform specific
 	

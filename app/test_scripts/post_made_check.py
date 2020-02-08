@@ -2,7 +2,7 @@ from bs4 import BeautifulSoup
 import requests
 import praw
 
-from credentials import *
+from app.credentials import *
 
 
 def reddit_bot(headline, main_text, link):

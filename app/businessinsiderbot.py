@@ -1,14 +1,12 @@
 import time
 from datetime import datetime
-
-
-import list_parser_helper_functions
+import app.helper_scripts.list_parser_helper_methods as helper_methods
 
 
 def article_info():
     """Gets the link to the article that will be posted on the sub"""
 
-    soup = list_parser_helper_functions.soup_session(archive_link)
+    soup = helper_methods.soup_session(archive_link)
 
     for link in soup.find_all('h3'):
 
@@ -24,10 +22,10 @@ def article_info():
 
         article_title_lowercase = article_to_open.text.lower()
 
-        if any(words in article_title_lowercase for words in list_parser_helper_functions.BREAK_WORDS):
+        if any(words in article_title_lowercase for words in helper_methods.BREAK_WORDS):
             continue
 
-        post_made = list_parser_helper_functions.post_made_check(article_title_lowercase, no_of_elements[0], my_subreddit)
+        post_made = helper_methods.post_made_check(article_title_lowercase, no_of_elements[0], my_subreddit)
 
         if post_made:
             continue
@@ -38,11 +36,11 @@ def article_info():
         try:
             article_text_to_use = article_text(list_article_link, no_of_elements[0])
             if article_text_to_use == '':
-                article_text_to_use = list_parser_helper_functions.paragraph_article_text(list_article_link, no_of_elements[0])
+                article_text_to_use = helper_methods.paragraph_article_text(list_article_link, no_of_elements[0])
             if article_text_to_use != '':
                 print(list_article_link)
                 print(article_to_open.text)
-                list_parser_helper_functions.reddit_bot(article_to_open.text, article_text_to_use, list_article_link, my_subreddit, website_name)
+                helper_methods.reddit_bot(article_to_open.text, article_text_to_use, list_article_link, my_subreddit, website_name)
 
                 return True
 
@@ -60,7 +58,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
     list_counter = 1
     full_list = ''
 
-    soup = list_parser_helper_functions.soup_session(link_to_check)
+    soup = helper_methods.soup_session(link_to_check)
 
     for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 
@@ -72,7 +70,7 @@ Also checks to make sure  the number of sub-points in the article is equal to th
         list_counter += 1
 
     if full_list.startswith(str(list_counter-1)):
-        full_list = list_parser_helper_functions.chronological_list_maker(full_list, list_counter)
+        full_list = helper_methods.chronological_list_maker(full_list, list_counter)
 
     if total_elements != list_counter-1:
         return ''
@@ -86,10 +84,10 @@ if __name__ == "__main__":
     website_name = 'Business Insider'
     archive_link = 'http://www.businessinsider.com/latest'
 
-    while True:
+    while True:  # Temporary functionality to run every three hours. Will adjust docker setup to avoid this method
         start_time = round(time.time(), 2)
         print("Buzzfeed Bot is starting @ " + str(datetime.now()))
         article_info()
         print("Sweep finished @ " + str(datetime.now()))
-        time.sleep(60 * 60 * 3) # Wait for five minutes before running again
-    #print('Script ran for ' + str(round((time.time()-start_time), 2)) + ' seconds')
+        time.sleep(60 * 60 * 3)  # Wait for three hours before running again
+    # print('Script ran for ' + str(round((time.time()-start_time), 2)) + ' seconds')

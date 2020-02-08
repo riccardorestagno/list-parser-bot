@@ -1,10 +1,8 @@
 from bs4 import BeautifulSoup
 import requests
 import praw
-
 from os import environ
 
-#from credentials import *
 
 BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',
