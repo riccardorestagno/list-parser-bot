@@ -1,4 +1,6 @@
 import time
+from datetime import datetime
+
 
 import list_parser_helper_functions
 
@@ -76,15 +78,18 @@ Also checks to make sure  the number of sub-points in the article is equal to th
         return ''
 
     return full_list
-
+   
 
 if __name__ == "__main__":
+
     my_subreddit = 'buzzfeedbot'
     website_name = 'Business Insider'
     archive_link = 'http://www.businessinsider.com/latest'
 
-    start_time = round(time.time(), 2)
-
-    article_info()
-
-    print('Script ran for ' + str(round((time.time()-start_time), 2)) + ' seconds')
+    while True:
+        start_time = round(time.time(), 2)
+        print("Buzzfeed Bot is starting @ " + str(datetime.now()))
+        article_info()
+        print("Sweep finished @ " + str(datetime.now()))
+        time.sleep(60 * 60 * 3) # Wait for five minutes before running again
+    #print('Script ran for ' + str(round((time.time()-start_time), 2)) + ' seconds')
