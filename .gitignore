@@ -143,3 +143,4 @@ dmypy.json
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
+docker-compose.yml
