@@ -1,15 +1,15 @@
 from langdetect import detect, lang_detect_exception
 from datetime import date, timedelta
 import time
-
 import app.helper_scripts.list_parser_helper_methods as helper_methods
-from app.credentials import *
-
+from os import environ
+from dotenv import load_dotenv
+load_dotenv()
 
 def get_total_articles_searched_today(current_date):
     """Gets the number of articles the bot already searched today"""
 
-    filepath = FILEPATH
+    filepath = environ["BUZZFEEDBOT_FILEPATH"]
 
     with open(filepath, 'r') as file:
         if current_date != file.readline().strip():
@@ -25,7 +25,7 @@ def get_total_articles_searched_today(current_date):
 def set_total_articles_searched_today(current_date, article_completed_count=0):
     """Modifies the file to contain the current archive date and the number of articles already searched"""
 
-    filepath = FILEPATH
+    filepath = environ["BUZZFEEDBOT_FILEPATH"]
 
     with open(filepath, 'w') as file:
         file.write(current_date + '\n' + str(article_completed_count) + '\n')
@@ -45,7 +45,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
     current_iter = 0
 
     print(archive_link + article_date)
-    soup = hf.soup_session(archive_link + article_date)
+    soup = helper_methods.soup_session(archive_link + article_date)
 
     for block in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[start_iter:]:
 
@@ -66,7 +66,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
                 break
 
             article_title_lowercase = article.text.lower()
-            if any(words in article_title_lowercase for words in hf.BREAK_WORDS):
+            if any(words in article_title_lowercase for words in helper_methods.BREAK_WORDS):
                 break
             try:
                 post_made = helper_methods.post_made_check(article_title_lowercase, no_of_elements[0], my_subreddit)

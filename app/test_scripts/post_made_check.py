@@ -1,18 +1,19 @@
 from bs4 import BeautifulSoup
 import requests
 import praw
-
-from app.credentials import *
+from os import environ
+from dotenv import load_dotenv
+load_dotenv()
 
 
 def reddit_bot(headline, main_text, link):
     """Module that takes the title, main text and link to article and posts directly to reddit"""
 
-    reddit = praw.Reddit(client_id=CLIENT_ID,
-                         client_secret=CLIENT_SECRET,
-                         user_agent=USER_AGENT,
-                         username=USERNAME,
-                         password=PASSWORD)
+    reddit = praw.Reddit(client_id=environ["BUZZFEEDBOT_CLIENT_ID"],
+                         client_secret=environ["BUZZFEEDBOT_CLIENT_SECRET"],
+                         user_agent=environ["BUZZFEEDBOT_USER_AGENT"],
+                         username=environ["BUZZFEEDBOT_USERNAME"],
+                         password=environ["BUZZFEEDBOT_PASSWORD"])
 
     reddit.subreddit('buzzfeedbot').submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')
 
@@ -22,11 +23,11 @@ def post_made_check(post_title, subpoints):
 Returns True if post was submitted already and returns False otherwise"""
 
     post_made = False
-    reddit = praw.Reddit(client_id=CLIENT_ID,
-                         client_secret=CLIENT_SECRET,
-                         user_agent=USER_AGENT,
-                         username=USERNAME,
-                         password=PASSWORD)
+    reddit = praw.Reddit(client_id=environ["BUZZFEEDBOT_CLIENT_ID"],
+                         client_secret=environ["BUZZFEEDBOT_CLIENT_SECRET"],
+                         user_agent=environ["BUZZFEEDBOT_USER_AGENT"],
+                         username=environ["BUZZFEEDBOT_USERNAME"],
+                         password=environ["BUZZFEEDBOT_PASSWORD"])
 
     subreddit = reddit.subreddit('buzzfeedbot')
     submissions = subreddit.new(limit=40)
@@ -113,5 +114,5 @@ Also checks to make sure  the number of subpoints in the article is equal to the
 
 if __name__ == "__main__":
 
-    #Enter buzzfeed article link and number of points in article
+    # Enter buzzfeed article link and number of points in article
     article_info(link='', no_of_points=0)

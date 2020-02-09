@@ -1,6 +1,5 @@
 .git/
 .idea/
-app/credentials.py
 Subreddit Images/
 Naut-for-reddit-master/
 *.JPG
