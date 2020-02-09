@@ -2,7 +2,8 @@ from bs4 import BeautifulSoup
 import requests
 import praw
 from os import environ
-
+from dotenv import load_dotenv
+load_dotenv()
 
 BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',
@@ -10,11 +11,11 @@ BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
 
 
 def connect_to_reddit():
-    return praw.Reddit(client_id=environ["CLIENT_ID"],
-                       client_secret=environ["CLIENT_SECRET"],
-                       user_agent=environ["USER_AGENT"],
-                       username=environ["USERNAME"],
-                       password=environ["PASSWORD"])
+    return praw.Reddit(client_id=environ["BUZZFEEDBOT_CLIENT_ID"],
+                       client_secret=environ["BUZZFEEDBOT_CLIENT_SECRET"],
+                       user_agent=environ["BUZZFEEDBOT_USER_AGENT"],
+                       username=environ["BUZZFEEDBOT_USERNAME"],
+                       password=environ["BUZZFEEDBOT_PASSWORD"])
 
 
 def soup_session(link):

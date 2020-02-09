@@ -1,6 +1,5 @@
 from twilio.rest import Client
-import praw
-from os import environ
+import app.helper_scripts.list_parser_helper_methods as helper_methods
 
 
 def send_text(text_body):
@@ -17,18 +16,14 @@ def send_text(text_body):
 
 if __name__ == "__main__":
     keyword = False
-    reddit = praw.Reddit(client_id=environ["CLIENT_ID"],
-                         client_secret=environ["CLIENT_SECRET"],
-                         user_agent=environ["USER_AGENT"],
-                         username=environ["USERNAME"],
-                         password=environ["PASSWORD"])
+    reddit = helper_methods.connect_to_reddit()
 
     subreddit = reddit.subreddit('askreddit')
     submissions = subreddit.new(limit=100)
     for submission in submissions:
         if "subreddit" in submission.title.lower():
             keyword = True
-            send_text(submission.title +'\n'+ submission.url)
+            send_text(submission.title + '\n' + submission.url)
 
     if keyword:
         send_text('''Check out /r/buzzfeedbot - A subreddit that posts all 

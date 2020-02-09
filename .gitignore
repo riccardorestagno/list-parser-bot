@@ -4,7 +4,7 @@ app/credentials.py
 Subreddit Images/
 Naut-for-reddit-master/
 *.JPG
-Posts_Searched_Today.txt
+app/posts_searched_today.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
