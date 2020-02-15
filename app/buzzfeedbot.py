@@ -165,8 +165,8 @@ Also checks to make sure the number of list elements in the article is equal to 
                         full_list += str(list_counter) + '. ' + article.text + '\n'
             list_counter += 1
 
-    if total_points != list_counter-1:
-        full_list = ''
+    if total_points != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
+        return ''
 
     return full_list
 

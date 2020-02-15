@@ -98,3 +98,15 @@ def chronological_list_maker(full_list_text, list_count):
             full_list_text = start.join(full_list_text.rsplit(end, 1))
 
     return full_list_text
+
+
+def is_correctly_formatted_list(full_text, list_count):
+    list_prefix_numbers = []
+
+    for number in range(1, list_count):
+        list_prefix_numbers.append(str(number) + '.')
+
+    if all(element_prefix in full_text for element_prefix in list_prefix_numbers):
+        return True
+
+    return False

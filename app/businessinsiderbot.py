@@ -1,4 +1,5 @@
 import time
+import re
 from datetime import datetime
 import app.helper_scripts.list_parser_helper_methods as helper_methods
 
@@ -12,8 +13,9 @@ def article_info():
 
         article_to_open = link.find('a', href=True)
 
+        # Records number of points in the article
         try:
-            no_of_elements = [int(s) for s in article_to_open.text.split() if s.isdigit()]  # Records number of points in the article
+            no_of_elements = [int(s) for s in article_to_open.text.split() if s.isdigit()]
         except AttributeError:
             continue
 
@@ -62,18 +64,18 @@ Also checks to make sure  the number of sub-points in the article is equal to th
 
     for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
 
-        if article_point.text[0].isdigit() and (article_point.text[1] == '.' or article_point.text[2] == '.'):
+        if re.search("^[0-9]+[.]", article_point.text):
             full_list = article_point.text + '\n' + full_list
         else:
             full_list = str(list_counter) + '. ' + article_point.text + '\n' + full_list
 
         list_counter += 1
 
+    if total_elements != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
+        return ''
+
     if full_list.startswith(str(list_counter-1)):
         full_list = helper_methods.chronological_list_maker(full_list, list_counter)
-
-    if total_elements != list_counter-1:
-        return ''
 
     return full_list
    
