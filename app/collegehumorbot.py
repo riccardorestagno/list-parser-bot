@@ -1,7 +1,6 @@
-from datetime import date, timedelta
-import time
-
 import app.helper_scripts.list_parser_helper_methods as helper_methods
+import time
+from datetime import date, timedelta
 
 
 def article_info():

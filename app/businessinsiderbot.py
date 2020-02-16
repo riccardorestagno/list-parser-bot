@@ -1,7 +1,7 @@
-import time
-import re
-from datetime import datetime
 import app.helper_scripts.list_parser_helper_methods as helper_methods
+import re
+import time
+from datetime import datetime
 
 
 def article_info():
@@ -34,7 +34,8 @@ def article_info():
 
         list_article_link = article_to_open['href']
 
-        # Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+        # Avoids rare case of when there is an index error
+        # (occurs when article starts with number immediately followed by a symbol)
         try:
             article_text_to_use = article_text(list_article_link, no_of_elements[0])
             if article_text_to_use == '':

@@ -1,9 +1,10 @@
-from bs4 import BeautifulSoup
-import requests
 import praw
-from os import environ
+import requests
+from bs4 import BeautifulSoup
 from dotenv import load_dotenv
-load_dotenv()
+from os import environ
+
+load_dotenv()  # Loads environmental variables
 
 BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',

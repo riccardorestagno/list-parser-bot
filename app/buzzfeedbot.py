@@ -1,10 +1,10 @@
-from langdetect import detect, lang_detect_exception
-from datetime import date, timedelta
-import time
 import app.helper_scripts.list_parser_helper_methods as helper_methods
+import re
+import time
+from datetime import date, timedelta
+from langdetect import detect, lang_detect_exception
 from os import environ
-from dotenv import load_dotenv
-load_dotenv()
+
 
 def get_total_articles_searched_today(current_date):
     """Gets the number of articles the bot already searched today"""
@@ -108,11 +108,11 @@ Also checks to make sure the number of list elements in the article is equal to 
 
     soup = helper_methods.soup_session(link_to_check)
 
-    for articles in soup.find_all('h2'):
+    for article in soup.find_all('h2'):
 
         list_element_check = False
 
-        for list_element in articles.find_all('span', attrs={'class': 'subbuzz__number'}):
+        for list_element in article.find_all('span', attrs={'class': 'subbuzz__number'}):
             if list_element:
                 list_element_check = True
                 break
@@ -120,49 +120,49 @@ Also checks to make sure the number of list elements in the article is equal to 
         if not list_element_check:
             continue
 
-        for article in articles.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
-            if len(article.text) < 4 or article.text.endswith(':'):
+        for list_element in article.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
+            if len(list_element.text) < 4 or list_element.text.endswith(':') or this_when_counter == 3:
                 return ''
+
+            if list_element.text.startswith(('When ', 'This ', 'And this ')):
+                this_when_counter += 1
             else:
-                full_list_temp = full_list
-                if this_when_counter == 3:
-                    return ''
+                this_when_counter = 0
 
-                if article.text.startswith(('When ', 'This ', 'And this ')):
-                    this_when_counter += 1
-                else:
-                    this_when_counter = 0
-
-                # Tries to add a hyperlink to the article list element being searched, if it has any
-                try:
-                    for link in article.find_all('a', href=True):
-                        if 'amazon' in link['href']:
-                            link_to_use = link['href'].split('?', 1)[0]
-                        else:
-                            link_to_use = link['href']
-
-                        # removes redirect link if there is any
-                        if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
-                            link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
-
-                        link_to_use = link_to_use.replace(')', r'\)')
-
-                        if article.text.startswith((str(list_counter)+'.', str(list_counter)+')')):
-                            full_list += '[' + article.text + '](' + link_to_use + ')' + '\n'
-                        else:
-                            full_list += str(list_counter) + '. ' + '[' + article.text + '](' + link_to_use + ')' + '\n'
-                        break
-                except KeyError:
-                    pass
-
-                # If the list element doesn't have a link associated to it, post it as plain text
-                if full_list_temp == full_list:
-                    if article.text.startswith(str(list_counter)+')'):
-                        article.text.replace(str(list_counter)+')', str(list_counter)+'. ')
-                    if article.text.startswith(str(list_counter)+'.'):
-                        full_list += article.text + '\n'
+            # Tries to add a hyperlink to the article list element being searched, if it has any
+            try:
+                for link in list_element.find_all('a', href=True):
+                    if 'amazon' in link['href']:
+                        link_to_use = link['href'].split('?', 1)[0]
                     else:
-                        full_list += str(list_counter) + '. ' + article.text + '\n'
+                        link_to_use = link['href']
+
+                    # removes redirect link if there is any
+                    if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
+                        link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
+
+                    link_to_use = link_to_use.replace(')', r'\)')
+
+                    if re.search("^[0-9]+[.]", list_element.text):
+                        full_list += str(list_counter) + '. [' + list_element.text.split('.', 1)[1] + '](' + link_to_use + ')' + '\n'
+                    if re.search("^[0-9]+[)]", list_element.text):
+                        full_list += str(list_counter) + '. [' + list_element.text.split(')', 1)[1] + '](' + link_to_use + ')' + '\n'
+                    else:
+                        full_list += str(list_counter) + '. ' + '[' + list_element.text + '](' + link_to_use + ')' + '\n'
+                    break
+            except KeyError as e:
+                print("Key Error: " + e)
+                pass
+
+            # If the list element doesn't have a link associated to it, post it as plain text
+            if not list_element.find_all('a', href=True):
+                if list_element.text.startswith(str(list_counter)+')'):
+                    list_element.text.replace(str(list_counter)+')', str(list_counter)+'. ')
+                if list_element.text.startswith(str(list_counter)+'.'):
+                    full_list += list_element.text + '\n'
+                else:
+                    full_list += str(list_counter) + '. ' + list_element.text + '\n'
+
             list_counter += 1
 
     if total_points != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
