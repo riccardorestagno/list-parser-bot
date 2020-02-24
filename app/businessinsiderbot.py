@@ -48,15 +48,14 @@ def article_info():
                 return True
 
         except IndexError as e:
-            print(e)
-            print('there was an error')
+            print("Index Error: " + e)
 
     return False
 
 
 def article_text(link_to_check, total_elements):
     """Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure  the number of sub-points in the article is equal to the number the article title starts with"""
+Also ensures the number of list elements in the article is equal to the number the article title starts with"""
 
     list_counter = 1
     full_list = ''

@@ -28,12 +28,12 @@ def soup_session(link):
 
 
 def reddit_bot(headline, main_text, link, my_subreddit, website_name):
-    """Module that takes the title, main text and link to article and posts directly to reddit"""
+    """Module that takes the title, main text and link to article and posts directly to Reddit"""
 
     reddit = connect_to_reddit()
 
-    reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')').\
-        mod.flair(text=website_name)
+    reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')\
+                                  .mod.flair(text=website_name)
 
 
 def post_made_check(post_title, list_elements, my_subreddit):

@@ -15,7 +15,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 
 	for article_to_open in soup.find_all('h3', attrs={'class': 'title'}):
 		
-		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()] # Records number of points in the article
+		no_of_points = [int(s) for s in article_to_open.text.split() if s.isdigit()]
 		
 		if not no_of_points:
 			continue
@@ -33,8 +33,10 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 			
 		top_x_link = 'http://www.collegehumor.com' + link['href']
 		
-		if compare_date(top_x_link) == True:
-			try:  # Avoids rare case of when there is an index error (occurs when article starts with number immediately followed by a symbol)
+		if compare_date(top_x_link):
+			# Avoids rare case of when there is an index error
+			# (occurs when article starts with number immediately followed by a symbol)
+			try:
 				article_text_to_use = article_text(top_x_link, no_of_points[0])
 				if article_text_to_use == '':
 					pass
@@ -55,7 +57,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 
 def article_text(link_to_check, total_points):
 	"""Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure  the number of list elements in the article is equal to the number the article title starts with"""
+Also ensures the number of list elements in the article is equal to the number the article title starts with"""
 	
 	i = 1
 	this_when_counter = 0
@@ -69,10 +71,10 @@ Also checks to make sure  the number of list elements in the article is equal to
 				continue
 		except IndexError:
 			continue
+
 		if len(article.text) < 4 or article.text.endswith(':'):
 			return ''
 		else:
-			
 			if this_when_counter == 3:
 				return ''
 				
@@ -84,7 +86,8 @@ Also checks to make sure  the number of list elements in the article is equal to
 			if article.text.startswith((str(i)+'.', str(i)+')')):
 				top_x_final += article.text + '\n'
 			else:
-				top_x_final += str(i) + '. ' + article.text  + '\n'
+				top_x_final += str(i) + '. ' + article.text + '\n'
+
 		i += 1
 
 	if total_points != i-1:

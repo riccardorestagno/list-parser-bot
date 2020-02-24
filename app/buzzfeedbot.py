@@ -100,7 +100,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
 
 def article_text(link_to_check, total_points):
     """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
-Also checks to make sure the number of list elements in the article is equal to the number the article title starts with"""
+Also ensures the number of list elements in the article is equal to the number the article title starts with"""
 
     list_counter = 1
     this_when_counter = 0
