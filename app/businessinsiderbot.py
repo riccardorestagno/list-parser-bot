@@ -32,7 +32,7 @@ def article_info():
         if post_made:
             continue
 
-        list_article_link = article_to_open['href']
+        list_article_link = "http://www.businessinsider.com" + article_to_open['href']
 
         # Avoids rare case of when there is an index error
         # (occurs when article starts with number immediately followed by a symbol)
