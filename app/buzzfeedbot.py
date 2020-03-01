@@ -1,4 +1,4 @@
-import app.helper_scripts.list_parser_helper_methods as helper_methods
+import helper_scripts.list_parser_helper_methods as helper_methods
 import re
 import time
 from datetime import date, timedelta
