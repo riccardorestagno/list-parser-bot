@@ -9,7 +9,7 @@ def article_info():
 
     soup = helper_methods.soup_session(archive_link)
 
-    for link in soup.find_all('h3'):
+    for link in soup.find_all('h2'):
 
         article_to_open = link.find('a', href=True)
 
