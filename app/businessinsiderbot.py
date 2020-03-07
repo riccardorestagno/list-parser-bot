@@ -54,7 +54,7 @@ def article_text_parsed(link_to_check, total_elements):
     Also ensures proper list formatting before making a post."""
 
     list_counter = 1
-    full_list = ''
+    full_list = ""
     formatting_options = {
         "html_format_1": {
             "wrapper": ["div", "class", "slide-title clearfix"],
@@ -91,6 +91,8 @@ def article_text_parsed(link_to_check, total_elements):
 
         if full_list and total_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
             break
+        else:
+            full_list = ""
 
     if total_elements != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
         return ''
