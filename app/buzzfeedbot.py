@@ -33,14 +33,14 @@ def set_total_articles_searched_today(current_date, article_completed_count=0):
 
 def find_article_to_parse(article_date, start_iter):
     """Gets the link to the article that will be posted on the sub.
-The three if-statements below check if
-(1) The article starts with a number,
-(2) The post hasn't been made already,
-(3) The articles language is in english,
-(4) The articles main points actually have text and not images,
-(5) The article title doesn't contain any keywords listed below
-If all these conditions are met, this module will get the articles text using the article_text() module
-and then posts the corresponding text to Reddit using the reddit_bot() module"""
+    The validations below check if:
+        (1) The article starts with a number,
+        (2) The post hasn't been made already,
+        (3) The articles language is in english,
+        (4) The articles main points actually have text and not images,
+        (5) The article title doesn't contain any keywords listed below
+    If all these conditions are met, this module will get the articles text using the article_text() module
+    and then posts the corresponding text to Reddit using the reddit_bot() module"""
 
     current_iter = 0
 
@@ -81,7 +81,7 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
             # Avoids rare case of when there is an index error
             # (occurs when article starts with number immediately followed by a symbol)
             try:
-                article_text_to_use = article_text_parsed_in_header_format(list_article_link, no_of_elements[0])
+                article_text_to_use = article_text_parsed(list_article_link, no_of_elements[0])
                 if article_text_to_use == '':
                     article_text_to_use = helper_methods.paragraph_article_text(list_article_link, no_of_elements[0])
 
@@ -98,9 +98,9 @@ and then posts the corresponding text to Reddit using the reddit_bot() module"""
     set_total_articles_searched_today(article_date, start_iter + current_iter)
 
 
-def article_text_parsed_in_header_format(link_to_check, total_points):
+def article_text_parsed(link_to_check, total_points):
     """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
-Also ensures the number of list elements in the article is equal to the number the article title starts with"""
+    Also ensures proper list formatting before making a post."""
 
     list_counter = 1
     this_when_counter = 0
@@ -151,7 +151,7 @@ Also ensures the number of list elements in the article is equal to the number t
                         full_list += str(list_counter) + '. ' + '[' + list_element.text + '](' + link_to_use + ')' + '\n'
                     break
             except KeyError as e:
-                print("Key Error: " + e)
+                print("Key Error: " + str(e))
                 pass
 
             # If the list element doesn't have a link associated to it, post it as plain text
@@ -191,5 +191,4 @@ if __name__ == "__main__":
 
     print('Searching Yesterdays Archive')
     url_to_search()
-
     print('Script ran for ' + str(round((time.time() - start_time), 2)) + ' seconds')

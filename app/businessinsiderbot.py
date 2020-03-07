@@ -1,6 +1,5 @@
 import helper_scripts.list_parser_helper_methods as helper_methods
 import re
-import json
 import time
 from datetime import datetime
 
@@ -41,37 +40,33 @@ def find_article_to_parse():
         # Avoids rare case of when there is an index error
         # (occurs when article starts with number immediately followed by a symbol)
         try:
-            article_text_to_use = article_text_parsed_in_header_format(list_article_link, no_of_elements[0])
-            if article_text_to_use == '':
-                article_text_to_use = article_text_parsed_in_paragraph_format(list_article_link, no_of_elements[0])
+            article_text_to_use = article_text_parsed(list_article_link, no_of_elements[0])
             if article_text_to_use != '':
                 print(list_article_link)
                 print(article_to_open.text)
                 helper_methods.reddit_bot(article_to_open.text, article_text_to_use, list_article_link, my_subreddit, website_name)
-
-                return True
-
         except IndexError as e:
-            print("Index Error: " + e)
-
-    return False
+            print("Index Error: " + str(e))
 
 
-def article_text_parsed_in_header_format(link_to_check, total_elements):
-    """Header-formatted list: Concatenates the main points of the article into a single string and also makes sure the
-    string isn't empty. Also ensures the number of list elements in the article is equal to the number the article title
-    starts with"""
+def article_text_parsed(link_to_check, total_elements):
+    """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
+    Also ensures proper list formatting before making a post."""
 
     list_counter = 1
     full_list = ''
     formatting_options = {
-        "option1": {
+        "html_format_1": {
             "wrapper": ["div", "class", "slide-title clearfix"],
             "body": ["h2", "class", "slide-title-text"]
         },
-        "option2": {
+        "html_format_2": {
             "wrapper": ["div", "class", "slide-module"],
             "body": ["h3"]
+        },
+        "html_format_3": {
+            "wrapper": ["ol"],
+            "body": ["li"]
         }
     }
 
@@ -88,9 +83,9 @@ def article_text_parsed_in_header_format(link_to_check, total_elements):
                                                                 attrs=None if len(body) == 1 else {body[1]: body[2]}):
 
                 if re.search("^[0-9]+[.]", article_point.text):
-                    full_list = article_point.text + '\n' + full_list
+                    full_list += article_point.text + '\n'
                 else:
-                    full_list = str(list_counter) + '. ' + article_point.text + '\n' + full_list
+                    full_list += str(list_counter) + '. ' + article_point.text + '\n'
 
                 list_counter += 1
 
@@ -102,31 +97,6 @@ def article_text_parsed_in_header_format(link_to_check, total_elements):
 
     if full_list.startswith(str(list_counter-1)):
         full_list = helper_methods.chronological_list_maker(full_list, list_counter)
-
-    return full_list
-
-
-def article_text_parsed_in_paragraph_format(link_to_check, total_elements):
-    """Paragraph-formatted list: Concatenates the main points of the article into a single string and also makes sure the
-    string isn't empty. Also ensures the number of list elements in the article is equal to the number the article title
-    starts with"""
-
-    list_counter = 1
-    full_list = ''
-
-    soup = helper_methods.soup_session(link_to_check)
-
-    for article_points in soup.find_all('ol'):
-        for article_point in article_points.find_all('li'):
-            if re.search("^[0-9]+[.]", article_point.text):
-                full_list += article_point.text + '\n'
-            else:
-                full_list += str(list_counter) + '. ' + article_point.text + '\n'
-
-            list_counter += 1
-
-    if total_elements != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
-        return ''
 
     return full_list
 
