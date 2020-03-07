@@ -1,10 +1,11 @@
 import helper_scripts.list_parser_helper_methods as helper_methods
 import re
+import json
 import time
 from datetime import datetime
 
 
-def article_info():
+def find_article_to_parse():
     """Gets the link to the article that will be posted on the sub"""
 
     soup = helper_methods.soup_session(archive_link)
@@ -40,9 +41,9 @@ def article_info():
         # Avoids rare case of when there is an index error
         # (occurs when article starts with number immediately followed by a symbol)
         try:
-            article_text_to_use = article_text(list_article_link, no_of_elements[0])
+            article_text_to_use = article_text_parsed_in_header_format(list_article_link, no_of_elements[0])
             if article_text_to_use == '':
-                article_text_to_use = helper_methods.paragraph_article_text(list_article_link, no_of_elements[0])
+                article_text_to_use = article_text_parsed_in_paragraph_format(list_article_link, no_of_elements[0])
             if article_text_to_use != '':
                 print(list_article_link)
                 print(article_to_open.text)
@@ -56,23 +57,45 @@ def article_info():
     return False
 
 
-def article_text(link_to_check, total_elements):
-    """Concatenates the main points of the article into a single string and also makes sure the string isn't empty.
-Also ensures the number of list elements in the article is equal to the number the article title starts with"""
+def article_text_parsed_in_header_format(link_to_check, total_elements):
+    """Header-formatted list: Concatenates the main points of the article into a single string and also makes sure the
+    string isn't empty. Also ensures the number of list elements in the article is equal to the number the article title
+    starts with"""
 
     list_counter = 1
     full_list = ''
+    formatting_options = {
+        "option1": {
+            "wrapper": ["div", "class", "slide-title clearfix"],
+            "body": ["h2", "class", "slide-title-text"]
+        },
+        "option2": {
+            "wrapper": ["div", "class", "slide-module"],
+            "body": ["h3"]
+        }
+    }
 
     soup = helper_methods.soup_session(link_to_check)
 
-    for article_point in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
+    for option in formatting_options.values():
 
-        if re.search("^[0-9]+[.]", article_point.text):
-            full_list = article_point.text + '\n' + full_list
-        else:
-            full_list = str(list_counter) + '. ' + article_point.text + '\n' + full_list
+        wrapper = option["wrapper"]
+        body = option["body"]
 
-        list_counter += 1
+        for article_point_wrapper in soup.find_all(wrapper[0],
+                                                   attrs=None if len(wrapper) == 1 else {wrapper[1]: wrapper[2]}):
+            for article_point in article_point_wrapper.find_all(body[0],
+                                                                attrs=None if len(body) == 1 else {body[1]: body[2]}):
+
+                if re.search("^[0-9]+[.]", article_point.text):
+                    full_list = article_point.text + '\n' + full_list
+                else:
+                    full_list = str(list_counter) + '. ' + article_point.text + '\n' + full_list
+
+                list_counter += 1
+
+        if full_list and total_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
+            break
 
     if total_elements != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
         return ''
@@ -81,7 +104,32 @@ Also ensures the number of list elements in the article is equal to the number t
         full_list = helper_methods.chronological_list_maker(full_list, list_counter)
 
     return full_list
-   
+
+
+def article_text_parsed_in_paragraph_format(link_to_check, total_elements):
+    """Paragraph-formatted list: Concatenates the main points of the article into a single string and also makes sure the
+    string isn't empty. Also ensures the number of list elements in the article is equal to the number the article title
+    starts with"""
+
+    list_counter = 1
+    full_list = ''
+
+    soup = helper_methods.soup_session(link_to_check)
+
+    for article_points in soup.find_all('ol'):
+        for article_point in article_points.find_all('li'):
+            if re.search("^[0-9]+[.]", article_point.text):
+                full_list += article_point.text + '\n'
+            else:
+                full_list += str(list_counter) + '. ' + article_point.text + '\n'
+
+            list_counter += 1
+
+    if total_elements != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
+        return ''
+
+    return full_list
+
 
 if __name__ == "__main__":
 
@@ -92,7 +140,7 @@ if __name__ == "__main__":
     while True:  # Temporary functionality to run every three hours. Will adjust docker setup to avoid this method
         start_time = round(time.time(), 2)
         print("Buzzfeed Bot is starting @ " + str(datetime.now()))
-        article_info()
+        find_article_to_parse()
         print("Sweep finished @ " + str(datetime.now()))
         time.sleep(60 * 60 * 3)  # Wait for three hours before running again
     # print('Script ran for ' + str(round((time.time()-start_time), 2)) + ' seconds')
