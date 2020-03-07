@@ -77,11 +77,8 @@ def article_text_parsed(link_to_check, total_elements):
         wrapper = option["wrapper"]
         body = option["body"]
 
-        for article_point_wrapper in soup.find_all(wrapper[0],
-                                                   attrs=None if len(wrapper) == 1 else {wrapper[1]: wrapper[2]}):
-            for article_point in article_point_wrapper.find_all(body[0],
-                                                                attrs=None if len(body) == 1 else {body[1]: body[2]}):
-
+        for article_point_wrapper in soup.find_all(wrapper[0], attrs=None if len(wrapper) == 1 else {wrapper[1]: wrapper[2]}):
+            for article_point in article_point_wrapper.find_all(body[0], attrs=None if len(body) == 1 else {body[1]: body[2]}):
                 if re.search("^[0-9]+[.]", article_point.text):
                     full_list += article_point.text + '\n'
                 else:
