@@ -89,13 +89,10 @@ def article_text_parsed(link_to_check, total_elements):
 
                 list_counter += 1
 
-        if full_list and total_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
+        if total_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
             break
         else:
             full_list = ""
-
-    if total_elements != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
-        return ''
 
     if full_list.startswith(str(list_counter-1)):
         full_list = helper_methods.chronological_list_maker(full_list, list_counter)

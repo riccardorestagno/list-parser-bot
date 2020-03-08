@@ -1,5 +1,4 @@
-praw
-langdetect
 bs4
+langdetect
+praw
 requests
-python-dotenv
