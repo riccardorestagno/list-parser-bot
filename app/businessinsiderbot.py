@@ -56,14 +56,17 @@ def article_text_parsed(link_to_check, total_elements):
     list_counter = 1
     full_list = ""
     formatting_options = {
+        # Header formatting
         "html_format_1": {
             "wrapper": ["div", "class", "slide-title clearfix"],
             "body": ["h2", "class", "slide-title-text"]
         },
+        # Slide formatting
         "html_format_2": {
             "wrapper": ["div", "class", "slide-module"],
             "body": ["h3"]
         },
+        # Paragraph formatting
         "html_format_3": {
             "wrapper": ["ol"],
             "body": ["li"]

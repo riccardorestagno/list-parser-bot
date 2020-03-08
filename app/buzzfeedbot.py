@@ -31,6 +31,28 @@ def set_total_articles_searched_today(current_date, article_completed_count=0):
         file.write(current_date + '\n' + str(article_completed_count) + '\n')
 
 
+def paragraph_article_text(link_to_check, total_points):
+    """Parses BuzzFeed list articles that are in paragraph form (have the 'p' HTML tag)"""
+
+    list_counter = 1
+    full_list = ""
+
+    soup = helper_methods.soup_session(link_to_check)
+
+    for list_element in soup.find_all('p'):
+        try:
+            if list_element.text[0].isdigit():
+                full_list += list_element.text.replace(')', '. ', 1) + '\n'
+                list_counter += 1
+        except IndexError:
+            continue
+
+    if total_points != list_counter-1:
+        full_list = ""
+
+    return full_list
+
+
 def find_article_to_parse(article_date, start_iter):
     """Gets the link to the article that will be posted on the sub.
     The validations below check if:
@@ -83,7 +105,7 @@ def find_article_to_parse(article_date, start_iter):
             try:
                 article_text_to_use = article_text_parsed(list_article_link, no_of_elements[0])
                 if article_text_to_use == '':
-                    article_text_to_use = helper_methods.paragraph_article_text(list_article_link, no_of_elements[0])
+                    article_text_to_use = paragraph_article_text(list_article_link, no_of_elements[0])
 
                 if article_text_to_use != '':
                     helper_methods.reddit_bot(article.text, article_text_to_use, list_article_link, my_subreddit, website_name)

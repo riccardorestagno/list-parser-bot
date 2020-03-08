@@ -59,29 +59,7 @@ Returns True if post was submitted already and returns False otherwise"""
     return post_made
 
 
-def paragraph_article_text(link_to_check, total_points):
-    """Parses list articles that are in paragraph form (have the 'p' HTML tag)"""
-
-    list_counter = 1
-    full_list = ''
-
-    soup = soup_session(link_to_check)
-
-    for list_element in soup.find_all('p'):
-        try:
-            if list_element.text[0].isdigit():
-                full_list += list_element.text.replace(')', '. ', 1) + '\n'
-                list_counter += 1
-        except IndexError:
-            continue
-
-    if total_points != list_counter-1:
-        full_list = ''
-    return full_list
-
-
 def chronological_list_maker(full_list_text, list_count):
-
     count_list = []
 
     for x, y in zip(range(1, list_count), reversed(range(1, list_count))):
