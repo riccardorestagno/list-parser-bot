@@ -92,6 +92,7 @@ def article_text_parsed(link_to_check, total_elements):
         if total_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
             break
         else:
+            list_counter = 1
             full_list = ""
 
     if full_list.startswith(str(list_counter-1)):
