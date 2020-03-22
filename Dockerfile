@@ -10,4 +10,4 @@ COPY app .
 # Using pip:
 RUN python3 -m pip install -r requirements.txt
 # Start bot
-CMD ["python3", "-u", "./businessinsiderbot.py"]
+CMD ["python3", "-u", "./parse_article_archives.py"]

@@ -1,55 +1,64 @@
-import helper_scripts.list_parser_helper_methods as helper_methods
+import app.helper_scripts.list_parser_helper_methods as helper_methods
 import re
 import time
-from datetime import datetime
 
 
-def find_article_to_parse():
+def find_article_to_parse(subreddit_name):
     """Gets the link to the article that will be posted on the sub"""
 
+    website_name = 'Business Insider'
+    archive_link = 'http://www.businessinsider.com/latest'
+
+    print("Searching Business Insider's archive")
     soup = helper_methods.soup_session(archive_link)
 
     for link in soup.find_all('h2'):
 
-        article_to_open = link.find('a', href=True)
+        article = link.find('a', href=True)
+        print("Parsing article: " + article['href'])
+        time.sleep(1)
 
         # Records number of points in the article
         try:
-            no_of_elements = [int(s) for s in article_to_open.text.split() if s.isdigit()]
+            no_of_elements = [int(s) for s in article.text.split() if s.isdigit()]
         except AttributeError:
             continue
 
         if not no_of_elements:
             continue
 
-        article_title_lowercase = article_to_open.text.lower()
+        article_title_lowercase = article.text.lower()
 
         if any(words in article_title_lowercase for words in helper_methods.BREAK_WORDS):
             continue
 
-        post_made = helper_methods.post_made_check(article_title_lowercase, no_of_elements[0], my_subreddit)
+        post_made = helper_methods.post_made_check(article_title_lowercase, no_of_elements[0], subreddit_name)
 
         if post_made:
             continue
 
-        if article_to_open['href'].startswith("http"):
-            list_article_link = article_to_open['href']
+        if article['href'].startswith("http"):
+            list_article_link = article['href']
         else:
-            list_article_link = "http://www.businessinsider.com" + article_to_open['href']
+            list_article_link = "http://www.businessinsider.com" + article['href']
 
         # Avoids rare case of when there is an index error
-        # (occurs when article starts with number immediately followed by a symbol)
+        # Occurs when article starts with number immediately followed by a symbol.
         try:
-            article_text_to_use = article_text_parsed(list_article_link, no_of_elements[0])
-            if article_text_to_use != '':
-                print(list_article_link)
-                print(article_to_open.text)
-                helper_methods.reddit_bot(article_to_open.text, article_text_to_use, list_article_link, my_subreddit, website_name)
+            article_list = get_article_list(list_article_link, no_of_elements[0])
+            if article_list:
+                print("BuzzFeed list article found: " + article.text)
+                helper_methods.post_to_reddit(article.text, article_list, list_article_link, subreddit_name, website_name)
+                return True
+
         except IndexError as e:
             print("Index Error: " + str(e))
 
+    print("No Business Insider list articles were found to parse at this time.")
+    return False
 
-def article_text_parsed(link_to_check, total_elements):
+
+def get_article_list(link_to_check, total_elements):
     """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
     Also ensures proper list formatting before making a post."""
 
@@ -102,15 +111,6 @@ def article_text_parsed(link_to_check, total_elements):
 
 
 if __name__ == "__main__":
-
-    my_subreddit = 'buzzfeedbot'
-    website_name = 'Business Insider'
-    archive_link = 'http://www.businessinsider.com/latest'
-
-    while True:  # Temporary functionality to run every three hours. Will adjust docker setup to avoid this method
-        start_time = round(time.time(), 2)
-        print("Buzzfeed Bot is starting @ " + str(datetime.now()))
-        find_article_to_parse()
-        print("Sweep finished @ " + str(datetime.now()))
-        time.sleep(60 * 60 * 3)  # Wait for three hours before running again
-    # print('Script ran for ' + str(round((time.time()-start_time), 2)) + ' seconds')
+    start_time = round(time.time(), 2)
+    find_article_to_parse("buzzfeedbot")
+    print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds")

@@ -3,7 +3,7 @@
 Subreddit Images/
 Naut-for-reddit-master/
 *.JPG
-app/posts_searched_today.txt
+buzzfeed_articles_searched.txt
 
 # Byte-compiled / optimized / DLL files
 __pycache__/

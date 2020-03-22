@@ -25,7 +25,7 @@ def soup_session(link):
     return soup
 
 
-def reddit_bot(headline, main_text, link, my_subreddit, website_name):
+def post_to_reddit(headline, main_text, link, my_subreddit, website_name):
     """Module that takes the title, main text and link to article and posts directly to Reddit"""
 
     reddit = connect_to_reddit()
