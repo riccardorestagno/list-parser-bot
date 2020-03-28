@@ -1,9 +1,9 @@
-import app.helper_scripts.list_parser_helper_methods as helper_methods
+import app.helper_methods.list_parser_helper_methods as helper_methods
 import time
 from datetime import date, timedelta
 
 
-def find_article_to_parse(subreddit_name):
+def find_article_to_parse(subreddit_name, website_name):
 	"""Gets the link to the article that will be posted on the subreddit.
 	The validations below check if:
 		(1) The article contains a number
@@ -13,7 +13,6 @@ def find_article_to_parse(subreddit_name):
 	If all these conditions are met, this module will get the articles text using the get_article_list() module
 	and then posts the corresponding text to Reddit using the post_to_reddit() module."""
 
-	website = 'CollegeHumor'
 	archive_link = 'http://www.collegehumor.com/articles'
 
 	print("Searching CollegeHumors's archive")
@@ -46,7 +45,7 @@ def find_article_to_parse(subreddit_name):
 				article_text_to_use = get_article_list(list_article_link, no_of_points[0])
 				if article_text_to_use:
 					print("CollegeHumor list article found: " + article.text)
-					helper_methods.post_to_reddit(article.text, article_text_to_use, list_article_link, subreddit_name, website)
+					helper_methods.post_to_reddit(article.text, article_text_to_use, list_article_link, subreddit_name, website_name)
 					return True
 				
 			except IndexError as e:
@@ -114,5 +113,5 @@ def compare_date(link):
 
 if __name__ == "__main__":
 	start_time = round(time.time(), 2)
-	find_article_to_parse("buzzfeedbot")
+	find_article_to_parse("buzzfeedbot", "CollegeHumor")
 	print("CollegeHumor script ran for " + str(round((time.time() - start_time), 2)) + " seconds")

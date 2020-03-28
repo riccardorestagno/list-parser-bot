@@ -3,16 +3,17 @@ from article_archive_parsers.businessinsider import find_article_to_parse as par
 from article_archive_parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from article_archive_parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
 from datetime import datetime
-from helper_scripts.list_parser_helper_methods import connect_to_reddit
+from helper_methods.enums import *
+from helper_methods.list_parser_helper_methods import connect_to_reddit
 
 
 def call_article_archive_parser(parser, subreddit):
-    if parser == "Business Insider":
-        return parse_businessinsider_archive(subreddit)
-    elif parser == "BuzzFeed":
-        return parse_buzzfeed_archive(subreddit)
-    elif parser == "CollegeHumor":
-        return parse_collegehumor_archive(subreddit)
+    if parser == ArticleType.Business_Insider:
+        return parse_businessinsider_archive(subreddit, convert_enum_to_string(ArticleType.Business_Insider))
+    elif parser == ArticleType.BuzzFeed:
+        return parse_buzzfeed_archive(subreddit, convert_enum_to_string(ArticleType.BuzzFeed))
+    elif parser == ArticleType.CollegeHumor:
+        return parse_collegehumor_archive(subreddit, convert_enum_to_string(ArticleType.CollegeHumor))
 
 
 def order_parsers(subreddit_name, parsers, posts_to_search):
@@ -22,8 +23,8 @@ def order_parsers(subreddit_name, parsers, posts_to_search):
     subreddit = reddit.subreddit(subreddit_name)
     submissions = subreddit.new(limit=posts_to_search)
     for submission in reversed(list(submissions)):
-        if submission.link_flair_text and submission.link_flair_text in parsers:
-            parsers.append(parsers.pop(parsers.index(submission.link_flair_text)))
+        if submission.link_flair_text and string_in_enum_list(parsers, submission.link_flair_text):
+            parsers.append(parsers.pop(parsers.index(convert_string_to_articletype_enum(submission.link_flair_text))))
 
     return parsers
 
@@ -34,10 +35,10 @@ def parser_controller():
 
     supported_parsers = []
     supported_parsers_mapping = {
-        "Business Insider": True,
-        "BuzzFeed": False,
-        "CollegeHumor": False,
-        "Polygon": False
+        ArticleType.Business_Insider: True,
+        ArticleType.BuzzFeed: False,
+        ArticleType.CollegeHumor: False,
+        ArticleType.Polygon: False
     }
 
     for parser in supported_parsers_mapping.items():

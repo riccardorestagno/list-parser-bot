@@ -1,12 +1,12 @@
-import app.helper_scripts.list_parser_helper_methods as helper_methods
+import app.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
+from app.helper_methods.enums import *
 
 
-def find_article_to_parse(subreddit_name):
+def find_article_to_parse(subreddit_name, website_name):
     """Gets the link to the article that will be posted on the sub"""
 
-    website_name = 'Business Insider'
     archive_link = 'http://www.businessinsider.com/latest'
 
     print("Searching Business Insider's archive")
@@ -112,5 +112,5 @@ def get_article_list(link_to_check, total_elements):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse("buzzfeedbot")
+    find_article_to_parse("buzzfeedbot", "Business Insider")
     print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds")

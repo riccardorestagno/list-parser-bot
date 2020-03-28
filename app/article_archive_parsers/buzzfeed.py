@@ -1,4 +1,4 @@
-import app.helper_scripts.list_parser_helper_methods as helper_methods
+import app.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
 from datetime import date, timedelta
@@ -54,7 +54,7 @@ def paragraph_article_text(link_to_check, total_points):
     return full_list
 
 
-def find_article_to_parse(subreddit_name):
+def find_article_to_parse(subreddit_name, website_name):
     """Gets the link to the article that will be posted on the sub.
     The validations below check if:
         (1) The article contains a number
@@ -65,7 +65,6 @@ def find_article_to_parse(subreddit_name):
     If all these conditions are met, this module will get the articles list elements using the get_article_list()
     module and then posts the corresponding text to Reddit using the post_to_reddit() module."""
 
-    website_name = 'BuzzFeed'
     archive_link = 'https://www.buzzfeed.com/archive/'
 
     current_iter = 0
@@ -205,5 +204,5 @@ def get_article_list(link_to_check, total_points):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse("buzzfeedbot")
+    find_article_to_parse("buzzfeedbot", "BuzzFeed")
     print("Buzzfeed script ran for " + str(round((time.time()-start_time), 2)) + " seconds")

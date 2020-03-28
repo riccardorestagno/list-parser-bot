@@ -1,5 +1,5 @@
 from twilio.rest import Client
-import app.helper_scripts.list_parser_helper_methods as helper_methods
+import app.helper_methods.list_parser_helper_methods as helper_methods
 
 
 def send_text(text_body):
