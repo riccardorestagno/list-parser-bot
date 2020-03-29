@@ -8,16 +8,18 @@ from helper_methods.list_parser_helper_methods import connect_to_reddit
 
 
 def call_article_archive_parser(parser, subreddit):
+    """Call the parser function associated to the enum value passed."""
+
     if parser == ArticleType.Business_Insider:
-        return parse_businessinsider_archive(subreddit, convert_enum_to_string(ArticleType.Business_Insider))
+        return parse_businessinsider_archive(subreddit, ArticleType.Business_Insider)
     elif parser == ArticleType.BuzzFeed:
-        return parse_buzzfeed_archive(subreddit, convert_enum_to_string(ArticleType.BuzzFeed))
+        return parse_buzzfeed_archive(subreddit, ArticleType.BuzzFeed)
     elif parser == ArticleType.CollegeHumor:
-        return parse_collegehumor_archive(subreddit, convert_enum_to_string(ArticleType.CollegeHumor))
+        return parse_collegehumor_archive(subreddit, ArticleType.CollegeHumor)
 
 
 def order_parsers(subreddit_name, parsers, posts_to_search):
-    """Order parsers based on latest posts made to subreddit, if possible."""
+    """Order parsers based on the flair of the latest posts made to the subreddit, if possible."""
 
     reddit = connect_to_reddit()
     subreddit = reddit.subreddit(subreddit_name)
@@ -30,13 +32,14 @@ def order_parsers(subreddit_name, parsers, posts_to_search):
 
 
 def parser_controller():
+    """Controller which determines which parser function should be called for the current iteration of the scripts' execution."""
 
-    subreddit_name = "buzzfeedbot"
+    subreddit = "buzzfeedbot"
 
     supported_parsers = []
     supported_parsers_mapping = {
         ArticleType.Business_Insider: True,
-        ArticleType.BuzzFeed: False,
+        ArticleType.BuzzFeed: True,
         ArticleType.CollegeHumor: False,
         ArticleType.Polygon: False
     }
@@ -47,11 +50,11 @@ def parser_controller():
 
     # If more than one parser is supported, order parsers based on parsers used for latest posts on the subreddit.
     if len(supported_parsers) > 1:
-        supported_parsers = order_parsers(subreddit_name, supported_parsers, len(supported_parsers)-1)
+        supported_parsers = order_parsers(subreddit, supported_parsers, len(supported_parsers)-1)
 
     # Iterate through all supported parsers. If a post was made, break the loop.
     for parser in supported_parsers:
-        if call_article_archive_parser(parser, subreddit_name):
+        if call_article_archive_parser(parser, subreddit):
             break
 
 

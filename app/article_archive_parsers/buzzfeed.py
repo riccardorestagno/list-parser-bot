@@ -2,7 +2,6 @@ import app.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
 from datetime import date, timedelta
-from langdetect import detect, lang_detect_exception
 from os import environ
 
 
@@ -17,14 +16,14 @@ def get_articles_searched_count():
             set_total_articles_searched_today(yesterdays_date, 0)
             return 0
         for i, line in enumerate(file):
-            if i == 0:  # Second line since first line was read above
+            if i == 0:  # Second line since first line was read above.
                 return int(line)
 
     return 0
 
 
 def set_total_articles_searched_today(current_date, article_completed_count=0):
-    """Modifies the file to contain the current archive date and the number of articles already searched"""
+    """Modifies the file to contain the current archive date and the number of articles already searched."""
 
     filepath = environ["BUZZFEEDBOT_ARTICLES_SEARCHED_FILE"]
 
@@ -54,74 +53,41 @@ def paragraph_article_text(link_to_check, total_points):
     return full_list
 
 
-def find_article_to_parse(subreddit_name, website_name):
-    """Gets the link to the article that will be posted on the sub.
-    The validations below check if:
-        (1) The article contains a number
-        (2) The post hasn't been made already
-        (3) The articles language is in english
-        (4) The articles main points actually have text and not images
-        (5) The article title doesn't contain any keywords listed below
-    If all these conditions are met, this module will get the articles list elements using the get_article_list()
-    module and then posts the corresponding text to Reddit using the post_to_reddit() module."""
-
-    archive_link = 'https://www.buzzfeed.com/archive/'
+def find_article_to_parse(subreddit, website):
+    """Finds a list article in BuzzFeed's article archive of yesterday's and posts the list article to Reddit."""
 
     current_iter = 0
     articles_searched_count = get_articles_searched_count()
     yesterdays_date = (date.today() - timedelta(1)).strftime("%Y/%m/%d")
 
+    archive_link = 'https://www.buzzfeed.com/archive/'
+
     print("Searching Buzzfeed's archive on " + yesterdays_date)
     soup = helper_methods.soup_session(archive_link + yesterdays_date)
 
-    for block in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[articles_searched_count:]:
+    for link in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[articles_searched_count:]:
 
-        for article in list(block.find_all('a', href=True)):
-            current_iter += 1
-            print("Parsing article: " + article['href'])
-            time.sleep(1)
+        current_iter += 1
 
-            try:
-                if not detect(article.text) == 'en':
-                    break
-            except lang_detect_exception.LangDetectException:
-                break
+        article_title = link.find('a', href=True)
+        print("Parsing article: " + article_title['href'])
+        time.sleep(1)
 
-            # Records number of points in the article.
-            no_of_elements = [int(s) for s in article.text.split() if s.isdigit()]
-            if not no_of_elements:
-                break
+        if not helper_methods.article_meets_posting_requirements(subreddit, website, article_title.text):
+            continue
 
-            article_title_lowercase = article.text.lower()
-            if any(words in article_title_lowercase for words in helper_methods.BREAK_WORDS):
-                break
-            try:
-                post_made = helper_methods.post_made_check(article_title_lowercase, no_of_elements[0], subreddit_name)
-            except IndexError:
-                post_made = helper_methods.post_made_check(article_title_lowercase, 0, subreddit_name)
+        list_article_link = article_title['href']
+        no_of_elements = helper_methods.get_article_list_count(article_title.text)
 
-            if post_made:
-                break
+        article_list_text = get_article_list_text(list_article_link, no_of_elements)
+        if not article_list_text:
+            article_list_text = paragraph_article_text(list_article_link, no_of_elements)
 
-            list_article_link = article['href']
-
-            # Avoids rare case of when there is an index error.
-            # Occurs when article starts with number immediately followed by a symbol.
-            try:
-                article_list = get_article_list(list_article_link, no_of_elements[0])
-                if not article_list:
-                    article_list = paragraph_article_text(list_article_link, no_of_elements[0])
-
-                if article_list:
-                    print("BuzzFeed list article found: " + article.text)
-                    helper_methods.post_to_reddit(article.text, article_list, list_article_link, subreddit_name, website_name)
-                    articles_searched_count += current_iter
-                    set_total_articles_searched_today(yesterdays_date, articles_searched_count)
-                    return True
-
-            except IndexError:
-                pass
-            break  # Only finds first link
+        if article_list_text:
+            print("BuzzFeed list article found: " + article_title.text)
+            helper_methods.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
+            set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
+            return True
 
     set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
 
@@ -129,7 +95,7 @@ def find_article_to_parse(subreddit_name, website_name):
     return False
 
 
-def get_article_list(link_to_check, total_points):
+def get_article_list_text(link_to_check, total_points):
     """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
     Also ensures proper list formatting before making a post."""
 

@@ -1,15 +1,21 @@
 import praw
 import requests
 from bs4 import BeautifulSoup
+from helper_methods.enums import ArticleType, convert_enum_to_string
+from langdetect import detect, lang_detect_exception
 from os import environ
 
 
+# If the list article title contains any of the words below, the list will not be posted to Reddit.
+# This avoids posting content which contain lists of images and ads.
 BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',
                'instagram', 'tumblr', 'gifts', 'products']
 
 
 def connect_to_reddit():
+    """Connects the bot to the Reddit client."""
+
     return praw.Reddit(client_id=environ["BUZZFEEDBOT_CLIENT_ID"],
                        client_secret=environ["BUZZFEEDBOT_CLIENT_SECRET"],
                        user_agent=environ["BUZZFEEDBOT_USER_AGENT"],
@@ -18,34 +24,35 @@ def connect_to_reddit():
 
 
 def soup_session(link):
-    """BeautifulSoup session"""
+    """BeautifulSoup session."""
     session = requests.Session()
     daily_archive = session.get(link)
     soup = BeautifulSoup(daily_archive.content, 'html.parser')
     return soup
 
 
-def post_to_reddit(headline, main_text, link, my_subreddit, website_name):
-    """Module that takes the title, main text and link to article and posts directly to Reddit"""
+def post_to_reddit(headline, main_text, link, subreddit, website):
+    """Module that takes the title, main text and link to article and posts directly to Reddit."""
 
     reddit = connect_to_reddit()
 
-    reddit.subreddit(my_subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')\
-                                  .mod.flair(text=website_name)
+    reddit.subreddit(subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')\
+                               .mod.flair(text=convert_enum_to_string(website))
 
 
-def post_made_check(post_title, list_elements, my_subreddit):
-    """Checks if the post has already been submitted.
-Returns True if post was submitted already and returns False otherwise"""
+def post_previously_made(post_title, list_elements, subreddit):
+    """
+    Checks if the post has already been submitted.
+    This is done by comparing a post with the same list count has 4 or more of the same words in the title.
+    Returns True if post was already submitted. Returns False otherwise.
+    """
 
-    post_made = False
     reddit = connect_to_reddit()
-    subreddit = reddit.subreddit(my_subreddit)
-    submissions = subreddit.new(limit=40)
+    subreddit = reddit.subreddit(subreddit)
+    submissions = subreddit.new(limit=20)
     for submission in submissions:
         if submission.title.lower() == post_title:
-            post_made = True
-            break
+            return True
         try:
             list_elements_to_check = [int(s) for s in submission.title.split() if s.isdigit()][0]
         except IndexError:
@@ -54,12 +61,59 @@ Returns True if post was submitted already and returns False otherwise"""
             same_words = set.intersection(set(post_title.split()), set(submission.title.lower().split()))
             number_of_words = len(same_words)
             if number_of_words >= 4:
-                post_made = True
-                break
-    return post_made
+                return True
+
+    return False
 
 
-def chronological_list_maker(full_list_text, list_count):
+def get_article_list_count(article_title):
+    """Gets number of points in the list article."""
+
+    try:
+        no_of_elements = [int(s) for s in article_title.split() if s.isdigit()][0]
+    except (AttributeError, IndexError):
+        return 0
+
+    return no_of_elements
+
+
+def article_meets_posting_requirements(subreddit, website, article_title):
+    """
+    Validates that the article meets all requirements to post the list to Reddit.
+
+    The validations below check if:
+        (1) The article contains a number
+        (2) The post hasn't been made already
+        (3) The article title doesn't contain certain pre-defined keywords
+        (4) The article title is in english (BuzzFeed only)
+
+    Returns True if all validations are met. Returns False otherwise.
+    """
+
+    if website == ArticleType.BuzzFeed:
+        try:
+            if not detect(article_title) == 'en':
+                return False
+        except lang_detect_exception.LangDetectException:
+            return False
+
+    no_of_elements = get_article_list_count(article_title)
+    if no_of_elements == 0:
+        return False
+
+    article_title_lowercase = article_title.lower()
+    if any(words in article_title_lowercase for words in BREAK_WORDS):
+        return False
+
+    if post_previously_made(article_title_lowercase, no_of_elements, subreddit):
+        return False
+
+    return True
+
+
+def sort_list_numerically(full_list_text, list_count):
+    """Sorts concatenated list in numerical order."""
+
     count_list = []
 
     for x, y in zip(range(1, list_count), reversed(range(1, list_count))):
@@ -78,6 +132,8 @@ def chronological_list_maker(full_list_text, list_count):
 
 
 def is_correctly_formatted_list(full_text, list_count):
+    """Checks if the final concatenated list is correctly formatted."""
+
     list_prefix_numbers = []
 
     for number in range(1, list_count):

@@ -1,11 +1,10 @@
 import app.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
-from app.helper_methods.enums import *
 
 
-def find_article_to_parse(subreddit_name, website_name):
-    """Gets the link to the article that will be posted on the sub"""
+def find_article_to_parse(subreddit, website):
+    """Finds a list article in Business Insider's latest article archive and posts the list article to Reddit."""
 
     archive_link = 'http://www.businessinsider.com/latest'
 
@@ -14,51 +13,29 @@ def find_article_to_parse(subreddit_name, website_name):
 
     for link in soup.find_all('h2'):
 
-        article = link.find('a', href=True)
-        print("Parsing article: " + article['href'])
+        article_title = link.find('a', href=True)
+        print("Parsing article: " + article_title['href'])
         time.sleep(1)
 
-        # Records number of points in the article
-        try:
-            no_of_elements = [int(s) for s in article.text.split() if s.isdigit()]
-        except AttributeError:
+        if not helper_methods.article_meets_posting_requirements(subreddit, website, article_title.text):
             continue
 
-        if not no_of_elements:
-            continue
-
-        article_title_lowercase = article.text.lower()
-
-        if any(words in article_title_lowercase for words in helper_methods.BREAK_WORDS):
-            continue
-
-        post_made = helper_methods.post_made_check(article_title_lowercase, no_of_elements[0], subreddit_name)
-
-        if post_made:
-            continue
-
-        if article['href'].startswith("http"):
-            list_article_link = article['href']
+        if article_title['href'].startswith("http"):
+            list_article_link = article_title['href']
         else:
-            list_article_link = "http://www.businessinsider.com" + article['href']
+            list_article_link = "http://www.businessinsider.com" + article_title['href']
 
-        # Avoids rare case of when there is an index error
-        # Occurs when article starts with number immediately followed by a symbol.
-        try:
-            article_list = get_article_list(list_article_link, no_of_elements[0])
-            if article_list:
-                print("BuzzFeed list article found: " + article.text)
-                helper_methods.post_to_reddit(article.text, article_list, list_article_link, subreddit_name, website_name)
-                return True
-
-        except IndexError as e:
-            print("Index Error: " + str(e))
+        article_list_text = get_article_list_text(list_article_link, helper_methods.get_article_list_count(article_title.text))
+        if article_list_text:
+            print("BuzzFeed list article found: " + article_title.text)
+            helper_methods.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
+            return True
 
     print("No Business Insider list articles were found to parse at this time.")
     return False
 
 
-def get_article_list(link_to_check, total_elements):
+def get_article_list_text(link_to_check, total_elements):
     """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
     Also ensures proper list formatting before making a post."""
 
@@ -105,7 +82,7 @@ def get_article_list(link_to_check, total_elements):
             full_list = ""
 
     if full_list.startswith(str(list_counter-1)):
-        full_list = helper_methods.chronological_list_maker(full_list, list_counter)
+        full_list = helper_methods.sort_list_numerically(full_list, list_counter)
 
     return full_list
 
