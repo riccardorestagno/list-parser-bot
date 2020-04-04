@@ -11,14 +11,20 @@ from helper_methods.list_parser_helper_methods import connect_to_reddit
 def call_article_archive_parser(parser, subreddit):
     """Call the parser function associated to the enum value passed."""
 
-    if parser == ArticleType.Business_Insider:
-        return parse_businessinsider_archive(subreddit, ArticleType.Business_Insider)
-    elif parser == ArticleType.BuzzFeed:
-        return parse_buzzfeed_archive(subreddit, ArticleType.BuzzFeed)
-    elif parser == ArticleType.CollegeHumor:
-        return parse_collegehumor_archive(subreddit, ArticleType.CollegeHumor)
-    elif parser == ArticleType.Polygon:
-        return parse_polygon_archive(subreddit, ArticleType.Polygon)
+    # Maps the parser enum type to its associated parser method.
+    archive_parsers = {
+        ArticleType.Business_Insider: lambda: parse_businessinsider_archive(subreddit, ArticleType.Business_Insider),
+        ArticleType.BuzzFeed: lambda: parse_buzzfeed_archive(subreddit, ArticleType.BuzzFeed),
+        ArticleType.CollegeHumor: lambda: parse_collegehumor_archive(subreddit, ArticleType.CollegeHumor),
+        ArticleType.Polygon: lambda: parse_polygon_archive(subreddit, ArticleType.Polygon)
+    }
+
+    try:
+        call_archive_parser = archive_parsers[parser]
+    except KeyError:
+        print(f"Unable to find archive parser method for {parser.name}'s website.")
+    else:
+        call_archive_parser()
 
 
 def order_parsers(subreddit_name, parsers, posts_to_search):
