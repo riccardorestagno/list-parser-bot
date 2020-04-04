@@ -1,6 +1,7 @@
 import app.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
+from app.helper_methods.enums import *
 from datetime import date, timedelta
 from os import environ
 
@@ -61,8 +62,9 @@ def find_article_to_parse(subreddit, website):
     yesterdays_date = (date.today() - timedelta(1)).strftime("%Y/%m/%d")
 
     archive_link = 'https://www.buzzfeed.com/archive/'
+    website_name = convert_enum_to_string(website)
 
-    print("Searching Buzzfeed's archive on " + yesterdays_date)
+    print(f"Searching {website_name}'s archive on " + yesterdays_date)
     soup = helper_methods.soup_session(archive_link + yesterdays_date)
 
     for link in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[articles_searched_count:]:
@@ -84,20 +86,19 @@ def find_article_to_parse(subreddit, website):
             article_list_text = paragraph_article_text(list_article_link, no_of_elements)
 
         if article_list_text:
-            print("BuzzFeed list article found: " + article_title.text)
+            print(f"{website_name} list article found: " + article_title.text)
             helper_methods.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
             set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
             return True
 
     set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
 
-    print("No BuzzFeed list articles were found to parse at this time.")
+    print(f"No {website_name} list articles were found to parse at this time.")
     return False
 
 
 def get_article_list_text(link_to_check, total_points):
-    """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
-    Also ensures proper list formatting before making a post."""
+    """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
     list_counter = 1
     this_when_counter = 0
@@ -170,5 +171,5 @@ def get_article_list_text(link_to_check, total_points):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse("buzzfeedbot", "BuzzFeed")
-    print("Buzzfeed script ran for " + str(round((time.time()-start_time), 2)) + " seconds")
+    find_article_to_parse("buzzfeedbot", ArticleType.BuzzFeed)
+    print("Buzzfeed script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")

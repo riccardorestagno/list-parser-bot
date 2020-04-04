@@ -1,14 +1,16 @@
 import app.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
+from app.helper_methods.enums import *
 
 
 def find_article_to_parse(subreddit, website):
     """Finds a list article in Business Insider's latest article archive and posts the list article to Reddit."""
 
     archive_link = 'http://www.businessinsider.com/latest'
+    website_name = convert_enum_to_string(website)
 
-    print("Searching Business Insider's archive")
+    print(f"Searching {website_name}'s archive.")
     soup = helper_methods.soup_session(archive_link)
 
     for link in soup.find_all('h2'):
@@ -27,17 +29,16 @@ def find_article_to_parse(subreddit, website):
 
         article_list_text = get_article_list_text(list_article_link, helper_methods.get_article_list_count(article_title.text))
         if article_list_text:
-            print("BuzzFeed list article found: " + article_title.text)
+            print(f"{website_name} list article found: " + article_title.text)
             helper_methods.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
             return True
 
-    print("No Business Insider list articles were found to parse at this time.")
+    print(f"No {website_name} list articles were found to parse at this time.")
     return False
 
 
 def get_article_list_text(link_to_check, total_elements):
-    """Concatenates the list elements of the article into a single string and also makes sure the string isn't empty.
-    Also ensures proper list formatting before making a post."""
+    """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
     list_counter = 1
     full_list = ""
@@ -69,9 +70,9 @@ def get_article_list_text(link_to_check, total_elements):
         for article_point_wrapper in soup.find_all(wrapper[0], attrs=None if len(wrapper) == 1 else {wrapper[1]: wrapper[2]}):
             for article_point in article_point_wrapper.find_all(body[0], attrs=None if len(body) == 1 else {body[1]: body[2]}):
                 if re.search("^[0-9]+[.]", article_point.text):
-                    full_list += article_point.text + '\n'
+                    full_list += article_point.text.strip() + '\n'
                 else:
-                    full_list += str(list_counter) + '. ' + article_point.text + '\n'
+                    full_list += str(list_counter) + '. ' + article_point.text.strip() + '\n'
 
                 list_counter += 1
 
@@ -89,5 +90,5 @@ def get_article_list_text(link_to_check, total_elements):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse("buzzfeedbot", "Business Insider")
-    print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds")
+    find_article_to_parse("buzzfeedbot", ArticleType.Business_Insider)
+    print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
