@@ -37,13 +37,14 @@ def find_article_to_parse(subreddit, website):
 def get_article_list_text(link_to_check, total_list_elements):
     """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
+    article_point_found = False
     list_counter = 1
     full_list = ""
     formatting_options = {
         # Header formatting
         "html_format_1": {
-            "wrapper": ["hr"],
-            "body": ["h2"]  # Not used for now.
+            "wrapper": ["h2"],
+            "body": ["strong"]
         }
     }
 
@@ -52,17 +53,21 @@ def get_article_list_text(link_to_check, total_list_elements):
     for option in formatting_options.values():
 
         wrapper = option["wrapper"]
+        body = option["body"]
 
         for article_point_wrapper in soup.find_all(wrapper[0], attrs=None if len(wrapper) == 1 else {wrapper[1]: wrapper[2]}):
+            article_point_text = ""
+            for article_point in article_point_wrapper.find_all(body[0], attrs=None if len(body) == 1 else {body[1]: body[2]}):
+                article_point_found = True
+                if re.search("^[0-9]+[.]", article_point_text):
+                    article_point_text += article_point.text
+                else:
+                    article_point_text += str(list_counter) + '. ' + article_point.text.strip()
 
-            article_point = article_point_wrapper.next_element.next_element
-
-            if re.search("^[0-9]+[.]", article_point.text):
-                full_list += article_point.text.strip() + '\n'
-            else:
-                full_list += str(list_counter) + '. ' + article_point.text.strip() + '\n'
-
+            if article_point_found:
+                full_list += article_point_text + '\n'
                 list_counter += 1
+                article_point_found = False
 
         if total_list_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
             break
