@@ -142,3 +142,4 @@ dmypy.json
 !.vscode/extensions.json
 *.code-workspace
 docker-compose.yml
+app/Posts_Searched_Today.txt
