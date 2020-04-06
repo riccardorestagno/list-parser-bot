@@ -1,6 +1,6 @@
-import app.helper_methods.list_parser_helper_methods as helper_methods
+import article_archive_parsers.helper_methods.list_parser_helper_methods as helper_methods
 import time
-from app.helper_methods.enums import *
+from article_archive_parsers.helper_methods.enums import *
 from datetime import date, timedelta
 
 

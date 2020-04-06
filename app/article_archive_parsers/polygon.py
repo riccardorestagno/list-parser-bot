@@ -1,7 +1,7 @@
-import app.helper_methods.list_parser_helper_methods as helper_methods
+import article_archive_parsers.helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
-from app.helper_methods.enums import *
+from article_archive_parsers.helper_methods.enums import *
 
 
 def find_article_to_parse(subreddit, website):

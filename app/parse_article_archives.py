@@ -4,8 +4,8 @@ from article_archive_parsers.buzzfeed import find_article_to_parse as parse_buzz
 from article_archive_parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
 from article_archive_parsers.polygon import find_article_to_parse as parse_polygon_archive
 from datetime import datetime
-from helper_methods.enums import *
-from helper_methods.list_parser_helper_methods import connect_to_reddit
+from article_archive_parsers.helper_methods.enums import *
+from article_archive_parsers.helper_methods.list_parser_helper_methods import connect_to_reddit
 
 
 def call_article_archive_parser(parser, subreddit):

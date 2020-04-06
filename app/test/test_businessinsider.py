@@ -1,4 +1,4 @@
-from app.helper_methods.list_parser_helper_methods import soup_session
+from article_archive_parsers.helper_methods.list_parser_helper_methods import soup_session
 
 
 def test_check_html_tags_correct():
