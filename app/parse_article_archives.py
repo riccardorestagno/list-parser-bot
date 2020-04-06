@@ -23,8 +23,9 @@ def call_article_archive_parser(parser, subreddit):
         call_archive_parser = archive_parsers[parser]
     except KeyError:
         print(f"Unable to find archive parser method for {parser.name}'s website.")
+        return False
     else:
-        call_archive_parser()
+        return call_archive_parser()
 
 
 def order_parsers(subreddit_name, parsers, posts_to_search):
@@ -73,4 +74,4 @@ if __name__ == '__main__':
         print("Buzzfeed Bot is starting @ " + str(datetime.now()))
         parser_controller()
         print("Sweep finished @ " + str(datetime.now()))
-        time.sleep(3 * 60 * 60)
+        time.sleep(2 * 60 * 60)
