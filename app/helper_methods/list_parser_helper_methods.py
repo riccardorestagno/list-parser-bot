@@ -1,7 +1,7 @@
 import praw
 import requests
 from bs4 import BeautifulSoup
-from article_archive_parsers.helper_methods.enums import ArticleType, convert_enum_to_string
+from helper_methods.enums import ArticleType, convert_enum_to_string
 from langdetect import detect, lang_detect_exception
 from os import environ
 

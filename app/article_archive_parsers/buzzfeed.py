@@ -1,7 +1,7 @@
-import article_archive_parsers.helper_methods.list_parser_helper_methods as helper_methods
+import helper_methods.list_parser_helper_methods as helper_methods
 import re
 import time
-from article_archive_parsers.helper_methods.enums import *
+from helper_methods.enums import *
 from datetime import date, timedelta
 from os import environ
 

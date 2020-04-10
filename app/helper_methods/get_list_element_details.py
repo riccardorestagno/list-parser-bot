@@ -1,4 +1,4 @@
-import article_archive_parsers.helper_methods.list_parser_helper_methods as helper_methods
+import helper_methods.list_parser_helper_methods as helper_methods
 	
 
 def paragraph_article_text(link_to_check, point_no):
