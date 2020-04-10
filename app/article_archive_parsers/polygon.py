@@ -7,7 +7,7 @@ from article_archive_parsers.helper_methods.enums import *
 def find_article_to_parse(subreddit, website):
     """Finds a list article in Polygons's latest article archive and posts the list article to Reddit."""
 
-    archive_link = 'http://www.polygon.com'
+    archive_link = 'http://www.polygon.com/news'
     website_name = convert_enum_to_string(website)
 
     print(f"Searching {website_name}'s archive.")
