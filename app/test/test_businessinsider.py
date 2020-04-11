@@ -1,5 +1,5 @@
 from helper_methods.list_parser_helper_methods import soup_session
-#test
+
 
 def test_check_html_tags_correct():
     correct_html_tags = False
