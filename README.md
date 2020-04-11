@@ -1,4 +1,4 @@
-Buzzfeed Reddit Bot
+List Parser Bot
 =========================
 
 Description
