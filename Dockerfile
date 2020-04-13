@@ -12,5 +12,8 @@ COPY app .
 
 # Using pip:
 RUN python3 -m pip install -r requirements.txt
+
+# Make sure log file exists so it can be mounted in compose file
+RUN touch Posts_Searched_Today.log
 # Start bot
 CMD ["python3", "-u", "./parse_article_archives.py"]
