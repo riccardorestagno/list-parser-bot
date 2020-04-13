@@ -7,6 +7,9 @@ LABEL Name=buzzfeed_reddit_bot Version=0.0.1
 WORKDIR /app
 COPY app .
 
+# Compiler not needed
+# RUN apk add build-base
+
 # Using pip:
 RUN python3 -m pip install -r requirements.txt
 # Start bot
