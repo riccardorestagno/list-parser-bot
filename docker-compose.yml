@@ -5,5 +5,5 @@ services:
     image: rslashdisneyvacation/list-parser-bot
     restart: unless-stopped
     env_file: .env
-    volumes:
-    - /opt/wolfware/mounts/list-parser-bot/Posts_Searched_Today.log:/app/Posts_Searched_Today.log
+    # volumes:
+    # - /opt/wolfware/mounts/list-parser-bot/Posts_Searched_Today.log:/app/Posts_Searched_Today.log
