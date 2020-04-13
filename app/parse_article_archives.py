@@ -49,7 +49,7 @@ def parser_controller():
     supported_parsers = []
     supported_parsers_mapping = {
         ArticleType.Business_Insider: True,
-        ArticleType.BuzzFeed: False,
+        ArticleType.BuzzFeed: True,
         ArticleType.CollegeHumor: False,
         ArticleType.Polygon: True
     }

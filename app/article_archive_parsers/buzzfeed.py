@@ -3,16 +3,22 @@ import re
 import time
 from helper_methods.enums import *
 from datetime import date, timedelta
-from os import environ
+from os import path
+
+
+BUZZFEED_ARTICLES_SEARCHED_FILE = 'buzzfeed_articles_searched.txt'
 
 
 def get_articles_searched_count():
     """Gets the number of articles the bot already searched in yesterdays archive"""
 
     yesterdays_date = (date.today() - timedelta(1)).strftime("%Y/%m/%d")
-    filepath = environ["BUZZFEEDBOT_ARTICLES_SEARCHED_FILE"]
 
-    with open(filepath, 'r') as file:
+    if not path.exists(BUZZFEED_ARTICLES_SEARCHED_FILE):
+        set_total_articles_searched_today(yesterdays_date, 0)
+        return 0
+
+    with open(BUZZFEED_ARTICLES_SEARCHED_FILE, 'r') as file:
         if yesterdays_date != file.readline().strip():
             set_total_articles_searched_today(yesterdays_date, 0)
             return 0
@@ -26,9 +32,7 @@ def get_articles_searched_count():
 def set_total_articles_searched_today(current_date, article_completed_count=0):
     """Modifies the file to contain the current archive date and the number of articles already searched."""
 
-    filepath = environ["BUZZFEEDBOT_ARTICLES_SEARCHED_FILE"]
-
-    with open(filepath, 'w') as file:
+    with open(BUZZFEED_ARTICLES_SEARCHED_FILE, 'w+') as file:
         file.write(current_date + '\n' + str(article_completed_count) + '\n')
 
 
