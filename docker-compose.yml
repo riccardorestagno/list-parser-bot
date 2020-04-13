@@ -1,0 +1,7 @@
+version: '2.1'
+
+services:
+  buzzfeed_reddit_bot:
+    image: rslashdisneyvacation/list-parser-bot
+    restart: unless-stopped
+    env_file: .env
