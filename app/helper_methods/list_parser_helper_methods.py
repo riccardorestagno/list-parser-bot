@@ -1,4 +1,5 @@
 import praw
+import re
 import requests
 from bs4 import BeautifulSoup
 from helper_methods.enums import ArticleType, convert_enum_to_string
@@ -49,7 +50,7 @@ def post_previously_made(post_title, list_elements, subreddit):
 
     reddit = connect_to_reddit()
     subreddit = reddit.subreddit(subreddit)
-    submissions = subreddit.new(limit=20)
+    submissions = subreddit.new(limit=10)
     for submission in submissions:
         if submission.title.lower() == post_title:
             return True
@@ -77,9 +78,9 @@ def get_article_list_count(article_title):
     return no_of_elements
 
 
-def article_meets_posting_requirements(subreddit, website, article_title):
+def article_title_meets_posting_requirements(subreddit, website, article_title):
     """
-    Validates that the article meets all requirements to post the list to Reddit.
+    Validates that the article title meets all requirements to post the list to Reddit.
 
     The validations below check if:
         (1) The article contains a number
@@ -107,6 +108,32 @@ def article_meets_posting_requirements(subreddit, website, article_title):
 
     if post_previously_made(article_title_lowercase, no_of_elements, subreddit):
         return False
+
+    return True
+
+
+def article_text_meets_posting_requirements(website, article_list_text, list_counter, total_elements):
+    """
+    Validates that the article text meets all requirements to post the list to Reddit.
+
+    The validations below check if:
+        (1) The header count is equal to the list article count
+        (2) The list is correctly formatted
+        (3) The article resembles an ad (BuzzFeed only)
+
+    Returns True if all validations are met. Returns False otherwise.
+    """
+
+    if list_counter-1 != total_elements:
+        return False
+
+    if not is_correctly_formatted_list(article_list_text, list_counter):
+        return False
+
+    if website == ArticleType.BuzzFeed:
+        percentage_threshold = 0.70  # Max percentage of advertisement list items where the post will not be made.
+        if (len(re.findall('(\[A(n)? |\[[0-9]{2}% )', article_list_text)) / total_elements) > percentage_threshold:
+            return False
 
     return True
 

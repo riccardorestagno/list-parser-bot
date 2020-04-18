@@ -36,7 +36,7 @@ def set_total_articles_searched_today(current_date, article_completed_count=0):
         file.write(current_date + '\n' + str(article_completed_count) + '\n')
 
 
-def paragraph_article_text(link_to_check, total_points):
+def paragraph_article_text(link_to_check, total_list_elements):
     """Parses BuzzFeed list articles that are in paragraph form (have the 'p' HTML tag)."""
 
     list_counter = 1
@@ -52,10 +52,8 @@ def paragraph_article_text(link_to_check, total_points):
         except IndexError:
             continue
 
-    if total_points != list_counter-1:
-        full_list = ""
-
-    return full_list
+    if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+        return full_list
 
 
 def find_article_to_parse(subreddit, website):
@@ -79,7 +77,7 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_title['href'])
         time.sleep(1)
 
-        if not helper_methods.article_meets_posting_requirements(subreddit, website, article_title.text):
+        if not helper_methods.article_title_meets_posting_requirements(subreddit, website, article_title.text):
             continue
 
         list_article_link = article_title['href']
@@ -101,7 +99,7 @@ def find_article_to_parse(subreddit, website):
     return False
 
 
-def get_article_list_text(link_to_check, total_points):
+def get_article_list_text(link_to_check, total_list_elements):
     """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
     list_counter = 1
@@ -167,13 +165,11 @@ def get_article_list_text(link_to_check, total_points):
 
             list_counter += 1
 
-    if total_points != list_counter-1 or not helper_methods.is_correctly_formatted_list(full_list, list_counter):
-        return ''
-
-    return full_list
+    if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+        return full_list
 
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
     find_article_to_parse("buzzfeedbot", ArticleType.BuzzFeed)
-    print("Buzzfeed script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
+    print("BuzzFeed script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")

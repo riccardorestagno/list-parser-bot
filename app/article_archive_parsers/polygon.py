@@ -19,7 +19,7 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_header['href'])
         time.sleep(1)
 
-        if not helper_methods.article_meets_posting_requirements(subreddit, website, article_header.text):
+        if not helper_methods.article_title_meets_posting_requirements(subreddit, website, article_header.text):
             continue
 
         list_article_link = article_header['href']
@@ -69,7 +69,7 @@ def get_article_list_text(link_to_check, total_list_elements):
                 list_counter += 1
                 article_point_found = False
 
-        if total_list_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
+        if helper_methods.article_text_meets_posting_requirements(ArticleType.Polygon, full_list, list_counter, total_list_elements):
             break
         else:
             list_counter = 1

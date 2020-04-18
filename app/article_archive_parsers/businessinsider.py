@@ -19,7 +19,7 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_title['href'])
         time.sleep(1)
 
-        if not helper_methods.article_meets_posting_requirements(subreddit, website, article_title.text):
+        if not helper_methods.article_title_meets_posting_requirements(subreddit, website, article_title.text):
             continue
 
         if article_title['href'].startswith("http"):
@@ -37,7 +37,7 @@ def find_article_to_parse(subreddit, website):
     return False
 
 
-def get_article_list_text(link_to_check, total_elements):
+def get_article_list_text(link_to_check, total_list_elements):
     """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
     list_counter = 1
@@ -76,7 +76,7 @@ def get_article_list_text(link_to_check, total_elements):
 
                 list_counter += 1
 
-        if total_elements == list_counter-1 and helper_methods.is_correctly_formatted_list(full_list, list_counter):
+        if helper_methods.article_text_meets_posting_requirements(ArticleType.Business_Insider, full_list, list_counter, total_list_elements):
             break
         else:
             list_counter = 1
