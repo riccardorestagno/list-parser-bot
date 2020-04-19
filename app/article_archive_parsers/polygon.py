@@ -9,11 +9,17 @@ def find_article_to_parse(subreddit, website):
 
     archive_link = 'http://www.polygon.com/news'
     website_name = convert_enum_to_string(website)
+    articles_checked = 0
 
     print(f"Searching {website_name}'s archive.")
     soup = helper_methods.soup_session(archive_link)
 
     for link in soup.find_all('h2', attrs={'class': 'c-entry-box--compact__title'}):
+
+        # Break loop if more than 5 articles were checked.
+        articles_checked += 1
+        if articles_checked > 5:
+            break
 
         article_header = link.find('a', href=True)
         print("Parsing article: " + article_header['href'])

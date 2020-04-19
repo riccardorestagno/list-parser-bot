@@ -45,12 +45,9 @@ def paragraph_article_text(link_to_check, total_list_elements):
     soup = helper_methods.soup_session(link_to_check)
 
     for list_element in soup.find_all('p'):
-        try:
-            if list_element.text[0].isdigit():
-                full_list += list_element.text.replace(')', '. ', 1) + '\n'
-                list_counter += 1
-        except IndexError:
-            continue
+        if list_element.text and list_element.text[0].isdigit():
+            full_list += list_element.text.replace(')', '. ', 1) + '\n'
+            list_counter += 1
 
     if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
         return full_list
@@ -110,24 +107,15 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     for article in soup.find_all('h2'):
 
-        list_element_check = False
-
-        for list_element in article.find_all('span', attrs={'class': 'subbuzz__number'}):
-            if list_element:
-                list_element_check = True
-                break
-
-        if not list_element_check:
+        if not article.find_all('span', attrs={'class': 'subbuzz__number'}):
             continue
 
         for list_element in article.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
+
             if len(list_element.text) < 4 or list_element.text.endswith(':') or this_when_counter == 3:
                 return ''
 
-            if list_element.text.startswith(('When ', 'This ', 'And this ')):
-                this_when_counter += 1
-            else:
-                this_when_counter = 0
+            this_when_counter = this_when_counter + 1 if list_element.text.startswith(('When ', 'This ', 'And this ')) else 0
 
             # Tries to add a hyperlink to the article list element being searched, if it has any
             try:
@@ -137,7 +125,7 @@ def get_article_list_text(link_to_check, total_list_elements):
                     else:
                         link_to_use = link['href']
 
-                    # removes redirect link if there is any
+                    # Removes redirect link if there is any.
                     if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
                         link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
 

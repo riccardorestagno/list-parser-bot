@@ -52,22 +52,13 @@ def get_article_list_text(link_to_check, total_list_elements):
 	soup = helper_methods.soup_session(link_to_check)
 		
 	for article in soup.find_all('h2'):
-		try:
-			if not article.text[0].isdigit():
-				continue
-		except IndexError:
+		if not article.text or article.text[0].isdigit():
 			continue
 
-		if len(article.text) < 4 or article.text.endswith(':'):
+		if len(article.text) < 4 or article.text.endswith(':') or this_when_counter == 3:
 			return ''
 		else:
-			if this_when_counter == 3:
-				return ''
-				
-			if article.text.startswith(('When ', 'This ', 'And this ')):
-				this_when_counter += 1
-			else:
-				this_when_counter = 0
+			this_when_counter = this_when_counter + 1 if article.text.startswith(('When ', 'This ', 'And this ')) else 0
 	
 			if article.text.startswith((str(list_counter)+'.', str(list_counter)+')')):
 				full_list += article.text.strip() + '\n'
