@@ -51,7 +51,7 @@ def parser_controller():
         ArticleType.Business_Insider: True,
         ArticleType.BuzzFeed: True,
         ArticleType.CollegeHumor: False,
-        ArticleType.Polygon: True
+        ArticleType.Polygon: False
     }
 
     for parser in supported_parsers_mapping.items():

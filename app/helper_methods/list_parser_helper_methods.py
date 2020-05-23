@@ -8,10 +8,10 @@ from os import environ
 
 
 # If the list article title contains any of the words below, the list will not be posted to Reddit.
-# This avoids posting content which contain lists of images and ads.
+# This avoids posting content which contains lists of ads and images.
 BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'twitter', 'must see', 'tweets', 'memes',
-               'instagram', 'tumblr', 'gifts', 'products']
+               'instagram', 'tumblr', 'gifts', 'products', 'deals']
 
 
 def connect_to_reddit():
