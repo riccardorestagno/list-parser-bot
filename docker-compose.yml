@@ -6,4 +6,4 @@ services:
     restart: unless-stopped
     env_file: .env
     # volumes:
-    # - /opt/wolfware/mounts/list-parser-bot/Posts_Searched_Today.log:/app/Posts_Searched_Today.log
+    # - /opt/wolfware/mounts/list-parser-bot/Posts_Searched_Today.log:/listparser/Posts_Searched_Today.log

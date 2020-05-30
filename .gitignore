@@ -141,4 +141,3 @@ dmypy.json
 !.vscode/launch.json
 !.vscode/extensions.json
 *.code-workspace
-app/Posts_Searched_Today.txt

@@ -10,13 +10,11 @@ Reddit bot that posts list articles from BuzzFeed, Business Insider and Polygon 
 
 Dependencies
 =================
-Supported Python versions: 3.4.0+ 
+Supported Python versions: 3.6.0+ 
 
-BeautifulSoup (https://www.crummy.com/software/BeautifulSoup)
-
-langdetect (https://pypi.python.org/pypi/langdetect)
-
-PRAW (https://github.com/praw-dev/praw)
+- BeautifulSoup (https://www.crummy.com/software/BeautifulSoup)
+- langdetect (https://pypi.python.org/pypi/langdetect)
+- PRAW (https://github.com/praw-dev/praw)
 
 
 Script Functionality
