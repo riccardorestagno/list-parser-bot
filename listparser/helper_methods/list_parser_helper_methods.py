@@ -119,7 +119,7 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
     The validations below check if:
         (1) The header count is equal to the list article count
         (2) The list is correctly formatted
-        (3) The article resembles an ad (BuzzFeed only)
+        (3) The article resembles an ad based on specific regex validation (BuzzFeed only)
 
     Returns True if all validations are met. Returns False otherwise.
     """
@@ -131,8 +131,8 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
         return False
 
     if website == ArticleType.BuzzFeed:
-        percentage_threshold = 0.50  # Max percentage of advertisement list items where the post will not be made.
-        if (len(re.findall('(\[A(n)? |\[(Up to )?[0-9]{2}% )', article_list_text)) / total_elements) >= percentage_threshold:
+        percentage_threshold = 0.50  # Max percentage of regex validated ad-like list items where the post will not be made.
+        if (len(re.findall('(\[A(n)? |\[(Up to )?[0-9]{2}% |\[This )', article_list_text)) / total_elements) >= percentage_threshold:
             return False
 
     return True
