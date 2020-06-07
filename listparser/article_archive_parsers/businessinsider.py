@@ -13,7 +13,7 @@ def find_article_to_parse(subreddit, website):
     print(f"Searching {website_name}'s archive.")
     soup = helper_methods.soup_session(archive_link)
 
-    for link in soup.find_all('h2'):
+    for link in soup.find_all('h2', attrs={'class': 'tout-title default-tout'}):
 
         article_title = link.find('a', href=True)
         print("Parsing article: " + article_title['href'])
