@@ -50,6 +50,9 @@ def paragraph_article_text(link_to_check, total_list_elements):
             list_counter += 1
 
     if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+        if full_list.startswith(str(list_counter - 1) + '. '):
+            full_list = helper_methods.sort_list_numerically(full_list)
+
         return full_list
 
 
@@ -117,7 +120,7 @@ def get_article_list_text(link_to_check, total_list_elements):
 
             this_when_counter = this_when_counter + 1 if list_element.text.startswith(('When ', 'This ', 'And this ')) else 0
 
-            # Tries to add a hyperlink to the article list element being searched, if it has any
+            # Tries to add a hyperlink to the article list element being searched, if it has any.
             try:
                 for link in list_element.find_all('a', href=True):
                     if 'amazon' in link['href']:
@@ -142,7 +145,7 @@ def get_article_list_text(link_to_check, total_list_elements):
                 print("Key Error: " + str(e))
                 pass
 
-            # If the list element doesn't have a link associated to it, post it as plain text
+            # If the list element doesn't have a link associated to it, post it as plain text.
             if not list_element.find_all('a', href=True):
                 if list_element.text.startswith(str(list_counter)+')'):
                     list_element.text.replace(str(list_counter)+')', str(list_counter)+'. ')
@@ -154,6 +157,9 @@ def get_article_list_text(link_to_check, total_list_elements):
             list_counter += 1
 
     if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+        if full_list.startswith(str(list_counter - 1) + '. '):
+            full_list = helper_methods.sort_list_numerically(full_list)
+
         return full_list
 
 

@@ -138,24 +138,14 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
     return True
 
 
-def sort_list_numerically(full_list_text, list_count):
-    """Sorts concatenated list in numerical order."""
+def sort_list_numerically(full_list_text):
+    """Returns a numerically ordered list if the list was in reverse order in the article."""
 
-    count_list = []
+    full_list = full_list_text.split('\n')
+    full_list.reverse()
+    full_list = list(filter(None, full_list))  # Filters out empty list elements.
 
-    for x, y in zip(range(1, list_count), reversed(range(1, list_count))):
-        count_list.append([x, y])
-
-    for i, (x, y) in enumerate(count_list):
-        count_list[i] = [str(x) + '.', str(y) + '.']
-
-    for i, (start, end) in enumerate(count_list):
-        if i <= len(count_list) / 2:
-            full_list_text = full_list_text.replace(end, start)
-        else:
-            full_list_text = start.join(full_list_text.rsplit(end, 1))
-
-    return full_list_text
+    return '\n'.join(full_list)
 
 
 def is_correctly_formatted_list(full_text, list_count):

@@ -82,8 +82,8 @@ def get_article_list_text(link_to_check, total_list_elements):
             list_counter = 1
             full_list = ""
 
-    if full_list.startswith(str(list_counter-1)):
-        full_list = helper_methods.sort_list_numerically(full_list, list_counter)
+    if full_list.startswith(str(list_counter-1) + '. '):
+        full_list = helper_methods.sort_list_numerically(full_list)
 
     return full_list
 
