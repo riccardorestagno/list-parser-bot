@@ -145,7 +145,7 @@ def sort_list_numerically(full_list_text):
     full_list.reverse()
     full_list = list(filter(None, full_list))  # Filters out empty list elements.
 
-    return '\n'.join(full_list)
+    return '\n'.join(full_list) + '\n'
 
 
 def is_correctly_formatted_list(full_text, list_count):
