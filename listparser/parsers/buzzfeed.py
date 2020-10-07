@@ -1,7 +1,7 @@
-import helper_methods.list_parser_helper_methods as helper_methods
+import helpers.list_parser_helper_methods as helpers
 import re
 import time
-from helper_methods.enums import *
+from helpers.enums import *
 from datetime import date, timedelta
 from os import path
 
@@ -42,16 +42,16 @@ def paragraph_article_text(link_to_check, total_list_elements):
     list_counter = 1
     full_list = ""
 
-    soup = helper_methods.soup_session(link_to_check)
+    soup = helpers.soup_session(link_to_check)
 
     for list_element in soup.find_all('p'):
         if list_element.text and list_element.text[0].isdigit():
             full_list += list_element.text.replace(')', '. ', 1) + '\n'
             list_counter += 1
 
-    if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+    if helpers.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
         if full_list.startswith(str(list_counter - 1) + '. '):
-            full_list = helper_methods.sort_list_numerically(full_list)
+            full_list = helpers.reverse_list(full_list)
 
         return full_list
 
@@ -67,7 +67,7 @@ def find_article_to_parse(subreddit, website):
     website_name = convert_enum_to_string(website)
 
     print(f"Searching {website_name}'s archive on " + yesterdays_date)
-    soup = helper_methods.soup_session(archive_link + yesterdays_date)
+    soup = helpers.soup_session(archive_link + yesterdays_date)
 
     for link in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[articles_searched_count:]:
 
@@ -77,11 +77,11 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_title['href'])
         time.sleep(1)
 
-        if not helper_methods.article_title_meets_posting_requirements(subreddit, website, article_title.text):
+        if not helpers.article_title_meets_posting_requirements(subreddit, website, article_title.text):
             continue
 
         list_article_link = article_title['href']
-        no_of_elements = helper_methods.get_article_list_count(article_title.text)
+        no_of_elements = helpers.get_article_list_count(article_title.text)
 
         article_list_text = get_article_list_text(list_article_link, no_of_elements)
         if not article_list_text:
@@ -89,7 +89,7 @@ def find_article_to_parse(subreddit, website):
 
         if article_list_text:
             print(f"{website_name} list article found: " + article_title.text)
-            helper_methods.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
+            helpers.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
             set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
             return True
 
@@ -106,7 +106,7 @@ def get_article_list_text(link_to_check, total_list_elements):
     this_when_counter = 0
     full_list = ''
 
-    soup = helper_methods.soup_session(link_to_check)
+    soup = helpers.soup_session(link_to_check)
 
     for article in soup.find_all('h2'):
 
@@ -156,9 +156,9 @@ def get_article_list_text(link_to_check, total_list_elements):
 
             list_counter += 1
 
-    if helper_methods.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+    if helpers.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
         if full_list.startswith(str(list_counter - 1) + '. '):
-            full_list = helper_methods.sort_list_numerically(full_list)
+            full_list = helpers.reverse_list(full_list)
 
         return full_list
 

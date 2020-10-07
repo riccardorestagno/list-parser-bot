@@ -1,7 +1,7 @@
-import helper_methods.list_parser_helper_methods as helper_methods
+import helpers.list_parser_helper_methods as helpers
 import re
 import time
-from helper_methods.enums import *
+from helpers.enums import *
 
 
 def find_article_to_parse(subreddit, website):
@@ -11,7 +11,7 @@ def find_article_to_parse(subreddit, website):
     website_name = convert_enum_to_string(website)
 
     print(f"Searching {website_name}'s archive.")
-    soup = helper_methods.soup_session(archive_link)
+    soup = helpers.soup_session(archive_link)
 
     for link in soup.find_all('h2', attrs={'class': 'tout-title default-tout'}):
 
@@ -19,7 +19,7 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_title['href'])
         time.sleep(1)
 
-        if not helper_methods.article_title_meets_posting_requirements(subreddit, website, article_title.text):
+        if not helpers.article_title_meets_posting_requirements(subreddit, website, article_title.text):
             continue
 
         if article_title['href'].startswith("http"):
@@ -27,10 +27,10 @@ def find_article_to_parse(subreddit, website):
         else:
             list_article_link = "http://www.businessinsider.com" + article_title['href']
 
-        article_list_text = get_article_list_text(list_article_link, helper_methods.get_article_list_count(article_title.text))
+        article_list_text = get_article_list_text(list_article_link, helpers.get_article_list_count(article_title.text))
         if article_list_text:
             print(f"{website_name} list article found: " + article_title.text)
-            helper_methods.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
+            helpers.post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
             return True
 
     print(f"No {website_name} list articles were found to parse at this time.")
@@ -60,7 +60,7 @@ def get_article_list_text(link_to_check, total_list_elements):
         }
     }
 
-    soup = helper_methods.soup_session(link_to_check)
+    soup = helpers.soup_session(link_to_check)
 
     for option in formatting_options.values():
 
@@ -76,14 +76,14 @@ def get_article_list_text(link_to_check, total_list_elements):
 
                 list_counter += 1
 
-        if helper_methods.article_text_meets_posting_requirements(ArticleType.Business_Insider, full_list, list_counter, total_list_elements):
+        if helpers.article_text_meets_posting_requirements(ArticleType.Business_Insider, full_list, list_counter, total_list_elements):
             break
         else:
             list_counter = 1
             full_list = ""
 
     if full_list.startswith(str(list_counter-1) + '. '):
-        full_list = helper_methods.sort_list_numerically(full_list)
+        full_list = helpers.reverse_list(full_list)
 
     return full_list
 

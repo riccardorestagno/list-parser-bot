@@ -1,4 +1,4 @@
-import helper_methods.list_parser_helper_methods as helper_methods
+import helpers.list_parser_helper_methods as helpers
 	
 
 def paragraph_article_text(link_to_check, point_no):
@@ -6,7 +6,7 @@ def paragraph_article_text(link_to_check, point_no):
 	details = ''
 	
 	print(link_to_check)
-	soup = helper_methods.soup_session(link_to_check)
+	soup = helpers.soup_session(link_to_check)
 	start = soup.find_all('span', attrs={'class': 'subbuzz__number'})[point_no].parent.parent
 	
 	try:
@@ -27,7 +27,7 @@ def paragraph_article_text(link_to_check, point_no):
 
 def check_inbox():
 
-	reddit = helper_methods.connect_to_reddit()
+	reddit = helpers.connect_to_reddit()
 	
 	bot_inbox = reddit.inbox.unread(limit=None)
 	unread_messages = []
