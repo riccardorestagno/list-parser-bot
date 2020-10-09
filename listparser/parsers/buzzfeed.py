@@ -50,7 +50,7 @@ def paragraph_article_text(link_to_check, total_list_elements):
             list_counter += 1
 
     if helpers.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
-        if full_list.startswith(str(list_counter - 1) + '. '):
+        if not full_list.startswith('1. '):
             full_list = helpers.reverse_list(full_list)
 
         return full_list
@@ -103,62 +103,50 @@ def get_article_list_text(link_to_check, total_list_elements):
     """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
     list_counter = 1
-    this_when_counter = 0
-    full_list = ''
+    full_list = ""
 
     soup = helpers.soup_session(link_to_check)
 
     for article in soup.find_all('h2'):
 
-        if not article.find_all('span', attrs={'class': 'subbuzz__number'}):
+        list_item_number_element = article.find('span', attrs={'class': 'subbuzz__number'})
+        if not list_item_number_element:
             continue
+        else:
+            list_item_number = list_item_number_element.text
 
-        for list_element in article.find_all('span', attrs={'class': 'js-subbuzz__title-text'}):
+        list_element = article.find('span', attrs={'class': 'js-subbuzz__title-text'})
 
-            if len(list_element.text) < 4 or list_element.text.endswith(':') or this_when_counter == 3:
-                return ''
-
-            this_when_counter = this_when_counter + 1 if list_element.text.startswith(('When ', 'This ', 'And this ')) else 0
-
-            # Tries to add a hyperlink to the article list element being searched, if it has any.
-            try:
-                for link in list_element.find_all('a', href=True):
-                    if 'amazon' in link['href']:
-                        link_to_use = link['href'].split('?', 1)[0]
-                    else:
-                        link_to_use = link['href']
-
-                    # Removes redirect link if there is any.
-                    if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
-                        link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
-
-                    link_to_use = link_to_use.replace(')', r'\)')
-
-                    if re.search("^[0-9]+[.]", list_element.text):
-                        full_list += str(list_counter) + '. [' + list_element.text.split('.', 1)[1] + '](' + link_to_use + ')' + '\n'
-                    if re.search("^[0-9]+[)]", list_element.text):
-                        full_list += str(list_counter) + '. [' + list_element.text.split(')', 1)[1] + '](' + link_to_use + ')' + '\n'
-                    else:
-                        full_list += str(list_counter) + '. ' + '[' + list_element.text + '](' + link_to_use + ')' + '\n'
-                    break
-            except KeyError as e:
-                print("Key Error: " + str(e))
-                pass
-
-            # If the list element doesn't have a link associated to it, post it as plain text.
-            if not list_element.find_all('a', href=True):
-                if list_element.text.startswith(str(list_counter)+')'):
-                    list_element.text.replace(str(list_counter)+')', str(list_counter)+'. ')
-                if list_element.text.startswith(str(list_counter)+'.'):
-                    full_list += list_element.text + '\n'
+        # Tries to add a hyperlink to the article list element being searched, if it has any.
+        try:
+            for link in list_element.find_all('a', href=True):
+                if 'amazon' in link['href']:
+                    link_to_use = link['href'].split('?', 1)[0]
                 else:
-                    full_list += str(list_counter) + '. ' + list_element.text + '\n'
+                    link_to_use = link['href']
 
-            list_counter += 1
+                # Removes redirect link if there is any.
+                if link_to_use.startswith('http:') and (r'/https:' in link_to_use or r'/http:' in link_to_use):
+                    link_to_use = 'http' + link_to_use.split(r'/http', 1)[1]
+
+                link_to_use = link_to_use.replace(')', r'\)')
+
+                full_list += list_item_number + ' [' + list_element.text + '](' + link_to_use + ')' + '\n'
+                break
+        except KeyError as e:
+            print("Key Error: " + str(e))
+            pass
+
+        # If the list element doesn't have a link associated to it, post it as plain text.
+        if not list_element.find_all('a', href=True):
+            full_list += list_item_number + ' ' + list_element.text + '\n'
+
+        list_counter += 1
 
     if helpers.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
-        if full_list.startswith(str(list_counter - 1) + '. '):
+        if not full_list.startswith('1. '):
             full_list = helpers.reverse_list(full_list)
+            full_list = full_list.replace("1. And finally, ", "1. ")
 
         return full_list
 
