@@ -41,6 +41,13 @@ def post_to_reddit(headline, main_text, link, subreddit, website):
                                .mod.flair(text=convert_enum_to_string(website))
 
 
+def send_error_message(stack_trace):
+    """If a runtime error has occurred, PM a mod with the error details."""
+    reddit = connect_to_reddit()
+
+    reddit.redditor('Improbably_wrong').message(F'ERROR - r/buzzfeedbot', stack_trace)
+
+
 def post_previously_made(post_title, list_elements, subreddit):
     """
     Checks if the post has already been submitted.

@@ -1,11 +1,12 @@
 import time
+import traceback
 from parsers.businessinsider import find_article_to_parse as parse_businessinsider_archive
 from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
 from parsers.polygon import find_article_to_parse as parse_polygon_archive
 from datetime import datetime
 from helpers.enums import *
-from helpers.list_parser_helper_methods import connect_to_reddit
+from helpers.list_parser_helper_methods import connect_to_reddit, send_error_message
 
 
 def call_article_archive_parser(parser, subreddit):
@@ -69,9 +70,13 @@ def parser_controller():
 
 
 if __name__ == '__main__':
-
-    while True:  # Temporary functionality to run every three hours. Will adjust Docker setup to avoid this method
-        print("Buzzfeed Bot is starting @ " + str(datetime.now()))
-        parser_controller()
-        print("Sweep finished @ " + str(datetime.now()))
-        time.sleep(2 * 60 * 60)
+    try:
+        while True:
+            print("Buzzfeed Bot is starting @ " + str(datetime.now()))
+            parser_controller()
+            print("Sweep finished @ " + str(datetime.now()))
+            time.sleep(2 * 60 * 60)  # Run once every two hours.
+    except Exception as error:
+        print(f"An error has occurred: {error}")
+        send_error_message(traceback.format_exc())
+        time.sleep(5 * 60 * 60)  # Stop for 5 hours if an exception occurred.

@@ -1,5 +1,4 @@
 import helpers.list_parser_helper_methods as helpers
-import re
 import time
 from helpers.enums import *
 from datetime import date, timedelta
