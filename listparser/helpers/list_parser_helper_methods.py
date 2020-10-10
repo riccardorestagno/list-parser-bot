@@ -45,7 +45,7 @@ def send_error_message(stack_trace):
     """If a runtime error has occurred, PM a mod with the error details."""
     reddit = connect_to_reddit()
 
-    reddit.redditor('Improbably_wrong').message(F'ERROR - r/buzzfeedbot', stack_trace)
+    reddit.redditor('Improbably_wrong').message('ERROR - r/buzzfeedbot', stack_trace)
 
 
 def post_previously_made(post_title, list_elements, subreddit):
