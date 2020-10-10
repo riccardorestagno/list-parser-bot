@@ -77,13 +77,12 @@ def get_article_list_text(link_to_check, total_list_elements):
                 list_counter += 1
 
         if helpers.article_text_meets_posting_requirements(ArticleType.Business_Insider, full_list, list_counter, total_list_elements):
+            if not full_list.startswith('1. '):
+                full_list = helpers.reverse_list(full_list)
             break
         else:
             list_counter = 1
             full_list = ""
-
-    if not full_list.startswith('1. '):
-        full_list = helpers.reverse_list(full_list)
 
     return full_list
 
