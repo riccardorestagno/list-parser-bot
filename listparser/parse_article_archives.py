@@ -6,7 +6,7 @@ from parsers.collegehumor import find_article_to_parse as parse_collegehumor_arc
 from parsers.polygon import find_article_to_parse as parse_polygon_archive
 from datetime import datetime
 from helpers.enums import *
-from helpers.list_parser_helper_methods import connect_to_reddit, send_error_message
+from helpers.reddit import connect_to_reddit, send_error_message
 
 
 def call_article_archive_parser(parser, subreddit):

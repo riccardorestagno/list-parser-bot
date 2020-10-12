@@ -1,9 +1,11 @@
-from helpers.list_parser_helper_methods import soup_session
+from helpers.list_validation_methods import soup_session
 
 
 def test_check_html_tags_correct():
+    no_of_elements = 0
     correct_html_tags = False
     soup = soup_session("http://www.businessinsider.com/latest")
+
     for link in soup.find_all('h2'):
 
         article_to_open = link.find('a', href=True)
@@ -25,7 +27,7 @@ def test_check_html_tags_correct():
 
         soup = soup_session(list_article_link)
 
-        for article in soup.find_all('h2', attrs={'class': 'slide-title-text'}):
+        if soup.find('h2', attrs={'class': 'slide-title-text'}):
             correct_html_tags = True
     else:
         correct_html_tags = True

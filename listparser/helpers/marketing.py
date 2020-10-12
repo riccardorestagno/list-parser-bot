@@ -1,5 +1,6 @@
 from twilio.rest import Client
-import helpers.list_parser_helper_methods as helpers
+
+import helpers.list_validation_methods as lvm
 
 
 def send_text(text_body):
@@ -16,7 +17,7 @@ def send_text(text_body):
 
 if __name__ == "__main__":
     keyword = False
-    reddit = helpers.connect_to_reddit()
+    reddit = lvm.connect_to_reddit()
 
     subreddit = reddit.subreddit('askreddit')
     submissions = subreddit.new(limit=100)

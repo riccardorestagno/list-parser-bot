@@ -1,10 +1,10 @@
-import praw
 import re
 import requests
 from bs4 import BeautifulSoup
-from helpers.enums import ArticleType, convert_enum_to_string
 from langdetect import detect, lang_detect_exception
-from os import environ
+
+from helpers.enums import ArticleType
+from helpers.reddit import connect_to_reddit
 
 
 # If the list article title contains any of the words below, the list will not be posted to Reddit.
@@ -14,38 +14,13 @@ BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
                'instagram', 'tumblr', 'gifts', 'products', 'deals']
 
 
-def connect_to_reddit():
-    """Connects the bot to the Reddit client."""
-
-    return praw.Reddit(client_id=environ["BUZZFEEDBOT_CLIENT_ID"],
-                       client_secret=environ["BUZZFEEDBOT_CLIENT_SECRET"],
-                       user_agent=environ["BUZZFEEDBOT_USER_AGENT"],
-                       username=environ["BUZZFEEDBOT_USERNAME"],
-                       password=environ["BUZZFEEDBOT_PASSWORD"])
-
-
 def soup_session(link):
     """BeautifulSoup session."""
+
     session = requests.Session()
     daily_archive = session.get(link)
     soup = BeautifulSoup(daily_archive.content, 'html.parser')
     return soup
-
-
-def post_to_reddit(headline, main_text, link, subreddit, website):
-    """Module that takes the title, main text and link to article and posts directly to Reddit."""
-
-    reddit = connect_to_reddit()
-
-    reddit.subreddit(subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')\
-                               .mod.flair(text=convert_enum_to_string(website))
-
-
-def send_error_message(stack_trace):
-    """If a runtime error has occurred, PM a mod with the error details."""
-    reddit = connect_to_reddit()
-
-    reddit.redditor('Improbably_wrong').message('ERROR - r/buzzfeedbot', stack_trace)
 
 
 def post_previously_made(post_title, list_elements, subreddit):
@@ -126,7 +101,7 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
     The validations below check if:
         (1) The header count is equal to the list article count
         (2) The list is correctly formatted
-        (3) The article resembles an ad based on specific regex validation (BuzzFeed only)
+        (3) The article resembles an ad based on specific regex validation or list element ends with ':' (BuzzFeed only)
 
     Returns True if all validations are met. Returns False otherwise.
     """
@@ -144,7 +119,8 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
         if (len(re.findall('(\. This |\. When )', article_list_text)) / total_elements) >= percentage_threshold:
             return False
 
-        if ':\n' in article_list_text:  # Articles where list items end with a colon will not be posted.
+        # Articles where list items end with a colon will not be posted (most likely referencing an image below).
+        if ':\n' in article_list_text:
             return False
 
     return True

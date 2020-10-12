@@ -1,7 +1,9 @@
-import helpers.list_parser_helper_methods as helpers
 import re
 import time
+
+import helpers.list_validation_methods as lvm
 from helpers.enums import *
+from helpers.reddit import post_to_reddit
 
 
 def find_article_to_parse(subreddit, website):
@@ -12,7 +14,7 @@ def find_article_to_parse(subreddit, website):
     articles_checked = 0
 
     print(f"Searching {website_name}'s archive.")
-    soup = helpers.soup_session(archive_link)
+    soup = lvm.soup_session(archive_link)
 
     for link in soup.find_all('h2', attrs={'class': 'c-entry-box--compact__title'}):
 
@@ -25,15 +27,15 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_header['href'])
         time.sleep(1)
 
-        if not helpers.article_title_meets_posting_requirements(subreddit, website, article_header.text):
+        if not lvm.article_title_meets_posting_requirements(subreddit, website, article_header.text):
             continue
 
         list_article_link = article_header['href']
 
-        article_list_text = get_article_list_text(list_article_link, helpers.get_article_list_count(article_header.text))
+        article_list_text = get_article_list_text(list_article_link, lvm.get_article_list_count(article_header.text))
         if article_list_text:
             print(f"{website_name} list article found: " + article_header.text)
-            helpers.post_to_reddit(article_header.text, article_list_text, list_article_link, subreddit, website)
+            post_to_reddit(article_header.text, article_list_text, list_article_link, subreddit, website)
             return True
 
     print(f"No {website_name} list articles were found to parse at this time.")
@@ -46,6 +48,7 @@ def get_article_list_text(link_to_check, total_list_elements):
     article_point_found = False
     list_counter = 1
     full_list = ""
+
     formatting_options = {
         # Header formatting
         "html_format_1": {
@@ -54,7 +57,7 @@ def get_article_list_text(link_to_check, total_list_elements):
         }
     }
 
-    soup = helpers.soup_session(link_to_check)
+    soup = lvm.soup_session(link_to_check)
 
     for option in formatting_options.values():
 
@@ -75,14 +78,13 @@ def get_article_list_text(link_to_check, total_list_elements):
                 list_counter += 1
                 article_point_found = False
 
-        if helpers.article_text_meets_posting_requirements(ArticleType.Polygon, full_list, list_counter, total_list_elements):
+        if lvm.article_text_meets_posting_requirements(ArticleType.Polygon, full_list, list_counter, total_list_elements):
+            if not full_list.startswith('1. '):
+                full_list = lvm.reverse_list(full_list)
             break
         else:
             list_counter = 1
             full_list = ""
-
-    if full_list.startswith(str(list_counter-1) + '. '):
-        full_list = helpers.reverse_list(full_list)
 
     return full_list
 
