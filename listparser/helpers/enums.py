@@ -5,7 +5,8 @@ class ArticleType(Enum):
     Business_Insider = 1
     BuzzFeed = 2
     CollegeHumor = 3
-    Polygon = 4
+    Cracked = 4
+    Polygon = 5
 
 
 def convert_enum_to_string(enum):

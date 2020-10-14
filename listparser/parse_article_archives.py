@@ -3,6 +3,7 @@ import traceback
 from parsers.businessinsider import find_article_to_parse as parse_businessinsider_archive
 from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
+from parsers.cracked import find_article_to_parse as parse_cracked_archive
 from parsers.polygon import find_article_to_parse as parse_polygon_archive
 from datetime import datetime
 from helpers.enums import *
@@ -17,6 +18,7 @@ def call_article_archive_parser(parser, subreddit):
         ArticleType.Business_Insider: lambda: parse_businessinsider_archive(subreddit, ArticleType.Business_Insider),
         ArticleType.BuzzFeed: lambda: parse_buzzfeed_archive(subreddit, ArticleType.BuzzFeed),
         ArticleType.CollegeHumor: lambda: parse_collegehumor_archive(subreddit, ArticleType.CollegeHumor),
+        ArticleType.Cracked: lambda: parse_cracked_archive(subreddit, ArticleType.Cracked),
         ArticleType.Polygon: lambda: parse_polygon_archive(subreddit, ArticleType.Polygon)
     }
 
@@ -35,6 +37,7 @@ def order_parsers(subreddit_name, parsers, posts_to_search):
     reddit = connect_to_reddit()
     subreddit = reddit.subreddit(subreddit_name)
     submissions = subreddit.new(limit=posts_to_search)
+
     for submission in reversed(list(submissions)):
         if submission.link_flair_text and string_in_enum_list(parsers, submission.link_flair_text):
             parsers.append(parsers.pop(parsers.index(convert_string_to_articletype_enum(submission.link_flair_text))))
@@ -52,6 +55,7 @@ def parser_controller():
         ArticleType.Business_Insider: True,
         ArticleType.BuzzFeed: True,
         ArticleType.CollegeHumor: False,
+        ArticleType.Cracked: True,
         ArticleType.Polygon: False
     }
 
