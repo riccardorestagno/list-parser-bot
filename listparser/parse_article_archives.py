@@ -74,13 +74,14 @@ def parser_controller():
 
 
 if __name__ == '__main__':
-    try:
-        while True:
+
+    while True:
+        try:
             print("Buzzfeed Bot is starting @ " + str(datetime.now()))
             parser_controller()
             print("Sweep finished @ " + str(datetime.now()))
             time.sleep(2 * 60 * 60)  # Run once every two hours.
-    except Exception as error:
-        print(f"An error has occurred: {error}")
-        send_error_message(traceback.format_exc())
-        time.sleep(5 * 60 * 60)  # Stop for 5 hours if an exception occurred.
+        except Exception as error:
+            print(f"An error has occurred: {error}")
+            send_error_message(traceback.format_exc())
+            time.sleep(5 * 60 * 60)  # Stop for 5 hours if an unknown exception occurred.
