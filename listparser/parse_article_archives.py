@@ -1,5 +1,7 @@
+import prawcore
 import time
 import traceback
+
 from parsers.businessinsider import find_article_to_parse as parse_businessinsider_archive
 from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
@@ -81,6 +83,13 @@ if __name__ == '__main__':
             parser_controller()
             print("Sweep finished @ " + str(datetime.now()))
             time.sleep(2 * 60 * 60)  # Run once every two hours.
+        except prawcore.exceptions.ResponseException as httpError:
+            if httpError.response.status_code == 503:
+                time.sleep(5 * 60)  # Wait 5 minutes before running again.
+            else:
+                print(f"A HTTP error has occurred. Received {httpError.response.status_code} HTTP response.")
+                send_error_message(f"A HTTP error has occurred. Received {httpError.response.status_code} HTTP response.")
+                time.sleep(1 * 60 * 60)  # Stop for 1 hour if a HTTP exception occurred (Not 503).
         except Exception as error:
             print(f"An error has occurred: {error}")
             send_error_message(traceback.format_exc())

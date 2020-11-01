@@ -1,4 +1,5 @@
 bs4
 langdetect
 praw
+prawcore
 requests
