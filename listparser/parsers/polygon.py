@@ -7,21 +7,16 @@ from helpers.reddit import post_to_reddit
 
 
 def find_article_to_parse(subreddit, website):
-    """Finds a list article in Polygons's latest article archive and posts the list article to Reddit."""
+    """Finds a list article in Polygon's latest article archive and posts the list article to Reddit."""
 
     archive_link = 'http://www.polygon.com/news'
     website_name = convert_enum_to_string(website)
-    articles_checked = 0
+    max_articles_to_search = 5
 
     print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
 
-    for link in soup.find_all('h2', attrs={'class': 'c-entry-box--compact__title'}):
-
-        # Break loop if more than 5 articles were checked.
-        articles_checked += 1
-        if articles_checked > 5:
-            break
+    for link in soup.find_all('h2', attrs={'class': 'c-entry-box--compact__title'}, limit=max_articles_to_search):
 
         article_header = link.find('a', href=True)
         print("Parsing article: " + article_header['href'])
@@ -45,7 +40,6 @@ def find_article_to_parse(subreddit, website):
 def get_article_list_text(link_to_check, total_list_elements):
     """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
 
-    article_point_found = False
     list_counter = 1
     full_list = ""
 
@@ -67,16 +61,16 @@ def get_article_list_text(link_to_check, total_list_elements):
         for article_point_wrapper in soup.find_all(wrapper[0], attrs=None if len(wrapper) == 1 else {wrapper[1]: wrapper[2]}):
             article_point_text = ""
             for article_point in article_point_wrapper.find_all(body[0], attrs=None if len(body) == 1 else {body[1]: body[2]}):
-                article_point_found = True
-                if re.search("^[0-9]+[.]", article_point_text):
-                    article_point_text += article_point.text
-                else:
-                    article_point_text += str(list_counter) + '. ' + article_point.text.strip()
+                article_point_text += article_point.text
 
-            if article_point_found:
+            if article_point_text:
+
+                article_point_text = article_point_text.strip()
+                if not re.search("^[0-9]+[.]", article_point_text):
+                    article_point_text = str(list_counter) + '. ' + article_point_text
+
                 full_list += article_point_text + '\n'
                 list_counter += 1
-                article_point_found = False
 
         if lvm.article_text_meets_posting_requirements(ArticleType.Polygon, full_list, list_counter, total_list_elements):
             if not full_list.startswith('1. '):
