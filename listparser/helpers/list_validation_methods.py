@@ -64,15 +64,14 @@ def get_article_list_count(article_title):
     return no_of_elements
 
 
-def article_title_meets_posting_requirements(subreddit, website, article_title, article_link):
+def article_title_meets_posting_requirements(website, article_title):
     """
     Validates that the article title meets all requirements to post the list to Reddit.
 
     The validations below check if:
         (1) The article contains a number
-        (2) The post hasn't been made already
-        (3) The article title doesn't contain certain pre-defined keywords
-        (4) The article title is in english (BuzzFeed only)
+        (2) The article title doesn't contain certain pre-defined keywords
+        (3) The article title is in english (BuzzFeed only)
 
     Returns True if all validations are met. Returns False otherwise.
     """
@@ -102,7 +101,7 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
     The validations below check if:
         (1) The header count is equal to the list article count
         (2) The list is correctly formatted
-        (3) The article resembles an ad based on specific regex validation or list element ends with ':' (BuzzFeed only)
+        (3) The article resembles an ad based on specific regex validations or list element ends with ':' (BuzzFeed only)
 
     Returns True if all validations are met. Returns False otherwise.
     """

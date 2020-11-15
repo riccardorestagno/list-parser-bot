@@ -79,7 +79,7 @@ def find_article_to_parse(subreddit, website):
         print("Parsing article: " + article_link)
         time.sleep(1)
 
-        if not lvm.article_title_meets_posting_requirements(subreddit, website, article_title.text, article_link):
+        if not lvm.article_title_meets_posting_requirements(website, article_title.text):
             continue
 
         no_of_elements = lvm.get_article_list_count(article_title.text)

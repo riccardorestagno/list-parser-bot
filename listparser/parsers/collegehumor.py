@@ -30,7 +30,7 @@ def find_article_to_parse(subreddit, website):
 
 		article_link = 'http://www.collegehumor.com' + article.find('a')['href']
 
-		if not lvm.article_title_meets_posting_requirements(subreddit, website, article.text, article_link):
+		if not lvm.article_title_meets_posting_requirements(website, article.text):
 			continue
 
 		if article_published_today(article_link):
