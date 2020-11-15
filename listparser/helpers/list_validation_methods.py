@@ -92,9 +92,6 @@ def article_title_meets_posting_requirements(subreddit, website, article_title, 
     if any(words in article_title_lowercase for words in get_title_exclusion_words(website)):
         return False
 
-    if post_previously_made(subreddit, article_link):
-        return False
-
     return True
 
 

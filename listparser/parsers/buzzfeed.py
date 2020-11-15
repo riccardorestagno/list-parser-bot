@@ -88,7 +88,7 @@ def find_article_to_parse(subreddit, website):
         if not article_list_text:
             article_list_text = paragraph_article_text(article_link, no_of_elements)
 
-        if article_list_text:
+        if article_list_text and not lvm.post_previously_made(subreddit, article_link):
             print(f"{website_name} list article found: " + article_title.text)
             post_to_reddit(article_title.text, article_list_text, article_link, subreddit, website)
             set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)

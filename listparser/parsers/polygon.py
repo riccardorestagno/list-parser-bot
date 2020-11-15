@@ -27,7 +27,7 @@ def find_article_to_parse(subreddit, website):
             continue
 
         article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article_header.text))
-        if article_list_text:
+        if article_list_text and not lvm.post_previously_made(subreddit, article_link):
             print(f"{website_name} list article found: " + article_header.text)
             post_to_reddit(article_header.text, article_list_text, article_link, subreddit, website)
             return True
