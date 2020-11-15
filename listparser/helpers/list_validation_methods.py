@@ -7,11 +7,15 @@ from helpers.enums import ArticleType
 from helpers.reddit import connect_to_reddit
 
 
-# If the list article title contains any of the words below, the list will not be posted to Reddit.
+# If the list article title from a specific website contains any of the words below, the list will not be posted to Reddit.
 # This avoids posting content which contains lists of ads and images.
-BREAK_WORDS = ['pictures', 'pics', 'photos', 'gifs', 'images',
-               'twitter', 'must see', 'tweets', 'memes',
-               'instagram', 'tumblr', 'gifts', 'products', 'deals']
+TITLE_EXCLUSION_WORDS_ALL = ['pics', 'pictures', 'photos', 'gifs', 'images', 'deals', 'memes', 'tweets', 'must see']
+
+TITLE_EXCLUSION_WORDS_BUZZFEED = ['amazon', 'twitter', 'instagram', 'tumblr', 'gifts', 'products']
+
+TITLE_EXCLUSION_WORDS_MAPPING = {
+    ArticleType.BuzzFeed: TITLE_EXCLUSION_WORDS_BUZZFEED
+}
 
 
 def soup_session(link):
@@ -49,8 +53,17 @@ def post_previously_made(post_title, list_elements, subreddit):
     return False
 
 
+def get_title_exclusion_words(website):
+    """Returns a list of words that should prevent the article from being posted if contained in the title."""
+
+    if website in TITLE_EXCLUSION_WORDS_MAPPING:
+        return TITLE_EXCLUSION_WORDS_ALL + TITLE_EXCLUSION_WORDS_MAPPING[website]
+    else:
+        return TITLE_EXCLUSION_WORDS_ALL
+
+
 def get_article_list_count(article_title):
-    """Gets number of points in the list article."""
+    """Returns number of points in the list article."""
 
     try:
         no_of_elements = [int(s) for s in article_title.split() if s.isdigit()][0]
@@ -85,7 +98,7 @@ def article_title_meets_posting_requirements(subreddit, website, article_title):
         return False
 
     article_title_lowercase = article_title.lower()
-    if any(words in article_title_lowercase for words in BREAK_WORDS):
+    if any(words in article_title_lowercase for words in get_title_exclusion_words(website)):
         return False
 
     if post_previously_made(article_title_lowercase, no_of_elements, subreddit):
