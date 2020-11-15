@@ -27,10 +27,10 @@ def soup_session(link):
     return soup
 
 
-def post_previously_made(post_title, list_elements, subreddit):
+def post_previously_made(subreddit, article_link):
     """
     Checks if the post has already been submitted.
-    This is done by comparing a post with the same list count has 4 or more of the same words in the title.
+    This is done by checking if the article link to be posted is within the article text of a previous post.
     Returns True if post was already submitted. Returns False otherwise.
     """
 
@@ -38,17 +38,8 @@ def post_previously_made(post_title, list_elements, subreddit):
     subreddit = reddit.subreddit(subreddit)
     submissions = subreddit.new(limit=10)
     for submission in submissions:
-        if submission.title.lower() == post_title:
+        if article_link in submission.selftext:
             return True
-        try:
-            list_elements_to_check = [int(s) for s in submission.title.split() if s.isdigit()][0]
-        except IndexError:
-            continue
-        if list_elements_to_check == list_elements:
-            same_words = set.intersection(set(post_title.split()), set(submission.title.lower().split()))
-            number_of_words = len(same_words)
-            if number_of_words >= 4:
-                return True
 
     return False
 
@@ -73,7 +64,7 @@ def get_article_list_count(article_title):
     return no_of_elements
 
 
-def article_title_meets_posting_requirements(subreddit, website, article_title):
+def article_title_meets_posting_requirements(subreddit, website, article_title, article_link):
     """
     Validates that the article title meets all requirements to post the list to Reddit.
 
@@ -101,7 +92,7 @@ def article_title_meets_posting_requirements(subreddit, website, article_title):
     if any(words in article_title_lowercase for words in get_title_exclusion_words(website)):
         return False
 
-    if post_previously_made(article_title_lowercase, no_of_elements, subreddit):
+    if post_previously_made(subreddit, article_link):
         return False
 
     return True

@@ -75,22 +75,22 @@ def find_article_to_parse(subreddit, website):
         current_iter += 1
 
         article_title = link.find('a', href=True)
-        print("Parsing article: " + article_title['href'])
+        article_link = article_title['href']
+        print("Parsing article: " + article_link)
         time.sleep(1)
 
-        if not lvm.article_title_meets_posting_requirements(subreddit, website, article_title.text):
+        if not lvm.article_title_meets_posting_requirements(subreddit, website, article_title.text, article_link):
             continue
 
-        list_article_link = article_title['href']
         no_of_elements = lvm.get_article_list_count(article_title.text)
 
-        article_list_text = get_article_list_text(list_article_link, no_of_elements)
+        article_list_text = get_article_list_text(article_link, no_of_elements)
         if not article_list_text:
-            article_list_text = paragraph_article_text(list_article_link, no_of_elements)
+            article_list_text = paragraph_article_text(article_link, no_of_elements)
 
         if article_list_text:
             print(f"{website_name} list article found: " + article_title.text)
-            post_to_reddit(article_title.text, article_list_text, list_article_link, subreddit, website)
+            post_to_reddit(article_title.text, article_list_text, article_link, subreddit, website)
             set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
             return True
 

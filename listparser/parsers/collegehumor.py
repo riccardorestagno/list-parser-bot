@@ -27,17 +27,17 @@ def find_article_to_parse(subreddit, website):
 	soup = lvm.soup_session(archive_link)
 
 	for article in soup.find_all('h3', attrs={'class': 'title'}):
-		
-		if not lvm.article_title_meets_posting_requirements(subreddit, website, article.text):
+
+		article_link = 'http://www.collegehumor.com' + article.find('a')['href']
+
+		if not lvm.article_title_meets_posting_requirements(subreddit, website, article.text, article_link):
 			continue
-		
-		list_article_link = 'http://www.collegehumor.com' + article.find('a')['href']
-		
-		if article_published_today(list_article_link):
-			article_list_text = get_article_list_text(list_article_link, lvm.get_article_list_count(article.text))
+
+		if article_published_today(article_link):
+			article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article.text))
 			if article_list_text:
 				print(f"{website_name} list article found: " + article.text)
-				post_to_reddit(article.text, article_list_text, list_article_link, subreddit, website)
+				post_to_reddit(article.text, article_list_text, article_link, subreddit, website)
 				return True
 
 	print(f"No {website_name} list articles were found to parse at this time.")

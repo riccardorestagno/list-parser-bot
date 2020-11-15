@@ -19,18 +19,17 @@ def find_article_to_parse(subreddit, website):
     for link in soup.find_all('h2', attrs={'class': 'c-entry-box--compact__title'}, limit=max_articles_to_search):
 
         article_header = link.find('a', href=True)
-        print("Parsing article: " + article_header['href'])
+        article_link = article_header['href']
+        print("Parsing article: " + article_link)
         time.sleep(1)
 
-        if not lvm.article_title_meets_posting_requirements(subreddit, website, article_header.text):
+        if not lvm.article_title_meets_posting_requirements(subreddit, website, article_header.text, article_link):
             continue
 
-        list_article_link = article_header['href']
-
-        article_list_text = get_article_list_text(list_article_link, lvm.get_article_list_count(article_header.text))
+        article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article_header.text))
         if article_list_text:
             print(f"{website_name} list article found: " + article_header.text)
-            post_to_reddit(article_header.text, article_list_text, list_article_link, subreddit, website)
+            post_to_reddit(article_header.text, article_list_text, article_link, subreddit, website)
             return True
 
     print(f"No {website_name} list articles were found to parse at this time.")
