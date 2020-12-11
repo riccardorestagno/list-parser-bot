@@ -47,10 +47,16 @@ def get_article_list_text(link_to_check, total_list_elements):
     for article in soup.find_all("h2", attrs={"class": "subheading"}):
 
         list_item_number_element = article.find("div", attrs={"class": "num-wrap"})
-        list_item_text_element = article.find("div", attrs={"class": None}).find("div", attrs={"class": None})
+        if list_item_number_element:
+            list_item_number = list_item_number_element.text
+            list_item_text_element = article.find("div", attrs={"class": None}).find("div", attrs={"class": None})
+            list_item_text = list_item_text_element.text.strip() if list_item_text_element else None
+        else:
+            list_item_number = str(list_counter)
+            list_item_text = article.text.strip()
 
-        if list_item_number_element and list_item_text_element and list_item_text_element.text.strip():
-            full_list += f"{list_item_number_element.text}. {list_item_text_element.text}\n"
+        if list_item_number and list_item_text:
+            full_list += f"{list_item_number}. {list_item_text}\n"
             list_counter += 1
 
     if lvm.article_text_meets_posting_requirements(ArticleType.Cracked, full_list, list_counter, total_list_elements):
@@ -62,5 +68,5 @@ def get_article_list_text(link_to_check, total_list_elements):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse("buzzfeedbot", ArticleType.Business_Insider)
+    find_article_to_parse("buzzfeedbot", ArticleType.Cracked)
     print("Cracked script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
