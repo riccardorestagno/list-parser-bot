@@ -82,7 +82,7 @@ if __name__ == '__main__':
             print("Buzzfeed Bot is starting @ " + str(datetime.now()))
             parser_controller()
             print("Sweep finished @ " + str(datetime.now()))
-            time.sleep(2 * 60 * 60)  # Run once every two hours.
+            time.sleep(1.5 * 60 * 60)  # Run once every 90 minutes.
         except prawcore.exceptions.ResponseException as httpError:
             if httpError.response.status_code == 503:
                 time.sleep(5 * 60)  # Wait 5 minutes before running again.
