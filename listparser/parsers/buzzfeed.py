@@ -143,7 +143,6 @@ def get_article_list_text(link_to_check, total_list_elements):
     if lvm.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
         if not full_list.startswith('1. '):
             full_list = lvm.reverse_list(full_list)
-            full_list = full_list.replace("1. And finally, ", "1. ")
 
         return full_list
 
