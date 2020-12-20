@@ -36,7 +36,7 @@ def post_previously_made(subreddit, article_link):
 
     reddit = connect_to_reddit()
     subreddit = reddit.subreddit(subreddit)
-    submissions = subreddit.new(limit=10)
+    submissions = subreddit.new(limit=25)
     for submission in submissions:
         if article_link in submission.selftext:
             return True
