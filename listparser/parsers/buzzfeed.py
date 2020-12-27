@@ -1,21 +1,23 @@
 import time
 from datetime import date, timedelta
-from os import path
+from os import getcwd, makedirs, path
 
 import helpers.list_validation_methods as lvm
 from helpers.enums import *
 from helpers.reddit import post_to_reddit
 
 
-BUZZFEED_ARTICLES_SEARCHED_FILE = 'buzzfeed_articles_searched.txt'
+BUZZFEED_ARTICLES_SEARCHED_FILE = getcwd() + "/data/buzzfeed_articles_searched.txt"
 
 
 def get_articles_searched_count():
-    """Gets the number of articles the bot already searched in yesterdays archive"""
+    """Gets the number of articles the bot already searched in yesterday's archive"""
 
     yesterdays_date = (date.today() - timedelta(1)).strftime("%Y/%m/%d")
 
+    # Creates the directory/file if it doesn't exist yet and sets the file with yesterday's date and 0 articles searched.
     if not path.exists(BUZZFEED_ARTICLES_SEARCHED_FILE):
+        makedirs(BUZZFEED_ARTICLES_SEARCHED_FILE.rsplit('/', 1)[0] + '/')
         set_total_articles_searched_today(yesterdays_date, 0)
         return 0
 
