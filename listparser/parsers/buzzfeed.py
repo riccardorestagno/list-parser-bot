@@ -17,7 +17,7 @@ def get_articles_searched_count():
 
     # Creates the directory/file if it doesn't exist yet and sets the file with yesterday's date and 0 articles searched.
     if not path.exists(BUZZFEED_ARTICLES_SEARCHED_FILE):
-        makedirs(BUZZFEED_ARTICLES_SEARCHED_FILE.rsplit('/', 1)[0] + '/')
+        makedirs(BUZZFEED_ARTICLES_SEARCHED_FILE.rsplit('/', 1)[0] + '/', exist_ok=True)
         set_total_articles_searched_today(yesterdays_date, 0)
         return 0
 
