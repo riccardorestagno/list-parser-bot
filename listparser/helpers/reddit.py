@@ -19,7 +19,7 @@ def post_to_reddit(headline, main_text, link, subreddit, website):
 
     reddit = connect_to_reddit()
 
-    reddit.subreddit(subreddit).submit(title=headline, selftext=main_text+'\n' + '[Link to article](' + link + ')')\
+    reddit.subreddit(subreddit).submit(title=headline, selftext=f"{main_text}\n[Link to article]({link})")\
                                .mod.flair(text=convert_enum_to_string(website))
 
 

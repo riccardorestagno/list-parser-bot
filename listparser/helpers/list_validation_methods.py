@@ -57,11 +57,11 @@ def get_article_list_count(article_title):
     """Returns number of points in the list article."""
 
     try:
-        no_of_elements = [int(s) for s in article_title.split() if s.isdigit()][0]
+        list_count = [int(s) for s in article_title.split() if s.isdigit()][0]
     except (AttributeError, IndexError):
         return 0
 
-    return no_of_elements
+    return list_count
 
 
 def article_title_meets_posting_requirements(website, article_title):
@@ -83,12 +83,10 @@ def article_title_meets_posting_requirements(website, article_title):
         except lang_detect_exception.LangDetectException:
             return False
 
-    no_of_elements = get_article_list_count(article_title)
-    if no_of_elements == 0:
+    if get_article_list_count(article_title) == 0:
         return False
 
-    article_title_lowercase = article_title.lower()
-    if any(words in article_title_lowercase for words in get_title_exclusion_words(website)):
+    if any(words in article_title.lower() for words in get_title_exclusion_words(website)):
         return False
 
     return True
