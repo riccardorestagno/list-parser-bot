@@ -8,9 +8,6 @@ WORKDIR /listparser
 COPY listparser .
 COPY requirements.txt .
 
-# Compiler not needed
-# RUN apk add build-base
-
 # Using pip:
 RUN python3 -m pip install -r requirements.txt
 

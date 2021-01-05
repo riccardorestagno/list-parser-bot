@@ -1,46 +1,12 @@
 import time
-from datetime import date, timedelta
-from os import getcwd, makedirs, path
 
 import helpers.list_validation_methods as lvm
 from helpers.enums import *
 from helpers.reddit import post_to_reddit
 
 
-BUZZFEED_ARTICLES_SEARCHED_FILE = getcwd() + "/data/buzzfeed_articles_searched.txt"
-
-
-def get_articles_searched_count():
-    """Gets the number of articles the bot already searched in yesterday's archive"""
-
-    yesterdays_date = (date.today() - timedelta(1)).strftime("%Y/%m/%d")
-
-    # Creates the directory/file if it doesn't exist yet and sets the file with yesterday's date and 0 articles searched.
-    if not path.exists(BUZZFEED_ARTICLES_SEARCHED_FILE):
-        makedirs(BUZZFEED_ARTICLES_SEARCHED_FILE.rsplit('/', 1)[0] + '/', exist_ok=True)
-        set_total_articles_searched_today(yesterdays_date, 0)
-        return 0
-
-    with open(BUZZFEED_ARTICLES_SEARCHED_FILE, 'r') as file:
-        if yesterdays_date != file.readline().strip():
-            set_total_articles_searched_today(yesterdays_date, 0)
-            return 0
-        for i, line in enumerate(file):
-            if i == 0:  # Second line since first line was read above.
-                return int(line)
-
-    return 0
-
-
-def set_total_articles_searched_today(current_date, article_completed_count=0):
-    """Modifies the file to contain the current archive date and the number of articles already searched."""
-
-    with open(BUZZFEED_ARTICLES_SEARCHED_FILE, 'w+') as file:
-        file.write(current_date + '\n' + str(article_completed_count) + '\n')
-
-
 def paragraph_article_text(link_to_check, total_list_elements):
-    """Parses BuzzFeed list articles that are in paragraph form (have the 'p' HTML tag)."""
+    """Parses BuzzFeed list articles that are in paragraph form (has the 'p' HTML tag)."""
 
     list_counter = 1
     full_list = ""
@@ -60,21 +26,16 @@ def paragraph_article_text(link_to_check, total_list_elements):
 
 
 def find_article_to_parse(subreddit, website):
-    """Finds a list article in BuzzFeed's article archive of yesterday's and posts the list article to Reddit."""
+    """Finds a list article in BuzzFeed's latest article archive and posts the list article to Reddit."""
 
-    current_iter = 0
-    articles_searched_count = get_articles_searched_count()
-    yesterdays_date = (date.today() - timedelta(1)).strftime("%Y/%m/%d")
-
-    archive_link = 'https://www.buzzfeed.com/archive/'
+    archive_link = 'https://www.buzzfeed.com/buzz'
     website_name = convert_enum_to_string(website)
+    max_articles_to_search = 15
 
-    print(f"Searching {website_name}'s archive on " + yesterdays_date)
-    soup = lvm.soup_session(archive_link + yesterdays_date)
+    print(f"Searching {website_name}'s archive.")
+    soup = lvm.soup_session(archive_link)
 
-    for link in soup.find_all('article', attrs={'data-buzzblock': 'story-card'})[articles_searched_count:]:
-
-        current_iter += 1
+    for link in soup.find_all('article', attrs={'data-buzzblock': 'story-card'}, limit=max_articles_to_search):
 
         article_title = link.find('a', href=True)
         article_link = article_title['href']
@@ -93,10 +54,7 @@ def find_article_to_parse(subreddit, website):
         if article_list_text and not lvm.post_previously_made(subreddit, article_link):
             print(f"{website_name} list article found: " + article_title.text)
             post_to_reddit(article_title.text, article_list_text, article_link, subreddit, website)
-            set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
             return True
-
-    set_total_articles_searched_today(yesterdays_date, articles_searched_count + current_iter)
 
     print(f"No {website_name} list articles were found to parse at this time.")
     return False
