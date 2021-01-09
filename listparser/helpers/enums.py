@@ -2,11 +2,12 @@ from enum import Enum
 
 
 class ArticleType(Enum):
-    Business_Insider = 1
-    BuzzFeed = 2
-    CollegeHumor = 3
-    Cracked = 4
-    Polygon = 5
+    All = 1
+    Business_Insider = 2
+    BuzzFeed = 3
+    CollegeHumor = 4
+    Cracked = 5
+    Polygon = 6
 
 
 def convert_enum_to_string(enum):

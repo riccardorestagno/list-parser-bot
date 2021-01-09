@@ -1,6 +1,7 @@
 import praw
 from os import environ
 
+from config import subreddit
 from helpers.enums import convert_enum_to_string
 
 
@@ -14,7 +15,7 @@ def connect_to_reddit():
                        password=environ["BUZZFEEDBOT_PASSWORD"])
 
 
-def post_to_reddit(headline, main_text, link, subreddit, website):
+def post_to_reddit(headline, main_text, link, website):
     """Module that takes the title, main text and link to article and posts directly to Reddit."""
 
     reddit = connect_to_reddit()
@@ -27,4 +28,4 @@ def send_error_message(stack_trace):
     """If a runtime error has occurred, PM a mod with the error details."""
     reddit = connect_to_reddit()
 
-    reddit.redditor('Improbably_wrong').message('ERROR - r/buzzfeedbot', stack_trace)
+    reddit.redditor('Improbably_wrong').message(f'ERROR - r/{subreddit}', stack_trace)

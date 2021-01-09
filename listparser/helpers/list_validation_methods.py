@@ -3,19 +3,9 @@ import requests
 from bs4 import BeautifulSoup
 from langdetect import detect, lang_detect_exception
 
+from config import post_previously_made_search_limit, subreddit, title_exclusion_words
 from helpers.enums import ArticleType
 from helpers.reddit import connect_to_reddit
-
-
-# If the list article title from a specific website contains any of the words below, the list will not be posted to Reddit.
-# This avoids posting content which contains lists of ads and images.
-TITLE_EXCLUSION_WORDS_ALL = ['pics', 'pictures', 'photos', 'gifs', 'images', 'deals', 'memes', 'tweets', 'must see']
-
-TITLE_EXCLUSION_WORDS_BUZZFEED = ['amazon', 'twitter', 'instagram', 'tumblr', 'gifts', 'products']
-
-TITLE_EXCLUSION_WORDS_MAPPING = {
-    ArticleType.BuzzFeed: TITLE_EXCLUSION_WORDS_BUZZFEED
-}
 
 
 def soup_session(link):
@@ -27,7 +17,7 @@ def soup_session(link):
     return soup
 
 
-def post_previously_made(subreddit, article_link):
+def post_previously_made(article_link):
     """
     Checks if the post has already been submitted.
     This is done by checking if the article link to be posted is within the article text of a previous post.
@@ -35,8 +25,7 @@ def post_previously_made(subreddit, article_link):
     """
 
     reddit = connect_to_reddit()
-    subreddit = reddit.subreddit(subreddit)
-    submissions = subreddit.new(limit=25)
+    submissions = reddit.subreddit(subreddit).new(limit=post_previously_made_search_limit)
     for submission in submissions:
         if article_link in submission.selftext:
             return True
@@ -47,10 +36,10 @@ def post_previously_made(subreddit, article_link):
 def get_title_exclusion_words(website):
     """Returns a list of words that should prevent the article from being posted if contained in the title."""
 
-    if website in TITLE_EXCLUSION_WORDS_MAPPING:
-        return TITLE_EXCLUSION_WORDS_ALL + TITLE_EXCLUSION_WORDS_MAPPING[website]
+    if website in title_exclusion_words:
+        return title_exclusion_words[ArticleType.All] + title_exclusion_words[website]
     else:
-        return TITLE_EXCLUSION_WORDS_ALL
+        return title_exclusion_words[ArticleType.All]
 
 
 def get_article_list_count(article_title):

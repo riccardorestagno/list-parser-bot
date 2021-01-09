@@ -1,16 +1,17 @@
 import time
 
 import helpers.list_validation_methods as lvm
+from config import cracked_article_archive_link as archive_link
+from config import cracked_max_articles_to_search as max_articles_to_search
 from helpers.enums import *
 from helpers.reddit import post_to_reddit
 
 
-def find_article_to_parse(subreddit, website):
+def find_article_to_parse():
     """Finds a list article in Cracked's latest article archive and posts the list article to Reddit."""
 
-    archive_link = 'https://www.cracked.com/funny-articles.html'
+    website = ArticleType.Cracked
     website_name = convert_enum_to_string(website)
-    max_articles_to_search = 5
 
     print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
@@ -27,9 +28,9 @@ def find_article_to_parse(subreddit, website):
                 continue
 
             article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article_title.text))
-            if article_list_text and not lvm.post_previously_made(subreddit, article_link):
+            if article_list_text and not lvm.post_previously_made(article_link):
                 print(f"{website_name} list article found: " + article_title.text)
-                post_to_reddit(article_title.text, article_list_text, article_link, subreddit, website)
+                post_to_reddit(article_title.text, article_list_text, article_link, website)
                 return True
 
     print(f"No {website_name} list articles were found to parse at this time.")
@@ -65,5 +66,5 @@ def get_article_list_text(link_to_check, total_list_elements):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse("buzzfeedbot", ArticleType.Cracked)
+    find_article_to_parse()
     print("Cracked script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")

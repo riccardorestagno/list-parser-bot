@@ -2,6 +2,7 @@ import time
 from datetime import date, timedelta
 
 import helpers.list_validation_methods as lvm
+from config import collegehumor_article_archive_link as archive_link
 from helpers.enums import *
 from helpers.reddit import post_to_reddit
 
@@ -17,10 +18,10 @@ def article_published_today(link):
 	return date_to_check == todays_date
 
 
-def find_article_to_parse(subreddit, website):
+def find_article_to_parse():
 	"""Finds a list article in CollegeHumor's latest article archive and posts the list article to Reddit."""
 
-	archive_link = 'http://www.collegehumor.com/articles'
+	website = ArticleType.CollegeHumor
 	website_name = convert_enum_to_string(website)
 
 	print(f"Searching {website_name}'s archive.")
@@ -35,9 +36,9 @@ def find_article_to_parse(subreddit, website):
 
 		if article_published_today(article_link):
 			article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article.text))
-			if article_list_text and not lvm.post_previously_made(subreddit, article_link):
+			if article_list_text and not lvm.post_previously_made(article_link):
 				print(f"{website_name} list article found: " + article.text)
-				post_to_reddit(article.text, article_list_text, article_link, subreddit, website)
+				post_to_reddit(article.text, article_list_text, article_link, website)
 				return True
 
 	print(f"No {website_name} list articles were found to parse at this time.")
@@ -65,5 +66,5 @@ def get_article_list_text(link_to_check, total_list_elements):
 
 if __name__ == "__main__":
 	start_time = round(time.time(), 2)
-	find_article_to_parse("buzzfeedbot", ArticleType.CollegeHumor)
+	find_article_to_parse()
 	print("CollegeHumor script ran for " + str(round((time.time() - start_time), 2)) + " seconds.")
