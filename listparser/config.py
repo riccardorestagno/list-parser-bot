@@ -5,7 +5,7 @@ subreddit = "buzzfeedbot"
 script_execution_delay = 1.5 * 60 * 60
 
 # Supported parsers
-supported_parsers_mapping = {
+active_parsers = {
     ArticleType.Business_Insider: True,
     ArticleType.BuzzFeed: True,
     ArticleType.CollegeHumor: False,

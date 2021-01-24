@@ -3,10 +3,10 @@ import time
 import traceback
 from datetime import datetime
 
-from config import script_execution_delay, subreddit, supported_parsers_mapping
+from config import active_parsers, script_execution_delay, subreddit
 from helpers.enums import *
 from helpers.reddit import connect_to_reddit, send_error_message
-from parsers.businessinsider import find_article_to_parse as parse_businessinsider_archive
+from parsers.businessinsider import find_article_to_parse as parse_business_insider_archive
 from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
 from parsers.cracked import find_article_to_parse as parse_cracked_archive
@@ -18,7 +18,7 @@ def call_article_archive_parser(parser):
 
     # Maps the parser enum type to its associated parser method.
     archive_parsers = {
-        ArticleType.Business_Insider: lambda: parse_businessinsider_archive(),
+        ArticleType.Business_Insider: lambda: parse_business_insider_archive(),
         ArticleType.BuzzFeed: lambda: parse_buzzfeed_archive(),
         ArticleType.CollegeHumor: lambda: parse_collegehumor_archive(),
         ArticleType.Cracked: lambda: parse_cracked_archive(),
@@ -34,9 +34,16 @@ def call_article_archive_parser(parser):
         return call_archive_parser()
 
 
-def order_parsers(parsers, posts_to_search):
-    """Order parsers based on the flair of the latest posts made to the subreddit, if possible."""
+def get_ordered_article_parsers():
+    """Gets ordered article parsers based on the flairs of the latest posts made to the subreddit."""
 
+    parsers = [website for website, active in active_parsers.items() if active]  # Get list of active parsers.
+
+    # Skip ordering of parsers list if one or less parsers are active.
+    if not len(parsers) > 1:
+        return parsers
+
+    posts_to_search = len(parsers) - 1
     reddit = connect_to_reddit()
     submissions = reddit.subreddit(subreddit).new(limit=posts_to_search)
 
@@ -48,20 +55,9 @@ def order_parsers(parsers, posts_to_search):
 
 
 def parser_controller():
-    """Controller which determines which parser function should be called for the current iteration of the scripts' execution."""
+    """Iterates through all active parsers. If a post was made, break the loop."""
 
-    supported_parsers = []
-
-    for parser in supported_parsers_mapping.items():
-        if parser[1]:
-            supported_parsers.append(parser[0])
-
-    # If more than one parser is supported, order parsers based on parsers used for latest posts on the subreddit.
-    if len(supported_parsers) > 1:
-        supported_parsers = order_parsers(supported_parsers, len(supported_parsers)-1)
-
-    # Iterate through all supported parsers. If a post was made, break the loop.
-    for parser in supported_parsers:
+    for parser in get_ordered_article_parsers():
         if call_article_archive_parser(parser):
             break
 
