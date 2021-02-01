@@ -1,4 +1,5 @@
 import prawcore
+import socket
 import time
 import traceback
 from datetime import datetime
@@ -72,11 +73,13 @@ if __name__ == '__main__':
             time.sleep(script_execution_delay)
         except prawcore.exceptions.ResponseException as httpError:
             if httpError.response.status_code == 503:
-                time.sleep(5 * 60)  # Wait 5 minutes before running again.
+                time.sleep(5 * 60)  # Temporary connection error. Wait 5 minutes before running again.
             else:
                 print(f"A HTTP error has occurred. Received {httpError.response.status_code} HTTP response.")
                 send_error_message(f"A HTTP error has occurred. Received {httpError.response.status_code} HTTP response.")
                 time.sleep(1 * 60 * 60)  # Stop for 1 hour if a HTTP exception occurred (Not 503).
+        except socket.gaierror:
+            time.sleep(5 * 60)  # Temporary connection error. Wait 5 minutes before running again.
         except Exception as error:
             print(f"An error has occurred: {error}")
             send_error_message(traceback.format_exc())
