@@ -17,7 +17,7 @@ def paragraph_article_text(link_to_check, total_list_elements):
 
     for list_element in soup.find_all('p'):
         if list_element.text and list_element.text[0].isdigit():
-            full_list += list_element.text.replace(')', '. ', 1) + '\n'
+            full_list += list_element.text.replace(') ', '. ', 1) + '\n'
             list_counter += 1
 
     if lvm.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
