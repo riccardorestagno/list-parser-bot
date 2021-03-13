@@ -72,7 +72,7 @@ if __name__ == '__main__':
             print("Sweep finished @ " + str(datetime.now()))
             time.sleep(script_execution_delay)
         except prawcore.exceptions.ResponseException as httpError:
-            if httpError.response.status_code == 503:
+            if httpError.response.status_code == 503 or httpError.response.status_code == 502:
                 time.sleep(5 * 60)  # Temporary connection error. Wait 5 minutes before running again.
             else:
                 print(f"A HTTP error has occurred. Received {httpError.response.status_code} HTTP response.")

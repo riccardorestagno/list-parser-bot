@@ -18,7 +18,7 @@ def find_article_to_parse():
 
     for article in soup.find_all("div", attrs={"class": "content-cards-info"}, limit=max_articles_to_search):
 
-        article_title = article.find("h3").find("a", href=True)
+        article_title = article.find("span", attrs={"class": "content-card-title"}).find("a", href=True)
         if article_title:
             article_link = article_title['href']
             print("Parsing article: " + article_link)
