@@ -7,7 +7,7 @@ from helpers.enums import *
 from helpers.reddit import post_to_reddit
 
 
-def find_article_to_parse():
+def find_article_to_parse(create_post=True):
     """Finds a list article in Business Insider's latest article archive and posts the list article to Reddit."""
 
     website = ArticleType.Business_Insider
@@ -33,7 +33,8 @@ def find_article_to_parse():
         article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article_title.text))
         if article_list_text and not lvm.post_previously_made(article_link):
             print(f"{website_name} list article found: " + article_title.text)
-            post_to_reddit(article_title.text, article_list_text, article_link, website)
+            if create_post:
+                post_to_reddit(article_title.text, article_list_text, article_link, website)
             return True
 
     print(f"No {website_name} list articles were found to parse at this time.")
@@ -92,5 +93,5 @@ def get_article_list_text(link_to_check, total_list_elements):
 
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
-    find_article_to_parse()
+    find_article_to_parse(create_post=False)
     print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
