@@ -49,8 +49,8 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     for article in soup.find_all("h2", attrs={"class": "subheading"}):
 
-        list_item_number_element = article.find("div", attrs={"class": "num-wrap"})
-        list_item_text_element = article.find("div", attrs={"class": None}).find("div", attrs={"class": None}) if list_item_number_element else None
+        list_item_number_element = article.find("label")
+        list_item_text_element = article.find("span")
 
         list_item_number = list_item_number_element.text if list_item_number_element else str(list_counter)
         list_item_text = list_item_text_element.text.strip() if list_item_text_element else article.text.strip()
