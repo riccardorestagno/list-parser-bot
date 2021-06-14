@@ -3,7 +3,7 @@ name: Build and Push Container
 on:
   push:
     branches:
-      - main # When "main" is pushed
+      - master # When "master" is pushed
   schedule:
     - cron: '0 3 * * *' # Everyday at 3AM
 
