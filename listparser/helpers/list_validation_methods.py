@@ -45,6 +45,23 @@ def get_title_exclusion_words(website):
 def get_article_list_count(article_title):
     """Returns number of points in the list article."""
 
+    text_number_mapping = {
+        'one': 1,
+        'two': 2,
+        'three': 3,
+        'four': 4,
+        'five': 5,
+        'six': 6,
+        'seven': 7,
+        'eight': 8,
+        'nine': 9,
+        'ten': 10,
+    }
+    first_word = article_title.split()[0].lower()
+
+    if first_word in text_number_mapping:
+        return text_number_mapping[first_word]
+
     try:
         list_count = [int(s) for s in article_title.split() if s.isdigit()][0]
     except (AttributeError, IndexError):
