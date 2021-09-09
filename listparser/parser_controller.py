@@ -12,6 +12,7 @@ from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
 from parsers.cracked import find_article_to_parse as parse_cracked_archive
 from parsers.polygon import find_article_to_parse as parse_polygon_archive
+from parsers.screenrant import find_article_to_parse as parse_screen_rant_archive
 
 
 def call_article_archive_parser(parser):
@@ -23,7 +24,8 @@ def call_article_archive_parser(parser):
         ArticleType.BuzzFeed: lambda: parse_buzzfeed_archive(),
         ArticleType.CollegeHumor: lambda: parse_collegehumor_archive(),
         ArticleType.Cracked: lambda: parse_cracked_archive(),
-        ArticleType.Polygon: lambda: parse_polygon_archive()
+        ArticleType.Polygon: lambda: parse_polygon_archive(),
+        ArticleType.Screen_Rant: lambda: parse_screen_rant_archive(),
     }
 
     try:

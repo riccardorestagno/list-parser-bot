@@ -8,6 +8,7 @@ class ArticleType(Enum):
     CollegeHumor = 4
     Cracked = 5
     Polygon = 6
+    Screen_Rant = 7
 
 
 def convert_enum_to_string(enum):

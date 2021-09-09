@@ -19,10 +19,7 @@ def find_article_to_parse(create_post=True):
     for link in soup.find_all('h2', attrs={'class': 'tout-title default-tout'}):
 
         article_title = link.find('a', href=True)
-        if article_title['href'].startswith("http"):
-            article_link = article_title['href']
-        else:
-            article_link = "http://www.businessinsider.com" + article_title['href']
+        article_link = article_title['href'] if article_title['href'].startswith("http") else "http://www.businessinsider.com" + article_title['href']
 
         print("Parsing article: " + article_link)
         time.sleep(1)

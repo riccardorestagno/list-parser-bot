@@ -12,7 +12,7 @@ def soup_session(link):
     """BeautifulSoup session."""
 
     session = requests.Session()
-    daily_archive = session.get(link)
+    daily_archive = session.get(link, headers={'User-Agent': 'Chrome'})
     soup = BeautifulSoup(daily_archive.content, 'html.parser')
     return soup
 
