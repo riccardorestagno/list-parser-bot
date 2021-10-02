@@ -51,8 +51,11 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     for article in soup.find_all("h2"):
 
-        list_item_number = article.find("span").text
-        list_item_text = article.contents[1].strip()
+        list_item_number_element = article.find("span")
+        list_item_text_element = article.contents
+
+        list_item_number = list_item_number_element.text if list_item_number_element else str(list_counter)
+        list_item_text = list_item_text_element[1].strip() if len(list_item_text_element) >= 2 else article.text.strip()
 
         if list_item_text:
             full_list += f"{list_item_number}. {list_item_text}\n"
