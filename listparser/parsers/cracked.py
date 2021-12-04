@@ -47,13 +47,17 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     soup = lvm.soup_session(link_to_check)
 
-    for article in soup.find_all("h2", attrs={"class": "subheading"}):
+    for article in soup.find_all("h2", attrs={"class": "subheading subheading-num"}):
 
-        list_item_number_element = article.find("label")
-        list_item_text_element = article.find("span")
+        # Expecting two items in contents list (number and header text).
+        if len(article.contents) != 2:
+            return ""
 
-        list_item_number = list_item_number_element.text if list_item_number_element else str(list_counter)
-        list_item_text = list_item_text_element.text.strip() if list_item_text_element else article.text.strip()
+        list_item_number_element = article.contents[0] if article.contents[0].name == 'label' else None
+        list_item_text_element = article.contents[1] if article.contents[1].name == 'span' else None
+
+        list_item_number = list_item_number_element.text.strip() if list_item_number_element else None
+        list_item_text = list_item_text_element.text.strip() if list_item_text_element else None
 
         if list_item_text:
             full_list += f"{list_item_number}. {list_item_text}\n"
