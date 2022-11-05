@@ -3,7 +3,7 @@ import requests
 from bs4 import BeautifulSoup
 from langdetect import detect, lang_detect_exception
 
-from config import post_previously_made_search_limit, subreddit, title_exclusion_words
+from config import post_previously_made_search_limit, reddit_max_post_text_length, subreddit, title_exclusion_words
 from helpers.enums import ArticleType
 from helpers.reddit import connect_to_reddit
 
@@ -110,10 +110,9 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
     Returns True if all validations are met. Returns False otherwise.
     """
 
-    if list_counter-1 != total_elements:
-        return False
-
-    if not is_correctly_formatted_list(article_list_text, list_counter):
+    if list_counter-1 != total_elements \
+            or len(article_list_text) >= reddit_max_post_text_length \
+            or not is_correctly_formatted_list(article_list_text, list_counter):
         return False
 
     if website == ArticleType.BuzzFeed:

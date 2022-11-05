@@ -2,7 +2,9 @@ from helpers.enums import *
 
 subreddit = "buzzfeedbot"
 
-script_execution_delay = 1.5 * 60 * 60
+script_execution_delay_in_seconds = 1.5 * 60 * 60
+
+reddit_max_post_text_length = 40000
 
 # Supported parsers
 active_parsers = {

@@ -4,7 +4,7 @@ import time
 import traceback
 from datetime import datetime
 
-from config import active_parsers, script_execution_delay, subreddit
+from config import active_parsers, script_execution_delay_in_seconds, subreddit
 from helpers.enums import *
 from helpers.reddit import connect_to_reddit, send_error_message
 from parsers.businessinsider import find_article_to_parse as parse_business_insider_archive
@@ -72,7 +72,7 @@ if __name__ == '__main__':
             print("Buzzfeed Bot is starting @ " + str(datetime.now()))
             parser_controller()
             print("Sweep finished @ " + str(datetime.now()))
-            time.sleep(script_execution_delay)
+            time.sleep(script_execution_delay_in_seconds)
         except prawcore.exceptions.ResponseException as httpError:
             if httpError.response.status_code == 503 or httpError.response.status_code == 502:
                 time.sleep(5 * 60)  # Temporary connection error. Wait 5 minutes before running again.
