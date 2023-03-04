@@ -8,19 +8,19 @@ reddit_max_post_text_length = 40000
 
 # Supported parsers
 active_parsers = {
-    ArticleType.Business_Insider: True,
     ArticleType.BuzzFeed: True,
     ArticleType.CollegeHumor: False,
     ArticleType.Cracked: True,
+    ArticleType.Insider: True,
     ArticleType.Polygon: False,
     ArticleType.Screen_Rant: True,
 }
 
 # Archive links
-business_insider_article_archive_link = "http://www.businessinsider.com/latest"
 buzzfeed_article_archive_link = "https://www.buzzfeed.com/buzz"
 collegehumor_article_archive_link = "http://www.collegehumor.com/articles"
 cracked_article_archive_link = "https://www.cracked.com/funny-articles.html"
+insider_article_archive_link = "http://www.insider.com/latest"
 polygon_article_archive_link = "http://www.polygon.com/news"
 screen_rant_article_archive_link = "https://screenrant.com/lists/"
 

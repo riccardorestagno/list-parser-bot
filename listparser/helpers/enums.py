@@ -3,10 +3,10 @@ from enum import Enum
 
 class ArticleType(Enum):
     All = 1
-    Business_Insider = 2
-    BuzzFeed = 3
-    CollegeHumor = 4
-    Cracked = 5
+    BuzzFeed = 2
+    CollegeHumor = 3
+    Cracked = 4
+    Insider = 5
     Polygon = 6
     Screen_Rant = 7
 

@@ -2,15 +2,15 @@ import re
 import time
 
 import helpers.list_validation_methods as lvm
-from config import business_insider_article_archive_link as archive_link
+from config import insider_article_archive_link as archive_link
 from helpers.enums import *
 from helpers.reddit import post_to_reddit
 
 
 def find_article_to_parse(create_post=True):
-    """Finds a list article in Business Insider's latest article archive and posts the list article to Reddit."""
+    """Finds a list article in Insider's latest article archive and posts the list article to Reddit."""
 
-    website = ArticleType.Business_Insider
+    website = ArticleType.Insider
     website_name = convert_enum_to_string(website)
 
     print(f"Searching {website_name}'s archive.")
@@ -19,7 +19,7 @@ def find_article_to_parse(create_post=True):
     for link in soup.find_all('h2', attrs={'class': 'tout-title default-tout'}):
 
         article_title = link.find('a', href=True)
-        article_link = article_title['href'] if article_title['href'].startswith("http") else "http://www.businessinsider.com" + article_title['href']
+        article_link = article_title['href'] if article_title['href'].startswith("http") else "http://www.insider.com" + article_title['href']
 
         print("Parsing article: " + article_link)
         time.sleep(1)
@@ -53,11 +53,6 @@ def get_article_list_text(link_to_check, total_list_elements):
         "html_format_2": {
             "wrapper": ["div", "class", "slide-module"],
             "body": ["h3"]
-        },
-        # Paragraph formatting
-        "html_format_3": {
-            "wrapper": ["ol"],
-            "body": ["li"]
         }
     }
 
@@ -77,7 +72,7 @@ def get_article_list_text(link_to_check, total_list_elements):
 
                 list_counter += 1
 
-        if lvm.article_text_meets_posting_requirements(ArticleType.Business_Insider, full_list, list_counter, total_list_elements):
+        if lvm.article_text_meets_posting_requirements(ArticleType.Insider, full_list, list_counter, total_list_elements):
             if not full_list.startswith('1. '):
                 full_list = lvm.reverse_list(full_list)
             break
@@ -91,4 +86,4 @@ def get_article_list_text(link_to_check, total_list_elements):
 if __name__ == "__main__":
     start_time = round(time.time(), 2)
     find_article_to_parse(create_post=False)
-    print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
+    print("Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
