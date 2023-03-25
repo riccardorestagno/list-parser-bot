@@ -44,16 +44,16 @@ def get_article_list_text(link_to_check, total_list_elements):
     list_counter = 1
     full_list = ""
     formatting_options = {
-        # Header formatting
+        # Slide formatting
         "html_format_1": {
-            "wrapper": ["div", "class", "slide-title clearfix"],
+            "wrapper": ["div", "data-e2e-name", "slide-title"],
             "body": ["h2", "class", "slide-title-text"]
         },
-        # Slide formatting
-        "html_format_2": {
-            "wrapper": ["div", "class", "slide-module"],
-            "body": ["h3"]
-        }
+        # Slide formatting (obsolete)
+        # "html_format_2": {
+        #     "wrapper": ["div", "class", "slide-module"],
+        #     "body": ["h3"]
+        # }
     }
 
     soup = lvm.soup_session(link_to_check)
