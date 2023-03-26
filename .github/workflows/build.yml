@@ -4,8 +4,6 @@ on:
   push:
     branches:
       - master # When "master" is pushed
-  schedule:
-    - cron: '0 3 * * *' # Everyday at 3AM
 
 env:
   IMAGE_NAME: rslashdisneyvacation/list-parser-bot
