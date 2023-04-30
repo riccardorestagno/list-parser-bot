@@ -17,12 +17,12 @@ def find_article_to_parse(create_post=True):
     print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
 
-    for article in soup.find_all("h3", attrs={"class": "bc-title"}, limit=max_articles_to_search):
+    for article in soup.find_all("h5", attrs={"class": "display-card-title"}, limit=max_articles_to_search):
         article = article.find("a", href=True)
 
         if article:
 
-            article_title = article['title']
+            article_title = article.text
             article_link = article['href'] if article['href'].startswith("http") else "http://www.screenrant.com" + article['href']
 
             print(f"Parsing article: {article_link}")
@@ -51,12 +51,19 @@ def get_article_list_text(link_to_check, total_list_elements):
     soup = lvm.soup_session(link_to_check)
 
     for article in soup.find_all("h2"):
+        list_item_elements = [content for content in article.contents if content.name is not None]
 
-        list_item_number_element = article.find("span")
-        list_item_text_element = article.contents
-
-        list_item_number = list_item_number_element.text if list_item_number_element else str(list_counter)
-        list_item_text = list_item_text_element[-1].strip() if list_item_text_element and isinstance(list_item_text_element[-1], NavigableString) else article.text.strip()
+        if len(list_item_elements) == 2:
+            list_item_number = list_item_elements[0].text.strip()
+            list_item_text = list_item_elements[1].text.strip()
+        elif len(list_item_elements) == 1:
+            list_item_number = str(list_counter)
+            list_item_text = list_item_elements[0].text.strip()
+        elif len(article.contents) == 1:
+            list_item_number = str(list_counter)
+            list_item_text = article.contents[0].text.strip()
+        else:
+            continue  # Not supported
 
         if list_item_text:
             full_list += f"{list_item_number}. {list_item_text}\n"
