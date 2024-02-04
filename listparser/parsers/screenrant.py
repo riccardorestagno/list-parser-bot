@@ -22,7 +22,7 @@ def find_article_to_parse(create_post=True):
 
         if article:
 
-            article_title = article.text
+            article_title = article.text.strip()
             article_link = article['href'] if article['href'].startswith("http") else "http://www.screenrant.com" + article['href']
 
             print(f"Parsing article: {article_link}")
@@ -50,22 +50,14 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     soup = lvm.soup_session(link_to_check)
 
-    for article in soup.find_all("h2"):
-        list_item_elements = [content for content in article.contents if content.name is not None]
-
-        if len(list_item_elements) == 2:
-            list_item_number = list_item_elements[0].text.strip()
-            list_item_text = list_item_elements[1].text.strip()
-        elif len(list_item_elements) == 1:
-            list_item_number = str(list_counter)
-            list_item_text = list_item_elements[0].text.strip()
-        elif len(article.contents) == 1:
-            list_item_number = str(list_counter)
-            list_item_text = article.contents[0].text.strip()
+    for header in soup.find_all("h2"):
+        if header.find('span', class_='item-num') and len(header.find_all('span')) == 2:
+            list_item_number = header.find('span', class_='item-num').text.strip()
+            list_item_text = header.find('span', class_=False).text.strip()
         else:
             continue  # Not supported
 
-        if list_item_text:
+        if list_item_number and list_item_number.isdigit() and list_item_text:
             full_list += f"{list_item_number}. {list_item_text}\n"
             list_counter += 1
 
