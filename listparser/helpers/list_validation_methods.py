@@ -119,9 +119,9 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
         percentage_threshold = 0.50  # Max percentage of regex validated ad-like list items where the post will not be made.
         if (len(re.findall('(.amazon.)', article_list_text)) / total_elements) >= percentage_threshold:
             return False
-        if (len(re.findall('(\[A(n)? |\[(Up to )?[0-9]{2}% |\[This )', article_list_text)) / total_elements) >= percentage_threshold:
+        if (len(re.findall(r'(\[A(n)? |\[(Up to )?[0-9]{2}% |\[This )', article_list_text)) / total_elements) >= percentage_threshold:
             return False
-        if (len(re.findall('(\. This |\. When )', article_list_text)) / total_elements) >= percentage_threshold:
+        if (len(re.findall('(. This |. When )', article_list_text)) / total_elements) >= percentage_threshold:
             return False
 
         # Articles where list items end with a colon will not be posted (most likely referencing an image below).
