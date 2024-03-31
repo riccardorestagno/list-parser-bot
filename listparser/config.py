@@ -1,4 +1,4 @@
-from helpers.enums import *
+from listparser.helpers.enums import *
 
 subreddit = "buzzfeedbot"
 

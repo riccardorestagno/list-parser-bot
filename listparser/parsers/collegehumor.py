@@ -1,10 +1,10 @@
 import time
 from datetime import date, timedelta
 
-import helpers.list_validation_methods as lvm
-from config import collegehumor_article_archive_link as archive_link
-from helpers.enums import *
-from helpers.reddit import post_to_reddit
+import listparser.helpers.list_validation_methods as lvm
+from listparser.config import collegehumor_article_archive_link as archive_link
+from listparser.helpers.enums import *
+from listparser.helpers.reddit import post_to_reddit
 
 
 def article_published_today(link):

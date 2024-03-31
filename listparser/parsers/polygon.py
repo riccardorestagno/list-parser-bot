@@ -1,11 +1,11 @@
 import re
 import time
 
-import helpers.list_validation_methods as lvm
-from config import polygon_article_archive_link as archive_link
-from config import polygon_max_articles_to_search as max_articles_to_search
-from helpers.enums import *
-from helpers.reddit import post_to_reddit
+import listparser.helpers.list_validation_methods as lvm
+from listparser.config import polygon_article_archive_link as archive_link
+from listparser.config import polygon_max_articles_to_search as max_articles_to_search
+from listparser.helpers.enums import *
+from listparser.helpers.reddit import post_to_reddit
 
 
 def find_article_to_parse(create_post=True):

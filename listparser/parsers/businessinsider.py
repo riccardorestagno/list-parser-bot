@@ -1,10 +1,10 @@
 import re
 import time
 
-import helpers.list_validation_methods as lvm
-from config import business_insider_article_archive_link as archive_link
-from helpers.enums import *
-from helpers.reddit import post_to_reddit
+import listparser.helpers.list_validation_methods as lvm
+from listparser.config import business_insider_article_archive_link as archive_link
+from listparser.helpers.enums import *
+from listparser.helpers.reddit import post_to_reddit
 
 
 def find_article_to_parse(create_post=True):

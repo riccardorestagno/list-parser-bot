@@ -1,6 +1,6 @@
 from twilio.rest import Client
 
-import helpers.list_validation_methods as lvm
+import listparser.helpers.list_validation_methods as lvm
 
 
 def send_text(text_body):

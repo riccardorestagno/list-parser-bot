@@ -1,8 +1,8 @@
 import praw
 from os import environ
 
-from config import subreddit
-from helpers.enums import convert_enum_to_string
+from listparser.config import subreddit
+from listparser.helpers.enums import convert_enum_to_string
 
 
 def connect_to_reddit():

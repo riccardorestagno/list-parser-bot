@@ -1,4 +1,4 @@
-from helpers.list_validation_methods import soup_session
+from listparser.helpers.list_validation_methods import soup_session
 
 
 def test_check_html_tags_correct():
