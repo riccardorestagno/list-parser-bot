@@ -7,10 +7,10 @@ from datetime import datetime
 from config import active_parsers, script_execution_delay_in_seconds, subreddit
 from helpers.enums import *
 from helpers.reddit import connect_to_reddit, send_error_message
+from parsers.businessinsider import find_article_to_parse as parse_business_insider_archive
 from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
 from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
 from parsers.cracked import find_article_to_parse as parse_cracked_archive
-from parsers.insider import find_article_to_parse as parse_insider_archive
 from parsers.polygon import find_article_to_parse as parse_polygon_archive
 from parsers.screenrant import find_article_to_parse as parse_screen_rant_archive
 
@@ -20,10 +20,10 @@ def call_article_archive_parser(parser):
 
     # Maps the parser enum type to its associated parser method.
     archive_parsers = {
+        ArticleType.Business_Insider: lambda: parse_business_insider_archive(),
         ArticleType.BuzzFeed: lambda: parse_buzzfeed_archive(),
         ArticleType.CollegeHumor: lambda: parse_collegehumor_archive(),
         ArticleType.Cracked: lambda: parse_cracked_archive(),
-        ArticleType.Insider: lambda: parse_insider_archive(),
         ArticleType.Polygon: lambda: parse_polygon_archive(),
         ArticleType.Screen_Rant: lambda: parse_screen_rant_archive(),
     }
