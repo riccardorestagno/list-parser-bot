@@ -3,16 +3,16 @@ import requests
 from bs4 import BeautifulSoup
 from langdetect import detect, lang_detect_exception
 
-from listparser.config import post_previously_made_search_limit, reddit_max_post_text_length, subreddit, title_exclusion_words
-from listparser.helpers.enums import ArticleType
-from listparser.helpers.reddit import connect_to_reddit
+from config import post_previously_made_search_limit, reddit_max_post_text_length, subreddit, title_exclusion_words
+from helpers.enums import ArticleType
+from helpers.reddit import connect_to_reddit
 
 
 def soup_session(link):
     """BeautifulSoup session."""
 
     session = requests.Session()
-    daily_archive = session.get(link, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'})
+    daily_archive = session.get(link, headers={'User-Agent': 'Chrome'})
     soup = BeautifulSoup(daily_archive.content, 'html.parser')
     return soup
 

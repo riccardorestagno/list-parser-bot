@@ -4,15 +4,15 @@ import time
 import traceback
 from datetime import datetime
 
-from listparser.config import active_parsers, script_execution_delay_in_seconds, subreddit
-from listparser.helpers.enums import *
-from listparser.helpers.reddit import connect_to_reddit, send_error_message
-from listparser.parsers.businessinsider import find_article_to_parse as parse_business_insider_archive
-from listparser.parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
-from listparser.parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
-from listparser.parsers.cracked import find_article_to_parse as parse_cracked_archive
-from listparser.parsers.polygon import find_article_to_parse as parse_polygon_archive
-from listparser.parsers.screenrant import find_article_to_parse as parse_screen_rant_archive
+from config import active_parsers, script_execution_delay_in_seconds, subreddit
+from helpers.enums import *
+from helpers.reddit import connect_to_reddit, send_error_message
+from parsers.businessinsider import find_article_to_parse as parse_business_insider_archive
+from parsers.buzzfeed import find_article_to_parse as parse_buzzfeed_archive
+from parsers.collegehumor import find_article_to_parse as parse_collegehumor_archive
+from parsers.cracked import find_article_to_parse as parse_cracked_archive
+from parsers.polygon import find_article_to_parse as parse_polygon_archive
+from parsers.screenrant import find_article_to_parse as parse_screen_rant_archive
 
 
 def call_article_archive_parser(parser):
@@ -75,8 +75,8 @@ if __name__ == '__main__':
             time.sleep(script_execution_delay_in_seconds)
         except prawcore.exceptions.ResponseException as httpError:
             if httpError.response.status_code == 500 or \
-                    httpError.response.status_code == 502 or \
-                    httpError.response.status_code == 503:
+                httpError.response.status_code == 502 or \
+                httpError.response.status_code == 503:
                 time.sleep(5 * 60)  # Temporary connection error. Wait 5 minutes before running again.
             else:
                 print(f"A HTTP error has occurred. Received {httpError.response.status_code} HTTP response.")

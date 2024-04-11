@@ -1,10 +1,10 @@
 import time
 
-import listparser.helpers.list_validation_methods as lvm
-from listparser.config import cracked_article_archive_link as archive_link
-from listparser.config import cracked_max_articles_to_search as max_articles_to_search
-from listparser.helpers.enums import *
-from listparser.helpers.reddit import post_to_reddit
+import helpers.list_validation_methods as lvm
+from config import cracked_article_archive_link as archive_link
+from config import cracked_max_articles_to_search as max_articles_to_search
+from helpers.enums import *
+from helpers.reddit import post_to_reddit
 
 
 def find_article_to_parse(create_post=True):
