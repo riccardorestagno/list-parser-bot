@@ -16,7 +16,7 @@ def find_article_to_parse(create_post=True):
     print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
 
-    for link in soup.find_all('h2', attrs={'class': 'tout-title default-tout'}):
+    for link in soup.find_all('h3', attrs={'class': 'tout-title'}):
 
         article_title = link.find('a', href=True)
         article_link = article_title['href'] if article_title['href'].startswith("http") else "http://www.businessinsider.com" + article_title['href']
@@ -49,11 +49,11 @@ def get_article_list_text(link_to_check, total_list_elements):
             "wrapper": ["div", "data-e2e-name", "slide-title"],
             "body": ["h2", "class", "slide-title-text"]
         },
-        # Slide formatting (obsolete)
-        # "html_format_2": {
-        #     "wrapper": ["div", "class", "slide-module"],
-        #     "body": ["h3"]
-        # }
+        # List header formatting
+        "html_format_2": {
+            "wrapper": ["div", "class", "premium-content"],
+            "body": ["h2", "class", "premium"]
+        }
     }
 
     soup = lvm.soup_session(link_to_check)
