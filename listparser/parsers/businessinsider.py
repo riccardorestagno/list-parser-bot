@@ -43,22 +43,20 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     list_counter = 1
     full_list = ""
-    formatting_options = {
-        # Slide formatting
-        "html_format_1": {
-            "wrapper": ["div", "data-e2e-name", "slide-title"],
-            "body": ["h2", "class", "slide-title-text"]
+    parser_options = {
+        "slide_parser": {
+            "wrapper": ["div", "class", "slide-content"],
+            "body": ["h2", "class", "heading-md"]
         },
-        # List header formatting
-        "html_format_2": {
-            "wrapper": ["div", "class", "premium-content"],
-            "body": ["h2", "class", "premium"]
+        "list_header_parser": {
+            "wrapper": ["h2"],
+            "body": ["strong"]
         }
     }
 
     soup = lvm.soup_session(link_to_check)
 
-    for option in formatting_options.values():
+    for option in parser_options.values():
 
         wrapper = option["wrapper"]
         body = option["body"]
