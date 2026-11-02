@@ -1,0 +1,52 @@
+@import "tailwindcss";
+
+/* Tailwind v4 borders default to the text color; the other tools use gray-200 (gray-700 when dark) */
+@layer base {
+  *,
+  ::after,
+  ::before,
+  ::backdrop,
+  ::file-selector-button {
+    border-color: var(--color-gray-200, currentcolor);
+  }
+
+  @media (prefers-color-scheme: dark) {
+    *,
+    ::after,
+    ::before,
+    ::backdrop,
+    ::file-selector-button {
+      border-color: var(--color-gray-700, currentcolor);
+    }
+  }
+}
+
+/* In the base layer, so utility classes still win over these element styles */
+@layer base {
+  :root {
+    font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+    line-height: 1.5;
+    font-weight: 400;
+
+    /* Follows the system theme: the dark: classes (Tailwind's default media variant) restyle the
+       panels, and this gives native controls and scrollbars a matching look */
+    color-scheme: light dark;
+    color: var(--color-gray-900);
+    background-color: var(--color-gray-50);
+
+    @media (prefers-color-scheme: dark) {
+      color: var(--color-gray-100);
+      background-color: var(--color-gray-950);
+    }
+
+    font-synthesis: none;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  /* Tailwind v4 gives buttons the default cursor; the other tools show a pointer on them */
+  button:not(:disabled) {
+    cursor: pointer;
+  }
+}

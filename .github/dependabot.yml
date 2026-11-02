@@ -1,0 +1,30 @@
+# Weekly dependency updates as pull requests into develop, one per ecosystem,
+# so they go through CI and reach main with the next release.
+version: 2
+updates:
+  - package-ecosystem: pip
+    directory: /server
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      server:
+        patterns: ["*"]
+
+  - package-ecosystem: npm
+    directory: /client
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      client:
+        patterns: ["*"]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule:
+      interval: weekly
+    groups:
+      actions:
+        patterns: ["*"]

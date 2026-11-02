@@ -1,0 +1,17 @@
+#!/bin/sh
+# Refuses pushes straight to main or develop: changes go through pull requests, where CI runs.
+# The repository's plan can't enforce this on GitHub, so this does it on your computer.
+# Turn it on once per clone:   git config core.hooksPath .githooks
+# Push anyway in an emergency: git push --no-verify
+
+while read -r local_ref local_sha remote_ref remote_sha; do
+    case "$remote_ref" in
+        refs/heads/main|refs/heads/develop)
+            branch=${remote_ref#refs/heads/}
+            echo "Pushing straight to $branch is blocked. Push your own branch and open a pull request." >&2
+            echo "(Emergency only: git push --no-verify)" >&2
+            exit 1
+            ;;
+    esac
+done
+exit 0

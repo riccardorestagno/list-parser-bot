@@ -1,0 +1,175 @@
+# Tests, then deploys server/ to the API (which sweeps on its schedule) and publishes the build of client/ for the site
+# (riccardorestagno.com/tools/list-parser-bot), on every push to main (or by hand from
+# the Actions tab, on main).
+#
+# The site belongs to the tools dashboard (riccardorestagno/tools-dashboard): it holds the
+# sign-in and every app, and replaces the whole site on each deploy. So this doesn't upload
+# the web app itself: it attaches web.zip to this version's GitHub Release, then asks the
+# dashboard to deploy (its docs/apps.md), which puts the latest web.zip in place.
+#
+# Each deploy is a version: once the API is live, the commit is tagged (v0.4.0) with a
+# GitHub Release. A release from develop raises the minor number, a hotfix/ the patch, and
+# a pull request labelled release:major the major. Before the first tag, the version counts
+# from v0.0.0.
+#
+# Signs in to Azure as the identity made by deploy/azure/setup-github.ps1 (OpenID
+# Connect): no password or key is stored in GitHub, and Azure only accepts runs on
+# main. Needs the repository variables AZURE_CLIENT_ID, AZURE_TENANT_ID and
+# AZURE_SUBSCRIPTION_ID that script prints, and the secret DASHBOARD_DISPATCH_TOKEN
+# (README.md) to start the dashboard's deploy.
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# One deploy at a time; a newer push waits for the running one instead of cutting it off
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+env:
+  # The names deploy/azure/provision.ps1 gives the resources (-Name)
+  RESOURCE_GROUP: list-parser-bot-prod
+  API_APP: list-parser-bot-prod-api
+  API_URL: https://list-parser-bot-prod-api.azurewebsites.net
+
+jobs:
+  version:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      version: ${{ steps.next.outputs.version }}
+      released: ${{ steps.next.outputs.released }}
+      pr: ${{ steps.next.outputs.pr }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0  # every tag, to find the latest version
+
+      - name: Work out the version
+        id: next
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # Already released (a run started again): deploy it under the same version
+          tag=$(git tag --points-at HEAD --list 'v*' --sort=-v:refname | head -n1)
+          if [ -n "$tag" ]; then
+            echo "$GITHUB_SHA is already $tag"
+            { echo "version=$tag"; echo "released=true"; } >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          latest=$(git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1)
+          IFS=. read -r major minor patch <<< "${latest:-v0.0.0}"
+          major=${major#v}
+
+          # The pull request this commit merged into main, if any
+          pr=$(gh api "repos/$GITHUB_REPOSITORY/commits/$GITHUB_SHA/pulls" \
+            --jq '[.[] | select(.merged_at != null and .base.ref == "main")][0] // {}')
+          number=$(jq -r '.number // ""' <<< "$pr")
+          head=$(jq -r '.head.ref // ""' <<< "$pr")
+
+          if jq -e 'any(.labels[]?; .name == "release:major")' <<< "$pr" > /dev/null; then
+            version="v$((major + 1)).0.0"
+          elif [ "$head" = develop ]; then
+            version="v$major.$((minor + 1)).0"
+          else
+            version="v$major.$minor.$((patch + 1))"  # a hotfix/, or a commit without a pull request
+          fi
+
+          echo "${latest:-no version yet} -> $version (pull request: ${number:-none}, from: ${head:-none})"
+          { echo "version=$version"; echo "released=false"; echo "pr=$number"; } >> "$GITHUB_OUTPUT"
+
+  build:
+    needs: version
+    uses: ./.github/workflows/ci.yml
+    with:
+      package: true
+      version: ${{ needs.version.outputs.version }}
+
+  deploy:
+    needs: [version, build]
+    # A run started by hand on another branch stops here; Azure would refuse it anyway
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    permissions:
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+
+      - uses: azure/login@v3
+        with:
+          client-id: ${{ vars.AZURE_CLIENT_ID }}
+          tenant-id: ${{ vars.AZURE_TENANT_ID }}
+          subscription-id: ${{ vars.AZURE_SUBSCRIPTION_ID }}
+
+      - name: Deploy the API
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+        run: |
+          # The CLI's own startup tracking can keep polling long after the site is up; the health check decides
+          az webapp deploy -g "$RESOURCE_GROUP" -n "$API_APP" --src-path api.zip --type zip --track-status false -o none
+
+          # Up, and running this version rather than the one before it
+          for try in $(seq 20); do
+            running=$(curl --silent --max-time 30 "$API_URL/health" | jq -r '.version // empty' 2> /dev/null || true)
+            if [ "$running" = "$VERSION" ]; then echo "The API is up, running $VERSION"; exit 0; fi
+            sleep 15
+          done
+          echo "::error::The API isn't running $VERSION (it answers: ${running:-nothing})"
+          exit 1
+
+  # Once the API is live, so a version always names what's in production. A run started
+  # again finds the release made and only replaces its web.zip
+  release:
+    needs: [version, deploy]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pull-requests: read
+    steps:
+      - uses: actions/download-artifact@v8
+        with:
+          name: release
+
+      - name: Tag the commit and publish a GitHub Release, with web.zip
+        if: needs.version.outputs.released == 'false'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+          PR: ${{ needs.version.outputs.pr }}
+        run: |
+          if [ -n "$PR" ]; then
+            # The release pull request's description is the release notes
+            title=$(gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json title --jq .title)
+            gh pr view "$PR" --repo "$GITHUB_REPOSITORY" --json body --jq .body > notes.md
+            gh release create "$VERSION" web.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" \
+              --title "$VERSION: ${title#Release: }" --notes-file notes.md
+          else
+            gh release create "$VERSION" web.zip --repo "$GITHUB_REPOSITORY" --target "$GITHUB_SHA" --generate-notes
+          fi
+
+      - name: Replace web.zip on the release
+        if: needs.version.outputs.released == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.version.outputs.version }}
+        run: gh release upload "$VERSION" web.zip --repo "$GITHUB_REPOSITORY" --clobber
+
+      - name: Ask the tools dashboard to deploy the site
+        env:
+          # Contents read and write on riccardorestagno/tools-dashboard; GitHub's own token only reaches this repository
+          GH_TOKEN: ${{ secrets.DASHBOARD_DISPATCH_TOKEN }}
+        run: |
+          if [ -z "$GH_TOKEN" ]; then echo "::error::The secret DASHBOARD_DISPATCH_TOKEN is missing (README.md)"; exit 1; fi
+          gh api repos/riccardorestagno/tools-dashboard/dispatches -f event_type=app-released
+          echo "The dashboard's deploy is starting: https://github.com/riccardorestagno/tools-dashboard/actions"

@@ -23,6 +23,7 @@ client/src/              React 19 + TypeScript + Vite + Tailwind
   features/<feature>/    one folder per area of the screen
   utils/api.ts, types.ts the API helpers (apiFetch sends the token) and shared types
   utils/auth.ts          the dashboard's token in the browser, sending people to sign in
+  utils/format.ts        times, durations and lists in words
 deploy/azure/            Azure setup scripts (the API; the site is the dashboard's)
 ```
 
@@ -31,7 +32,7 @@ deploy/azure/            Azure setup scripts (the API; the site is the dashboard
 ```bash
 cd server && python main.py            # API on :8002, docs at /docs (venv + pip install -r requirements.txt first)
 cd server && python -m pytest -q       # server tests (needs pytest)
-cd server && python -m dev.sweep       # one sweep by hand
+cd server && python -m dev.sweep       # one sweep by hand (posts; --dry-run only looks)
 cd client && yarn dev                  # web app on :5175, /api proxied to :8002
 cd client && yarn test --run           # client tests (vitest)
 cd client && yarn build                # type-check + build; CI runs this
