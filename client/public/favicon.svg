@@ -1,0 +1,10 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32">
+  <!-- A numbered list, what the bot posts, in its accent orange (Tailwind orange-600) -->
+  <rect width="32" height="32" rx="7" fill="#ea580c"/>
+  <circle cx="9" cy="10" r="1.9" fill="#fff"/>
+  <rect x="13" y="8.75" width="12" height="2.5" rx="1.25" fill="#fff"/>
+  <circle cx="9" cy="16" r="1.9" fill="#fff"/>
+  <rect x="13" y="14.75" width="12" height="2.5" rx="1.25" fill="#fff"/>
+  <circle cx="9" cy="22" r="1.9" fill="#fff"/>
+  <rect x="13" y="20.75" width="12" height="2.5" rx="1.25" fill="#fff"/>
+</svg>

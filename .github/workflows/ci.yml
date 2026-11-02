@@ -1,0 +1,97 @@
+# Tests every pull request into develop or main, and checks that only develop
+# (or a hotfix/ branch) goes into main. deploy.yml reuses this to build the release.
+#
+# The repository's plan can't make these checks required, so a red ✗ on a pull
+# request means: don't merge it.
+name: CI
+
+on:
+  pull_request:
+    branches: [develop, main]
+  workflow_call:
+    inputs:
+      package:
+        description: Upload the API package and the web app's web.zip for deploy.yml
+        type: boolean
+        default: false
+      version:
+        description: The version being deployed (v1.4.0), shown in the app and by the API's /health
+        type: string
+        default: ""
+
+permissions:
+  contents: read
+
+env:
+  # The API's address, built into the app; public, never a secret. Matches deploy.yml
+  API_URL: https://list-parser-bot-prod-api.azurewebsites.net
+  # Where the app is served on riccardorestagno.com; the tools dashboard's apps.json names it too
+  BASE_PATH: /tools/list-parser-bot/
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
+        with:
+          python-version: "3.14"
+          cache: pip
+          cache-dependency-path: server/requirements.txt
+      - name: Test the server
+        working-directory: server
+        run: |
+          pip install -r requirements.txt pytest
+          python -m pytest -q
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: yarn
+          cache-dependency-path: client/yarn.lock
+      - name: Test and build the web app
+        working-directory: client
+        env:
+          VITE_API_URL: ${{ env.API_URL }}
+          VITE_BASE_PATH: ${{ env.BASE_PATH }}
+          VITE_APP_VERSION: ${{ inputs.version }}
+        run: |
+          yarn install --frozen-lockfile
+          yarn test --run
+          yarn build
+
+      # Only committed files, so no .env, data or virtual environment, plus the version for /health
+      - name: Package the server
+        if: inputs.package
+        env:
+          VERSION: ${{ inputs.version }}
+        run: git archive --format=zip -o api.zip --add-virtual-file="version.txt:$VERSION" HEAD:server
+      # The tools dashboard puts this at /tools/list-parser-bot/ on the site (its docs/apps.md):
+      # every file under tools/list-parser-bot/, nothing else
+      - name: Package the web app
+        if: inputs.package
+        working-directory: client/dist
+        run: zip -qr ../../web.zip tools/list-parser-bot
+      - uses: actions/upload-artifact@v7
+        if: inputs.package
+        with:
+          name: release
+          path: |
+            api.zip
+            web.zip
+          retention-days: 7
+
+  # main is production: it takes develop, or a hotfix/ branch for an urgent fix
+  source-branch:
+    if: github.event_name == 'pull_request' && github.base_ref == 'main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check the pull request comes from develop or hotfix/
+        env:
+          HEAD_REF: ${{ github.head_ref }}
+        run: |
+          case "$HEAD_REF" in
+            develop|hotfix/*) echo "OK: $HEAD_REF -> main" ;;
+            *) echo "::error::Only develop or a hotfix/ branch can go into main, not '$HEAD_REF'. Open this pull request against develop instead."; exit 1 ;;
+          esac
