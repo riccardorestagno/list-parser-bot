@@ -25,7 +25,7 @@ PyJWT==2.15.1
 python-dotenv==1.2.4
 requests==2.34.2
 six==1.17.0
-soupsieve==3.0.4
+soupsieve==4.0
 starlette==1.10.0
 typing-inspection==0.4.4
 typing_extensions==4.16.0
