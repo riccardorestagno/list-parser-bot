@@ -28,6 +28,29 @@ function Grant-Role([string]$ObjectId, [string]$PrincipalType, [string]$Role, [s
     }
 }
 
+# Keeps the API on one instance of the shared plan. Each instance runs its own schedule, so two would
+# both post; and SQLite lives on /home, a network share every instance mounts, where two writers
+# lock each other out or corrupt the file.
+# With per-site scaling on the plan, the site is pinned to one instance whatever the plan scales to.
+# Without it, the API follows the plan: refuse when the plan can run more than one, warn otherwise.
+function Set-OneInstance([string]$PlanId, [string]$ResourceGroup, [string]$App) {
+    $plan = (Invoke-Az resource show --ids $PlanId --query "{perSite:properties.perSiteScaling,capacity:sku.capacity}" -o json) -join "`n" | ConvertFrom-Json
+    if ($plan.perSite) {
+        Invoke-Az webapp update -g $ResourceGroup -n $App --set siteConfig.numberOfWorkers=1 -o none
+        return
+    }
+    # An autoscale setting can sit in any resource group, so look through the whole subscription
+    $autoscale = @(Invoke-Az resource list --resource-type Microsoft.Insights/autoscalesettings --query "[].id" -o tsv |
+        Where-Object { $_ } | ForEach-Object {
+            Invoke-Az resource show --ids $_ --query "[properties.enabled,properties.targetResourceUri]" -o tsv
+        } | Where-Object { $_ -match "^true\s+(.+)$" -and $Matches[1].Trim() -eq $PlanId })
+    $turnOn = "az resource update --ids $PlanId --set properties.perSiteScaling=true"
+    if ($plan.capacity -gt 1 -or $autoscale) {
+        throw "The plan runs or can scale to more than one instance, and without per-site scaling $App would too (two schedules would both post). Turn it on with: $turnOn, then run this again."
+    }
+    Write-Warning "The plan has per-site scaling off: scaling it out would scale $App too, and every instance would post. Turn it on with: $turnOn"
+}
+
 function Get-ApiHost([string]$ResourceGroup, [string]$App) {
     (Invoke-Az webapp show -g $ResourceGroup -n $App --query defaultHostName -o tsv).Trim()
 }
