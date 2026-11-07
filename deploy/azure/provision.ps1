@@ -68,8 +68,9 @@ if (-not ((Invoke-Az webapp list -g $rg --query "[].name" -o tsv) -contains $api
     Invoke-Az webapp create -g $rg -p $planId -n $api --runtime "PYTHON:3.14" -o none
 }
 Invoke-Az webapp update -g $rg -n $api --https-only true -o none
+# One instance, and one uvicorn process on it (no --workers): one schedule, and SQLite takes one writer
+Set-OneInstance $planId $rg $api
 # Always On keeps the API, and so its schedule, running: without it App Service stops an idle app.
-# One worker: one schedule, and SQLite takes one writer at a time.
 # uvicorn reads FORWARDED_ALLOW_IPS (set below) to see requests came over HTTPS
 Invoke-Az webapp config set -g $rg -n $api --always-on true --min-tls-version 1.2 --ftps-state Disabled `
     --startup-file "uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers" -o none
