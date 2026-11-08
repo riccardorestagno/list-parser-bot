@@ -3,11 +3,25 @@
 Run from ``server/``:  ``pip install pytest`` then ``python -m pytest``.
 """
 import os
+import sqlite3
 import sys
 import tempfile
 from pathlib import Path
 
 import pytest
+
+_connect = sqlite3.connect
+
+
+def _connect_without_disk_sync(*args, **kwargs) -> sqlite3.Connection:
+    """Test databases are thrown away, so commits needn't wait for the disk, nor make and delete a journal file each."""
+    conn = _connect(*args, **kwargs)
+    conn.execute("PRAGMA synchronous = OFF")
+    conn.execute("PRAGMA journal_mode = MEMORY")
+    return conn
+
+
+sqlite3.connect = _connect_without_disk_sync
 
 _TMP = Path(tempfile.mkdtemp(prefix="listbot-tests-"))
 os.environ["LISTBOT_ENV_FILE"] = ""  # ignore a developer's server/.env, and its Reddit account
