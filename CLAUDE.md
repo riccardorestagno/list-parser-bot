@@ -75,6 +75,7 @@ cd client && yarn build                # type-check + build; CI runs this
 
 - Create branches with the `create-feature-branch` skill: `feature/<desc>` off `origin/develop`. Never commit on `develop` or `main`.
 - Bring `develop` into a feature or bugfix branch with the `merge-with-develop` skill: it merges `origin/develop`, checks what develop changed against the branch's work, and lists what the branch must change to fit, or why nothing needs to.
+- Bring improvements from a sibling repository (sdc-management-app, tools-dashboard, spending-insights, list-parser-bot) here, or from here to the others, with the `port-improvements` skill: it finds what was merged there (the last 7 days, or `all`), skills and `CLAUDE.md` rules included, measures what each would gain in the others, and on a go-ahead applies them, one branch and PR per repository.
 - When a change is done, the `done-message` skill writes its commit message, PR title and description.
 - Before a release, the `release-review` skill deep-reviews `origin/main..origin/develop` for bugs and risks, asks which findings to fix, and fixes those on a branch off `develop`. The `release-pr-message` skill then writes the release PR's title, label and description.
 - PRs go into `develop` (squash). Releases go `develop` → `main` (merge commit); `hotfix/` branches may go straight to `main`. `.githooks/pre-push` blocks direct pushes to both (`git config core.hooksPath .githooks`).
