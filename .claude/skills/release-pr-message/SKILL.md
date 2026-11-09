@@ -42,7 +42,7 @@ git fetch origin --tags
 git tag --list 'v[0-9]*.[0-9]*.[0-9]*' --sort=-v:refname | head -n1   # none yet means v0.0.0
 ```
 
-**Always ask the user whether this is a major release** before writing anything, with the AskUserQuestion tool. Never decide it yourself, even when the changes look large or small. Show both versions in the options, e.g. *Minor: v0.4.0 → v0.5.0* (first, as the usual answer) and *Major: v0.4.0 → v1.0.0*, and mention any breaking change you found in step 1 in the question.
+**Always ask the user whether this is a major release** before writing anything, with the AskUserQuestion tool (in chat, if it isn't available). Never decide it yourself, even when the changes look large or small. Show both versions in the options, e.g. *Minor: v0.4.0 → v0.5.0* (first, as the usual answer) and *Major: v0.4.0 → v1.0.0*, and mention any breaking change you found in step 1 in the question.
 
 ## 3. Write the outputs
 
@@ -96,4 +96,4 @@ release:major
 - Merge with a merge commit, not a squash.
 ```
 
-If the user then asks for the PR to be opened, a major release needs `--label release:major` on `gh pr create` (or `gh pr edit <n> --add-label release:major` on an open one).
+If the user then asks for the PR to be opened, a major release needs `--label release:major` on `gh pr create` (or `gh pr edit <n> --add-label release:major` on an open one). In a cloud session there is no `gh`: open it with the GitHub tools, and tell the user to add the label if those can't.
