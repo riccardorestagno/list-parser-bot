@@ -1,52 +1,52 @@
 ---
 name: release-review
-description: Targeted review of origin/develop vs origin/main hunting for critical bugs, security holes, and data risks. Optimized for low token overhead by analyzing diffs and targeting test runs.
+description: Review what a release would ship (origin/develop against origin/main) for critical bugs, security holes and data risks, verify each finding, ask which to fix, and fix those on a branch off develop. Reads the diff first and runs only the tests the changes reach. Use when the user asks to review a release, check develop before it goes to main, or look for what could go wrong in production with what's about to ship.
 ---
 
 # Release Review
 
-Reviews **`origin/develop`** against **`origin/main`** for critical production risks (posting to Reddit, sign-in and secrets, data integrity, migrations).
+Reviews **`origin/develop`** against **`origin/main`** for what could go wrong in production: posting to Reddit, sign-in and secrets, data integrity, migrations.
 
 **Rules:**
-- Never change `develop` or `main`, never push, and never open a PR unless explicitly asked. Fixes go on a new branch off `origin/develop` (Step 6).
-- Never change code before the user chooses what to fix (Step 5).
-- Every finding must be verified against a concrete path to failure before reporting.
+- Never change `develop` or `main`, never push, and never open a PR unless asked. Fixes go on a new branch off `origin/develop` (step 6).
+- Change no code before the user chooses what to fix (step 5).
+- Every finding is checked against a concrete path to failure before it's reported (step 4).
+
+**Values found in one command are written out in the next.** Each command runs in a new shell, so a variable set earlier (`$WT`, `$DEV`) is empty later, and `git diff $BASE HEAD` with an empty `$BASE` quietly shows something else. Below, `<main>`, `<develop>` and `<worktree>` stand for the values step 1 printed: type them in.
 
 ---
 
-## 1. Pin What Is Being Reviewed
-
-Fetch remote branches and evaluate the release size:
+## 1. Pin what is being reviewed
 
 ```bash
 git fetch origin main develop
-MAIN=$(git rev-parse --short origin/main)
-DEV=$(git rev-parse --short origin/develop)
-
+git rev-parse --short origin/main        # <main>
+git rev-parse --short origin/develop     # <develop>
 git log --oneline origin/main..origin/develop
 git log --oneline origin/develop..origin/main
 git diff --stat origin/main...origin/develop
 ```
 
-- **Empty release:** Stop if there are no changes between `origin/main` and `origin/develop`.
-- **Hotfix check:** If commits exist in `origin/develop..origin/main`, warn at the top of the report.
+- **Nothing to release:** stop if `origin/main..origin/develop` is empty.
+- **A hotfix on main:** if `origin/develop..origin/main` isn't empty, say so at the top of the report.
 
-Set up a throwaway worktree:
+Review a throwaway worktree, so the user's working tree isn't touched. Put it in your scratchpad:
+
 ```bash
-WT=$(mktemp -d)/develop
-git worktree add --detach "$WT" origin/develop
+git worktree add --detach <scratchpad>/release-review-<develop> origin/develop     # <worktree>
 ```
-*(Always run `git worktree remove --force "$WT"` when finished).*
+
+Remove it when the review ends, however it ends: `git worktree remove --force <worktree>`.
 
 ---
 
-## 2. Targeted Analysis
+## 2. Read the changes by risk
 
-Review changed code grouped by risk area (**Posting**, **Access/Security**, **Data/Migrations**, **Deploy/Contracts**).
+Group what changed by risk: **Posting**, **Access/Security**, **Data/Migrations**, **Deploy/Contracts**.
 
-> **Token Optimization:** Read the diff (`git diff origin/main...origin/develop -- <file>`) first. Read whole files in `$WT` **only** for high-risk files (e.g. the sweep and scheduler, `bot/helpers/reddit.py`, `api/auth.py`, migrations).
+Read the diff first (`git diff origin/main...origin/develop -- <file>`). Read a whole file in the worktree only where the diff can't be judged alone: the sweep and scheduler, `bot/helpers/reddit.py`, `api/auth.py`, migrations.
 
-### Critical Checklist
+### What to check
 - **Posting:** Nothing posts twice (the earlier-post check), nothing posts when the schedule is off or in tests, one sweep at a time, the gap between sweeps kept after restarts, parsers still within their limits and pauses, failures reported to the moderator once rather than every sweep.
 - **Access & Security:** Every router but `/` and `/health` behind `signed_in` (the dashboard's token, for this app's id), sign-in never turned off when deployed, Reddit credentials and tokens never logged or returned (a run's error details included), query injection, XSS from scraped titles shown on the dashboard.
 - **Data & Migrations:** Safe execution of `db/migrations.py` on existing DBs, default values for existing rows, old runs pruned without losing the latest.
@@ -54,73 +54,78 @@ Review changed code grouped by risk area (**Posting**, **Access/Security**, **Da
 
 ---
 
-## 3. Targeted Checks
+## 3. Run only what the changes reach
 
-**Do not run the full server/client test suites.** (The dev branch CI already executes the full suite). Run tests **only** for modified or high-risk modules:
+Develop's own CI ran the full suites. Run the tests of the changed modules, and the build when the client changed:
 
 ```bash
-# Run python tests only for affected modules
-# (the main clone's venv: venv/bin/python on Linux, venv/Scripts/python.exe on Windows)
-cd "$WT/server" && <main clone>/server/venv/bin/python -m pytest -q tests/test_affected_module.py
-
-# Run client tests only if client files changed
-cd "$WT/client" && yarn test --run <affected-file-or-pattern>
+cd <worktree>/server && <python> -m pytest -q tests/test_<resource>.py
+cd <worktree>/client && yarn install --frozen-lockfile && yarn test --run <changed file or pattern> && yarn build
 ```
 
-A failing test or broken build on modified code is a **Critical** finding.
+- Test modules are in `server/tests/`, named for the route or service they cover.
+- `<python>` is the main clone's virtual environment: `server\venv\Scripts\python.exe` on Windows, `server/venv/bin/python` on Linux. In a cloud session there is none: use `python` after `pip install -r requirements.txt pytest pytest-xdist`.
+- If a check can't run, say which and why. Don't call it passing.
+
+A failing test or a build that breaks is a **Critical** finding.
 
 ---
 
-## 4. Verify & Classify Findings
+## 4. Verify and classify
 
-Disprove candidate issues before adding them to the report. Trace entry points to ensure guards or callers don't already prevent the bug.
+Try to disprove each candidate before it goes in the report: follow it from its entry point and see whether a guard or a caller already prevents it. Mark each one **Confirmed** (reproduced, or the path read end to end) or **Suspected** (with what would settle it).
 
-**Severity:**
 - **Critical:** Posting twice, posting when it shouldn't, an endpoint open without sign-in, a credential leaked, migration failure, broken build.
 - **High:** Broken functionality on key user flows, export/import corruption, unhandled edge cases in core logic.
-- **Medium / Low:** Minor edge cases, unclear error messages, suboptimal performance.
+- **Medium:** an edge case few will meet, an unclear message, something noticeably slower.
+- **Low:** cosmetic, or worth knowing but not worth holding the release.
+
+Report all four. Critical and High get the full entry below; Medium and Low one line each.
 
 ---
 
-## 5. Report & Choice
+## 5. Report, then ask
 
-Write the concise report to `$(git rev-parse --git-common-dir)/release-review/$DEV.md` and present it:
+Write the report to `<scratchpad>/release-review-<develop>.md` and show it:
 
-### Report Format
 ```markdown
-### Release Review: `$MAIN` → `$DEV`
+### Release review: `<main>` → `<develop>`
 
 #### Findings
-**F1 · Critical · Confirmed — <Short Title>**
-- **Where:** `server/services/sweep.py:42`
-- **What goes wrong:** <Plain description failure of path>
-- **Fix:** <Specific fix minimal proposal>
+**F1 · Critical · Confirmed — <what goes wrong, in a few words>**
+- **Where:** `server/services/<module>.py:142`
+- **What goes wrong:** <who does what, and what they get instead of what they should>
+- **Fix:** <the smallest change that fixes it>
 
-#### Risks (Non-code)
-- <Manual considerations contract migration or steps, warnings>
+**F2 · Medium · Suspected — <one line: where, and what goes wrong>**
+
+#### To do by hand
+- <What someone must do around this release that no code change covers: a setting or secret to add, a one-time step, a hotfix to merge back into develop first>
 ```
 
-Prompt the user using `AskUserQuestion` to select which findings (`F1`, `F2`, etc.) to resolve. If nothing is selected, clean up the worktree and exit.
+Ask which findings to fix (`F1`, `F2`, ...), with the AskUserQuestion tool, or in chat if it isn't available. If none, remove the worktree and stop.
 
 ---
 
-## 6. Fix Chosen Findings
+## 6. Fix what was chosen
 
-1. Verify `origin/develop` is still at `$DEV` (`git fetch origin develop`).
-2. Create a fix branch `feature/release-review-fixes` off `origin/develop` with the `create-feature-branch` skill.
-3. Apply the minimal fix for each selected finding with **one commit per finding**.
-4. Add or update unit tests covering the specific failure case.
-5. Re-run targeted tests to confirm green status.
-6. Clean up worktree:
+1. Check `origin/develop` is still at `<develop>` (`git fetch origin develop`). If it moved, say so and review what's new before fixing.
+2. Create the branch as the `create-feature-branch` skill does, named for what it fixes (`feature/fix-<what>`), never by hand with `git checkout -b`:
    ```bash
-   git worktree remove --force "$WT"
+   git switch --no-track -c feature/fix-<what> origin/develop
+   git config branch.feature/fix-<what>.remote origin
+   git config branch.feature/fix-<what>.merge refs/heads/feature/fix-<what>
    ```
+3. Make the smallest fix for each chosen finding, **one commit per finding**, each with a test that fails without it.
+4. Run the tests of what was touched again.
+5. Remove the worktree: `git worktree remove --force <worktree>`.
+
+Don't push or open a PR unless asked.
 
 ---
 
-## 7. Final Summary
+## 7. Close
 
-Provide a short closing summary:
-- Created fix branch and commit list (`git log --oneline origin/develop..HEAD`).
-- Targeted test results.
-- Unfixed findings and risks carried forward.
+- The branch and its commits (`git log --oneline origin/develop..HEAD`).
+- What was run and how it went.
+- The findings left unfixed, and what must be done by hand.

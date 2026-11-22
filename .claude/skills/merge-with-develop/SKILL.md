@@ -37,10 +37,12 @@ ls "$(git rev-parse --git-dir)" | grep -E '^(MERGE_HEAD|rebase-merge|rebase-appl
 
 ```bash
 git fetch origin develop
-BASE=$(git merge-base HEAD origin/develop)
-git log --oneline $BASE..origin/develop          # what develop gained since the branch started
-git log --oneline $BASE..HEAD                    # the branch's own commits
+git merge-base HEAD origin/develop               # where the branch started: <base>
+git log --oneline <base>..origin/develop         # what develop gained since the branch started
+git log --oneline <base>..HEAD                   # the branch's own commits
 ```
+
+**Type the commit `merge-base` printed wherever `$BASE` appears below.** Each command runs in a new shell, so a variable set in one is empty in the next, and `git diff --name-status $BASE HEAD` with an empty `$BASE` quietly lists the uncommitted changes instead of the branch's work.
 
 - Always merge **`origin/develop`**, freshly fetched, never the local `develop` (it is usually stale). If the fetch fails, say so and stop rather than merging a stale `develop`.
 - If `$BASE..origin/develop` is empty, the branch already has all of develop. Say so and stop; there is nothing to merge or to judge.
@@ -144,6 +146,8 @@ cd server && python -m pytest -q          # anything under server/ changed on ei
 cd client && yarn test --run              # anything under client/ changed on either side
 cd client && yarn build                   # type-check; CI runs this
 ```
+
+Run the server's with its virtual environment (`server\venv\Scripts\python.exe` on Windows, `server/venv/bin/python` on Linux), or `python` in a cloud session once the requirements are installed.
 
 - If dependencies aren't installed (no venv, no `node_modules`), install them per the README, or say which checks couldn't run. Never call the merge verified without running them.
 - A failure after the merge: work out whose it is. If unsure, check `origin/develop` alone in a throwaway worktree (`git worktree add <scratch dir> origin/develop`, run the same check, then `git worktree remove <scratch dir>`). Failing on develop too → not the branch's, say so. Passing on both sides but failing merged → an interaction, and it goes in the report's list of changes.
