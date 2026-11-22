@@ -1,13 +1,13 @@
 ---
 name: port-improvements
-description: Find the improvements merged into one of the sibling repositories (sdc-management-app, tools-dashboard, spending-insights, list-parser-bot) in the last 7 days, or over its whole history, and work out which ones the other repositories should get. Improvements include performance, CI, deploy, test speed, caching or robustness work, and new or changed skills and CLAUDE.md rules that would serve the others too. Measure what each would gain there, report it, then on the user's go-ahead apply them to each target on one feature branch per repository, one commit per improvement, with a PR into develop. Use when the user asks to port, copy, carry over or apply another repo's optimizations, improvements, skills or instructions, or asks whether another repo's recent changes apply here.
+description: Find the improvements merged into one of the sibling repositories (every repository of the owner that has this skill, found each time, so a new tool needs no list updated) in the last 7 days, or over its whole history, and work out which ones the other repositories should get. Improvements include performance, CI, deploy, test speed, caching or robustness work, and new or changed skills and CLAUDE.md rules that would serve the others too. Measure what each would gain there, report it, then on the user's go-ahead apply them to each target on one feature branch per repository, one commit per improvement, with a PR into develop. Use when the user asks to port, copy, carry over or apply another repo's optimizations, improvements, skills or instructions, or asks whether another repo's recent changes apply here.
 ---
 
 # Port Improvements
 
-The four repositories share one architecture: a FastAPI + SQLite server (`server/`), a React + Vite + Tailwind client (`client/`), Azure deploys from `.github/workflows/`, and the same `.claude/skills/`. An improvement made in one of them often fits the others, but **adapt each one, never copy it**: the repositories differ in ways that matter (see *Differences*).
+The sibling repositories share one architecture: a FastAPI + SQLite server (`server/`), a React + Vite + Tailwind client (`client/`), Azure deploys from `.github/workflows/`, and the same `.claude/skills/`. An improvement made in one of them often fits the others, but **adapt each one, never copy it**: the repositories differ in ways that matter (see *Differences*).
 
-**This runs on the user's own computer**, where the four repositories sit side by side. If the other folders aren't there (a cloud session has only this repository), say so and stop: don't guess at a repository you can't read.
+**This runs on the user's own computer**, where the siblings sit side by side. If the other folders aren't there (a cloud session has only the repositories attached to it), say which are missing and leave them out: don't guess at a repository you can't read.
 
 It runs in two phases: **analyze** (read-only, ends with a report and one question), then **apply** (branches, commits, PRs). Don't start applying until the user says which improvements to apply, unless the arguments already say so (e.g. `apply all`).
 
@@ -15,25 +15,30 @@ It runs in two phases: **analyze** (read-only, ends with a report and one questi
 
 `/port-improvements <source> [since] [targets] [apply all]`
 
-- `<source>`: the repository the improvements come from, by folder name (`sdc-management-app`). Required; ask if missing.
+- `<source>`: the repository the improvements come from, by name (`tools-dashboard`). Required; ask if missing.
 - `[since]`: which of its commits to look at: a date (`2026-11-07`), `today`, `yesterday`, `last 3 days`, PR numbers (`#152 #166`), a commit range, or `all` for every commit on `origin/develop`, however old. Default: the last 7 days.
-- `[targets]`: the repositories to bring them to. Default: the other three.
+- `[targets]`: the repositories to bring them to. Default: every other sibling (*Repositories*).
 - `apply all`: skip the question at the end of phase 1 and apply everything marked **Apply**.
 
 ## Repositories
 
-All four are folders next to each other, in the parent folder of this repository (find it from this repository's own path; don't assume a drive or a user folder):
+The siblings are **every repository of this one's owner that has this skill** (`.claude/skills/port-improvements/SKILL.md`), plus every app the tools dashboard lists. Nothing names them by hand: a new tool joins by having this skill, and no other repository needs updating. Find them at the start of each run:
 
-| Folder | Env prefix | Database access | Notes |
-| --- | --- | --- | --- |
-| `sdc-management-app` | `SDC_` | SQLAlchemy ORM | has its own `site/`; client served by its own Static Web App |
-| `tools-dashboard` | `TOOLS_` | raw `sqlite3` | owns the site: `client/web-root/staticwebapp.config.json` is the config for **every** app under `/tools/` |
-| `spending-insights` | `SPENDING_` | raw `sqlite3` | `shared/` holds test cases both server and client tests read |
-| `list-parser-bot` | `LISTBOT_` | raw `sqlite3` | a scheduler thread runs sweeps in the API process |
+```bash
+OWNER=$(git remote get-url origin | sed -E 's#.*github\.com[:/]([^/]+)/.*#\1#')
+# Repositories with this skill (code search reads each default branch, so a repository whose skill is only on develop shows up after its first release)
+gh api -X GET search/code -f q="filename:SKILL.md path:.claude/skills/port-improvements user:$OWNER" --jq '.items[].repository.full_name'
+# The apps on the tools dashboard, which may not have released the skill yet
+gh api "repos/$OWNER/tools-dashboard/contents/server/apps.json" --jq '.content' | base64 -d | jq -r '.[].repository'
+```
 
-Re-check this table against each repository's `CLAUDE.md` before relying on it; update it here when it's wrong.
+Take the union of the two, and `$OWNER/tools-dashboard` itself. If search is rate-limited, wait a minute and try again; if it still fails, use the second list plus the folders next to this repository that have the skill, and say so in the report.
 
-This skill is the same file in all four repositories (`.claude/skills/port-improvements/SKILL.md`). A change to it goes into all four, so they stay identical.
+Each sibling is a folder named after it, next to this repository (in the same parent folder). One that's missing: tell the user, and offer to clone it there (`git clone https://github.com/<owner>/<name>`); leave it out until they say.
+
+What sets each one apart (its env prefix, how it reaches the database, what it owns or runs) is in its own `CLAUDE.md`: read the map and the conventions of every repository a change touches before judging it, rather than assuming they match this one. Where a difference made a port go wrong, it belongs in *Differences to adapt for* below.
+
+This skill should read the same in every sibling. A change to it is an improvement like any other: port it to the others with this skill.
 
 ## Phase 1: analyze
 
@@ -124,6 +129,8 @@ These are what made earlier ports differ from the source. Check each one that th
 - **Import-time work**: a lazy import must come with no module-level use of the name; keep type hints as strings with `if TYPE_CHECKING:`. Check for work done while a module imports (e.g. a hash computed at import) before patching things in `conftest.py`: patches must come before `from main import app`.
 - **What the deployed API installs**: Azure installs `server/requirements.txt`. A package only `server/dev/` scripts use belongs in `requirements-dev.txt`.
 - **Background work in the process**: list-parser-bot's scheduler uses praw soon after start, so deferring that import saves nothing.
+- **Outside services**: vacation-planner calls Open-Meteo from `services/open_meteo.py` alone, and its tests replace that module's `get_json` (`tests/fakes.py`); a change to outgoing HTTP goes there, and the fake must keep answering what the code reads.
+- **A new tool before its first merge**: until its setup pull request (`feature/initial-setup`) merges, its `develop` holds only a README, and its skills and `CLAUDE.md` exist only on that branch. A port to it goes on that branch, as a commit in that pull request, not on a new branch off `develop`.
 - **Python 3.14** everywhere (CI and Azure): annotations aren't evaluated until read.
 
 When a port goes wrong because of a difference not listed here, add it to this list in the same PR.
