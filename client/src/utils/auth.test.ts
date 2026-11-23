@@ -1,7 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import { readPerson, shouldSendToSignIn, signInUrl } from './auth';
 
-const token = (claims: object) => `header.${btoa(JSON.stringify(claims)).replace(/=+$/, '')}.signature`;
+// Claims written as the dashboard writes them: UTF-8, then base64url without padding
+const token = (claims: object) => {
+  const bytes = new TextEncoder().encode(JSON.stringify(claims));
+  const base64 = btoa(String.fromCharCode(...bytes));
+  return `header.${base64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '')}.signature`;
+};
 
 describe('signInUrl', () => {
   it('comes back to this page, query included', () => {
@@ -25,6 +30,10 @@ describe('shouldSendToSignIn', () => {
 describe('readPerson', () => {
   it('reads who the token names', () => {
     expect(readPerson(token({ email: 'a@example.com', name: 'A' }))).toEqual({ email: 'a@example.com', name: 'A' });
+  });
+
+  it('reads a name with accents or in another script as written', () => {
+    expect(readPerson(token({ email: 'j@example.com', name: 'José Müller 山田' }))?.name).toBe('José Müller 山田');
   });
 
   it('gives nobody for no token or an unreadable one', () => {
