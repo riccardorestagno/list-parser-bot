@@ -3,9 +3,8 @@ import requests
 from bs4 import BeautifulSoup
 from langdetect import DetectorFactory, detect, lang_detect_exception
 
-from bot.config import post_previously_made_search_limit, reddit_max_post_text_length, subreddit, title_exclusion_words
+from bot.config import reddit_max_post_text_length, title_exclusion_words
 from bot.helpers.enums import ArticleType
-from bot.helpers.reddit import connect_to_reddit
 
 ITEM_NUMBER = re.compile(r'^(\d+)\.', flags=re.MULTILINE)  # An item's number starts its line: "3. Foo"
 ITEM_START = re.compile(r'\n(?=\d+\.)')  # The line break before each numbered line
@@ -14,30 +13,28 @@ DetectorFactory.seed = 0  # langdetect guesses at random otherwise: the same tit
 MIN_WORDS_TO_DETECT = 5  # with fewer words langdetect guesses: "8 Pizza Hacks" reads as Polish
 
 
+# One session for every page: a site's archive and its articles share a host, so its connection is kept between
+# them rather than opened again for each. Only the schedule's thread (or dev/sweep.py) fetches
+_session = requests.Session()
+_session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'
+
+
 def soup_session(link):
-    """BeautifulSoup session."""
+    """The page at the link, read by BeautifulSoup. An error page (403, 404, 5xx) raises rather than reading as a
+    page without articles, so a site that blocks the bot or moved its archive shows as failing, not as quiet."""
 
-    session = requests.Session()
-    daily_archive = session.get(link, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'},
-                                timeout=60)  # A site that never answers would hold up every sweep after it
-    soup = BeautifulSoup(daily_archive.content, 'html.parser')
-    return soup
+    response = _session.get(link, timeout=60)  # A site that never answers would hold up every sweep after it
+    response.raise_for_status()
+    return BeautifulSoup(response.content, 'html.parser')
 
 
-def post_previously_made(article_link):
+def post_previously_made(article_link, recent_posts):
     """
-    Checks if the post has already been submitted.
-    This is done by checking if the article link to be posted is within the article text of a previous post.
-    Returns True if post was already submitted. Returns False otherwise.
+    Checks if the post has already been submitted: whether one of the subreddit's recent posts (reddit.recent_posts,
+    read once per sweep) has the article's link in its text.
     """
 
-    reddit = connect_to_reddit()
-    submissions = reddit.subreddit(subreddit).new(limit=post_previously_made_search_limit)
-    for submission in submissions:
-        if article_link in submission.selftext:
-            return True
-
-    return False
+    return any(article_link in submission.selftext for submission in recent_posts)
 
 
 def get_title_exclusion_words(website):
@@ -64,13 +61,17 @@ def get_article_list_count(article_title):
         'nine': 9,
         'ten': 10,
     }
-    first_word = article_title.split()[0].lower()
+    words = article_title.split()
+    if not words:
+        return 0  # an empty title (a card whose link is only a picture) isn't a list
+
+    first_word = words[0].lower()
 
     if first_word in text_number_mapping:
         return text_number_mapping[first_word]
 
     try:
-        list_count = [int(s) for s in article_title.split() if s.isdigit()][0]
+        list_count = [int(s) for s in words if s.isdigit()][0]
     except (AttributeError, IndexError):
         return 0
 

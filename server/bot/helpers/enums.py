@@ -5,9 +5,7 @@ class ArticleType(Enum):
     All = 1
     Business_Insider = 2
     BuzzFeed = 3
-    CollegeHumor = 4
     Cracked = 5
-    Polygon = 6
     Screen_Rant = 7
 
 

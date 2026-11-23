@@ -1,6 +1,7 @@
 import { CircleCheck, CircleMinus, CircleX, ExternalLink, LoaderCircle, LucideIcon, TriangleAlert } from 'lucide-react';
 import { formatDuration, formatWhen, listNames } from '@/utils/format';
-import type { Run, RunStatus } from '@/utils/types';
+import type { Run, RunStatus, SiteError } from '@/utils/types';
+import { siteErrorLook } from './siteErrors';
 
 const LOOKS: Record<RunStatus, { icon: LucideIcon; color: string; spin?: boolean }> = {
   posted: { icon: CircleCheck, color: 'text-green-600 dark:text-green-400' },
@@ -29,6 +30,28 @@ const linkClass = 'text-blue-600 dark:text-blue-400 hover:underline focus:outlin
 
 const Searched = ({ sites }: { sites: string[] }) =>
   sites.length ? <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Searched {listNames(sites)}</p> : null;
+
+/** The sites the sweep couldn't search to the end, whatever else it did: the others went fine. */
+const SiteErrors = ({ errors }: { errors: SiteError[] }) =>
+  errors.length ? (
+    <ul className="mt-1 space-y-0.5 text-sm">
+      {errors.map((problem) => {
+        const look = siteErrorLook(problem.status);
+        const Icon = look.icon;
+        return (
+          <li key={problem.site} className={`flex items-start gap-1.5 ${look.color}`}>
+            <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+            <span className="min-w-0 break-words">
+              <span className="font-medium">
+                {problem.site} {look.inRun}
+              </span>
+              : {problem.error}
+            </span>
+          </li>
+        );
+      })}
+    </ul>
+  ) : null;
 
 /** One sweep: how it went, when, and what it posted or why it stopped. */
 export const RunItem = ({ run }: { run: Run }) => {
@@ -73,29 +96,37 @@ export const RunItem = ({ run }: { run: Run }) => {
           <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">Searching the sites' latest articles</p>
         )}
 
-        {(run.status === 'unreachable' || run.status === 'failed') && (
+        {run.error && (run.status === 'unreachable' || run.status === 'failed') && (
+          // What stopped the sweep as a whole: Reddit, or the bot itself
           <>
             <p className="mt-1 text-sm break-words text-gray-700 dark:text-gray-300">
               {run.error}
               {run.status === 'unreachable' && <span className="text-gray-500 dark:text-gray-400">. The next sweep tries again.</span>}
             </p>
             {run.sites_searched.length > 0 && (
-              // The sweep adds a site before searching it, so the last one is where it stopped
+              // The sweep adds each site as it's searched, so the last one is where it stopped
               <p className="mt-1 text-sm text-gray-600 dark:text-gray-400">
                 Stopped while searching {run.sites_searched[run.sites_searched.length - 1]}
               </p>
             )}
-            {run.error_details && (
-              <details className="mt-2 text-sm">
-                <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
-                  Details
-                </summary>
-                <pre className="mt-2 max-h-80 overflow-auto rounded-md bg-gray-100 dark:bg-gray-800 p-3 text-xs leading-relaxed">
-                  {run.error_details}
-                </pre>
-              </details>
-            )}
           </>
+        )}
+
+        {/* An API from before sites were noted one by one sends none */}
+        <SiteErrors errors={run.site_errors ?? []} />
+        {run.status === 'unreachable' && !run.error && (
+          <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">The next sweep tries again.</p>
+        )}
+
+        {run.error_details && (
+          <details className="mt-2 text-sm">
+            <summary className="cursor-pointer text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-200">
+              Details
+            </summary>
+            <pre className="mt-2 max-h-80 overflow-auto rounded-md bg-gray-100 dark:bg-gray-800 p-3 text-xs leading-relaxed">
+              {run.error_details}
+            </pre>
+          </details>
         )}
       </div>
     </li>

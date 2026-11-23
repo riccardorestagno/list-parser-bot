@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayLabel, formatDuration, formatEvery, formatUntil, listNames } from './format';
+import { dayLabel, formatDuration, formatEvery, formatSince, formatTime, formatUntil, listNames } from './format';
 
 const NOW = new Date(2026, 10, 1, 12, 0);
 
@@ -52,5 +52,17 @@ describe('listNames', () => {
     expect(listNames(['Cracked'])).toBe('Cracked');
     expect(listNames(['Cracked', 'BuzzFeed'])).toBe('Cracked and BuzzFeed');
     expect(listNames(['Cracked', 'BuzzFeed', 'Screen Rant'])).toBe('Cracked, BuzzFeed and Screen Rant');
+  });
+});
+
+describe('formatSince', () => {
+  it('names the time alone today, and the day before that', () => {
+    const today = new Date(2026, 10, 1, 9, 5);
+    const yesterday = new Date(2026, 9, 31, 21, 40);
+    expect(formatSince(today.toISOString(), NOW)).toBe(`since ${formatTime(today)}`);
+    expect(formatSince(yesterday.toISOString(), NOW)).toBe(`since yesterday, ${formatTime(yesterday)}`);
+    const earlier = new Date(2026, 9, 28, 18, 15);
+    const date = earlier.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+    expect(formatSince(earlier.toISOString(), NOW)).toBe(`since ${date}, ${formatTime(earlier)}`);
   });
 });

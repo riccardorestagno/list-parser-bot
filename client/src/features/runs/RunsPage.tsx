@@ -1,8 +1,9 @@
 import { Clock, RefreshCw } from 'lucide-react';
 import { APP_VERSION } from '@/utils/constants';
-import { formatEvery, formatTime, formatUntil, listNames } from '@/utils/format';
-import type { BotStatus } from '@/utils/types';
+import { formatEvery, formatSince, formatTime, formatUntil, listNames } from '@/utils/format';
+import type { BotStatus, SiteProblem } from '@/utils/types';
 import { RunItem } from './RunItem';
+import { siteErrorLook } from './siteErrors';
 import { useRuns } from './useRuns';
 
 const card = 'rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm';
@@ -39,7 +40,28 @@ const NextSweep = ({ status, sweeping }: { status: BotStatus; sweeping: boolean 
   );
 };
 
-/** The bot's page: what it does, when it next sweeps, and how the latest sweeps went. */
+/** The sites whose latest search went wrong. Each goes once a sweep searches it and finds it working. */
+const SiteProblems = ({ problems }: { problems: SiteProblem[] }) => (
+  <ul className="mt-2 space-y-1 text-sm">
+    {problems.map((problem) => {
+      const look = siteErrorLook(problem.status);
+      const Icon = look.icon;
+      return (
+        <li key={problem.site} className={`flex items-start gap-1.5 ${look.color}`}>
+          <Icon className="mt-0.5 h-4 w-4 shrink-0" aria-hidden />
+          <span className="min-w-0 break-words">
+            <span className="font-medium">
+              {problem.site} {look.inHeader} {formatSince(problem.since)}
+            </span>
+            : {problem.error}
+          </span>
+        </li>
+      );
+    })}
+  </ul>
+);
+
+/** The bot's page: what it does, which sites are failing, when it next sweeps, and how the latest sweeps went. */
 export const RunsPage = () => {
   const { runs, status, error, loading, reload } = useRuns();
 
@@ -61,6 +83,8 @@ export const RunsPage = () => {
               .
             </p>
           )}
+          {/* An API from before sites were noted one by one sends none */}
+          {status?.site_problems?.length ? <SiteProblems problems={status.site_problems} /> : null}
         </div>
         <button
           type="button"

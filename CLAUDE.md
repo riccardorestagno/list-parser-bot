@@ -40,9 +40,9 @@ cd client && yarn build                # type-check + build; CI runs this
 
 ## Conventions
 
-- **Nothing posts to Reddit unless asked to**: the schedule is off unless `LISTBOT_SCHEDULE_ENABLED=true`, a parser run by hand or by a test finds without posting, and tests never reach Reddit or the live websites (they stub them).
-- **Be gentle with the websites**: keep the pause between article fetches and each parser's limit on articles searched.
-- A new website gets its `ArticleType`, its settings in `bot/config.py` (active, archive link, limits), its module in `bot/parsers/`, and its place in the controller. The type's name is the post's flair, and the controller orders parsers by the flairs of the latest posts, so renaming one changes both.
+- **Nothing posts to Reddit unless asked to**: the schedule is off unless `LISTBOT_SCHEDULE_ENABLED=true`, a dry run (`python -m dev.sweep --dry-run`, one site with `--site`) or a test finds without posting, and tests never reach Reddit or the live websites (they stub them).
+- **Be gentle with the websites**: keep the pause before each article fetched (`bot/controller.py`), each parser's limit on articles searched, and the check against the subreddit's recent posts before an article is opened.
+- A new website gets its `ArticleType`, its settings in `bot/config.py` (active, archive link, limits), its module in `bot/parsers/` (`find_articles()` reads the archive, `get_article_list_text(link, count)` one article's list), and its place in the controller's `PARSERS`. A parser change keeps its article links exactly as they were: earlier posts' links are how the bot tells an article was posted before. The type's name is the post's flair, and the controller orders parsers by the flairs of the latest posts, so renaming one changes both.
 - Websites change their HTML: a parser fix stays within that parser, and says which website changed what.
 - Schema changes: add the column in `db/migrations.py` (`CREATE TABLE` for new databases, an `ALTER` in `run_migrations` for existing ones), with a default (or NULL) that suits the rows already there.
 - Each resource has a test module in `server/tests/`; add or extend one with the change.
@@ -61,7 +61,7 @@ cd client && yarn build                # type-check + build; CI runs this
 - **Routes don't import other routes.** Helpers two routes share live in `services/`; configuration lives in `settings.py`.
 - **Environment variables are read once, in `settings.py`**, prefixed `LISTBOT_`, never in route, service or `bot/` modules.
 - **`services/`, `bot/` and `db/` don't import from `api/` or FastAPI.** Services raise `AppError` (`services/errors.py`), never `HTTPException`; `api/errors.py` turns it into the same JSON. `bot/` knows nothing of runs or the database: `services/sweep.py` calls it and records what happened. `db/` takes no imports from `services/`.
-- **Parsers parse**: they fetch and read a website and return what they found. The rules a list must meet live in `bot/helpers/list_validation_methods.py`, and every Reddit call goes through `bot/helpers/reddit.py`.
+- **Parsers parse**: they fetch and read a website and return what they found; the controller decides what to open and posts. The rules a list must meet live in `bot/helpers/list_validation_methods.py`, and every Reddit call goes through `bot/helpers/reddit.py`.
 - **One owner per transaction**: a service function that opens a connection (`db/session.py`) commits its unit of work once. Helpers that take a connection never commit.
 
 ## Working style
