@@ -106,7 +106,7 @@ This is where clean merges break. Check both directions:
 | `server/api/auth.py`, `server/services/auth.py` | The dashboard's token check: new routes stay behind `signed_in`, and the contract with the dashboard (its `docs/apps.md`) still holds. |
 | `client/src/utils/types.ts`, `client/src/utils/api.ts` | Types and API calls develop changed that the branch's components use, and the reverse. |
 | `server/api/routes/`, `server/schemas/`, `server/main.py`, `client/src/App.tsx` | Changed request models, routes registered on both sides, paths that now clash. |
-| `server/tests/conftest.py`, `server/tests/tokens.py` | Fixtures develop changed that the branch's tests use. |
+| `server/tests/conftest.py`, `server/tests/support.py` | Fixtures develop changed that the branch's tests use. |
 | `server/requirements.txt`, `client/package.json`, `client/yarn.lock` | Dependency changes on both sides. Never merge `yarn.lock` by hand (step 4). |
 | `CLAUDE.md`, `README.md`, `.claude/skills/` | New conventions from develop that the branch's work must now follow (e.g. a new rule on where code goes or what every feature must include). |
 | `.github/workflows/` | New CI checks the branch's code must now pass. |

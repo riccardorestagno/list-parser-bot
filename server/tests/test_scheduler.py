@@ -1,3 +1,4 @@
+"""The schedule: when the next sweep is due, and the thread that starts sweeps on time."""
 import threading
 from datetime import datetime, timedelta, timezone
 

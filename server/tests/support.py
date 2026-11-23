@@ -1,4 +1,5 @@
-"""Tokens like the tools dashboard signs, with a key made for the tests."""
+"""Helpers shared by the tests (``conftest.py`` sets up the app): tokens like the tools dashboard signs,
+with a key made for the tests."""
 from datetime import datetime, timedelta, timezone
 
 import jwt
