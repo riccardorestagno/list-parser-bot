@@ -3,6 +3,7 @@ import time
 
 import bot.helpers.list_validation_methods as lvm
 from bot.config import business_insider_article_archive_link as archive_link
+from bot.config import business_insider_max_articles_to_search as max_articles_to_search
 from bot.helpers.enums import *
 from bot.helpers.post import Post
 from bot.helpers.reddit import post_to_reddit
@@ -18,7 +19,7 @@ def find_article_to_parse(create_post=True):
     print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
 
-    for link in soup.find_all('h3', attrs={'class': 'tout-title'}):
+    for link in soup.find_all('h3', attrs={'class': 'tout-title'}, limit=max_articles_to_search):
 
         article_title = link.find('a', href=True)
         if article_title is None:
