@@ -1,46 +1,28 @@
 import re
-import time
 
 import bot.helpers.list_validation_methods as lvm
 from bot.config import business_insider_article_archive_link as archive_link
 from bot.config import business_insider_max_articles_to_search as max_articles_to_search
 from bot.helpers.enums import *
-from bot.helpers.post import Post
-from bot.helpers.reddit import post_to_reddit
+from bot.helpers.post import Article
 
 
-def find_article_to_parse(create_post=True):
-    """Finds a list article in Business Insider's latest article archive and posts the list article to Reddit.
-    Returns the Post made, or False when no list article was found."""
+def find_articles():
+    """The latest articles in Business Insider's archive, up to its limit."""
 
-    website = ArticleType.Business_Insider
-    website_name = convert_enum_to_string(website)
-
-    print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
+    articles = []
 
-    for link in soup.find_all('h3', attrs={'class': 'tout-title'}, limit=max_articles_to_search):
-
-        article_title = link.find('a', href=True)
-        if article_title is None:
-           continue
-
-        article_link = article_title['href'] if article_title['href'].startswith("http") else "http://www.businessinsider.com" + article_title['href']
-
-        print("Parsing article: " + article_link)
-        time.sleep(1)
-
-        if not lvm.article_title_meets_posting_requirements(website, article_title.text):
+    for heading in soup.find_all('h3', attrs={'class': 'tout-title'}, limit=max_articles_to_search):
+        link = heading.find('a', href=True)
+        if link is None:
             continue
 
-        article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article_title.text))
-        if article_list_text and not lvm.post_previously_made(article_link):
-            print(f"{website_name} list article found: " + article_title.text)
-            reddit_url = post_to_reddit(article_title.text, article_list_text, article_link, website) if create_post else None
-            return Post(website_name, article_title.text, article_link, reddit_url)
+        # Kept as it always was: the links in earlier posts are what tells an article was posted before
+        article_link = link['href'] if link['href'].startswith("http") else "http://www.businessinsider.com" + link['href']
+        articles.append(Article(link.text.strip(), article_link))
 
-    print(f"No {website_name} list articles were found to parse at this time.")
-    return False
+    return articles
 
 
 def get_article_list_text(link_to_check, total_list_elements):
@@ -84,8 +66,3 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     return full_list
 
-
-if __name__ == "__main__":
-    start_time = round(time.time(), 2)
-    find_article_to_parse(create_post=False)
-    print("Business Insider script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")

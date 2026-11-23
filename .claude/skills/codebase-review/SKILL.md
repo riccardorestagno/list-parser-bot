@@ -55,8 +55,11 @@ Each line is a kind of problem. Check the kind, not only one place.
 
 **In this repository especially**
 - **Anything that could post twice, or post when it shouldn't**: the earlier-post check skipped on some path, two sweeps at once, the schedule honoured when `LISTBOT_SCHEDULE_ENABLED` is off, a test or a hand-run parser that reaches Reddit.
-- **The gap between sweeps lost** over a restart, or a failure reported to the moderator every sweep instead of once.
-- **A parser that no longer respects its limit or its pause** between fetches, or fetches more pages than it reads.
+- **The gap between sweeps lost** over a restart, or a failure reported to the moderator every sweep instead of once. Looking back for "already told", pass over the sweeps that say nothing either way (cut short by a restart, or where the site or Reddit couldn't be reached), as `runs.sweep_failed_before` and `runs.sites_failing_before` do.
+- **A parser that no longer respects its limit or its pause** between fetches, or fetches more pages than it reads: the same page fetched again by a second reader (read it once and hand the soup to both, as BuzzFeed's `get_article_list_text` does), or an article opened before checking whether it was posted.
+- **One site's failure stopping the others**: anything that raises out of a site's search ends the sweep and every site after it, and a site that never posts stays first in the order, so it would fail every sweep. Each site's search is caught on its own in `bot/controller.py`'s `sweep`; only Reddit failing ends a sweep.
+- **A failure that reads as "nothing new"**: a fetch that doesn't check the HTTP status, or an archive page that matches no articles, looks like a quiet day. `soup_session` raises on an error page and the controller raises `NoArticlesFound` on an empty archive, so the site shows as failing. Only the archive counts: an article page that's gone (4xx but 429) is passed over for the next, as `is_gone` does, or one deleted article would fail its site every sweep.
+- **Repeated work per article**: a new Reddit connection, a subreddit listing or an HTTP session per check. One connection and one listing per sweep, one session for every page.
 - **A check that answers differently each time, or guesses on too little**: a library that picks a random seed per call (langdetect without `DetectorFactory.seed`), or a language or similarity check run on a few words. Fix the seed, and judge only what's long enough to judge, as `is_english_title` does.
 - **A list rule that matches text anywhere instead of where it belongs**: a number looked for with `in` (the "1." in "11." or "$1.99"), or a list handled line by line where an item can run over several lines. Anchor the pattern (`^` with `re.MULTILINE`) and compare the whole sequence, as `is_correctly_formatted_list` and `put_list_in_order` do.
 - **A thread and a request sharing state** without a lock: the scheduler's thread writes while a route reads.
@@ -69,7 +72,8 @@ Each line is a kind of problem. Check the kind, not only one place.
 - **A read that writes**: a GET route that commits.
 - **Memory read before it's bounded**: an upload read whole before its size is checked, a table loaded whole to count it.
 - **In-memory state that only grows**: module-level dicts keyed by something a visitor chooses (an email, an address).
-- **The client treating every failure as one kind**: a `catch` that signs out, clears state or redirects on a 5xx or a dropped connection as it would on a 401.
+- **The client treating every failure as one kind**: a `catch` that signs out, clears state or redirects on a 5xx or a dropped connection as it would on a 401. Also the reverse: a dropped connection shown in each browser's own words ("Failed to fetch") rather than said plainly (`apiFetch`).
+- **Bytes read as text**: `atob` gives one character per byte, so a token's UTF-8 claims (a name with an accent) come out garbled. Decode the bytes with `TextDecoder`, as `readPerson` does.
 - **A connection or cursor left open** on an error path, or a transaction left uncommitted across a slow call.
 - **Days counted in the wrong time zone**: `.date()` on a UTC time where the local day is meant.
 - **A layering rule broken in a way that causes a bug**, not only one that's untidy: see `CLAUDE.md`'s *Layering*.

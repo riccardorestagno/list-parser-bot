@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
-import { requestJson } from '@/utils/api';
+import { API_UNREACHABLE, requestJson } from '@/utils/api';
 import { API_BASE_URL, RUNS_SHOWN } from '@/utils/constants';
 import type { BotStatus, Run, RunList } from '@/utils/types';
 
@@ -24,7 +24,7 @@ export const useRuns = () => {
       setStatus(botStatus);
       setError(null);
     } catch (problem) {
-      setError(problem instanceof Error ? problem.message : 'The API could not be reached');
+      setError(problem instanceof Error ? problem.message : API_UNREACHABLE);
     } finally {
       setLoading(false);
     }

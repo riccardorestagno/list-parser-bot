@@ -1,46 +1,24 @@
-import time
-from bs4 import NavigableString
-
 import bot.helpers.list_validation_methods as lvm
 from bot.config import screen_rant_article_archive_link as archive_link
 from bot.config import screen_rant_max_articles_to_search as max_articles_to_search
 from bot.helpers.enums import *
-from bot.helpers.post import Post
-from bot.helpers.reddit import post_to_reddit
+from bot.helpers.post import Article
 
 
-def find_article_to_parse(create_post=True):
-    """Finds a list article in Screen Rant's latest article archive and posts the list article to Reddit.
-    Returns the Post made, or False when no list article was found."""
+def find_articles():
+    """The latest articles in Screen Rant's archive, up to its limit."""
 
-    website = ArticleType.Screen_Rant
-    website_name = convert_enum_to_string(website)
-
-    print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
+    articles = []
 
-    for article in soup.find_all("h5", attrs={"class": "display-card-title"}, limit=max_articles_to_search):
-        article = article.find("a", href=True)
+    for heading in soup.find_all("h5", attrs={"class": "display-card-title"}, limit=max_articles_to_search):
+        link = heading.find("a", href=True)
+        if link:
+            # Kept as it always was: the links in earlier posts are what tells an article was posted before
+            article_link = link['href'] if link['href'].startswith("http") else "http://www.screenrant.com" + link['href']
+            articles.append(Article(link.text.strip(), article_link))
 
-        if article:
-
-            article_title = article.text.strip()
-            article_link = article['href'] if article['href'].startswith("http") else "http://www.screenrant.com" + article['href']
-
-            print(f"Parsing article: {article_link}")
-            time.sleep(1)
-
-            if not lvm.article_title_meets_posting_requirements(website, article_title):
-                continue
-
-            article_list_text = get_article_list_text(article_link, lvm.get_article_list_count(article_title))
-            if article_list_text and not lvm.post_previously_made(article_link):
-                print(f"{website_name} list article found: {article_title}")
-                reddit_url = post_to_reddit(article_title, article_list_text, article_link, website) if create_post else None
-                return Post(website_name, article_title, article_link, reddit_url)
-
-    print(f"No {website_name} list articles were found to parse at this time.")
-    return False
+    return articles
 
 
 def get_article_list_text(link_to_check, total_list_elements):
@@ -64,9 +42,3 @@ def get_article_list_text(link_to_check, total_list_elements):
 
     if lvm.article_text_meets_posting_requirements(ArticleType.Screen_Rant, full_list, list_counter, total_list_elements):
         return lvm.put_list_in_order(full_list)
-
-
-if __name__ == "__main__":
-    start_time = round(time.time(), 2)
-    find_article_to_parse(create_post=False)
-    print("Screen Rant script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")

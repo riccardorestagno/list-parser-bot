@@ -1,6 +1,8 @@
 """Runs: the record of sweeps the dashboard lists, newest first."""
 import pytest
 
+from db.migrations import init_db
+from db.session import connect
 from schemas.enums import RunStatus
 from services import runs
 
@@ -55,3 +57,35 @@ def test_runs_a_stopped_process_left_open_end_as_failed(no_runs):
 def test_an_unknown_run(no_runs):
     with pytest.raises(runs.RunNotFound):
         runs.get_run(123456)
+
+
+def test_the_sites_a_sweep_couldnt_search_are_listed(client, no_runs):
+    run_id = runs.start_run()
+    runs.finish_run(run_id, RunStatus.NOTHING_NEW, ["Cracked", "Screen Rant"],
+                    site_errors=[{"site": "Cracked", "status": "failed", "error": "HTTP 403 from https://www.cracked.com/"}])
+    [run] = client.get("/runs").json()["runs"]
+    assert run["site_errors"] == [{"site": "Cracked", "status": "failed", "error": "HTTP 403 from https://www.cracked.com/"}]
+
+
+def test_a_database_from_before_gets_the_new_column_and_keeps_its_runs(no_runs):
+    conn = connect()
+    try:
+        conn.execute("DROP TABLE runs")
+        # The table as releases before site_errors made it
+        conn.execute("""
+            CREATE TABLE runs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT, started_at TEXT NOT NULL, finished_at TEXT,
+                status TEXT NOT NULL, sites_searched TEXT NOT NULL DEFAULT '', site TEXT, title TEXT,
+                article_url TEXT, reddit_url TEXT, error TEXT, error_details TEXT
+            )
+        """)
+        conn.execute("INSERT INTO runs (started_at, status, sites_searched, error) VALUES (?, 'failed', 'Cracked', ?)",
+                     ("2026-11-01T12:00:00+00:00", "ValueError: The page changed"))
+        conn.commit()
+    finally:
+        conn.close()
+
+    init_db()
+    init_db()  # and again, as every start does
+    [run] = runs.list_runs(10)
+    assert (run["status"], run["error"], run["site_errors"]) == ("failed", "ValueError: The page changed", [])

@@ -26,11 +26,18 @@ export interface SignedInPerson {
   name: string;
 }
 
+/** One part of a token as text. atob gives bytes, one character each, and the claims are UTF-8:
+ *  read as they are, "José" would show as "JosÃ©". */
+const decodePart = (part: string): string => {
+  const bytes = Uint8Array.from(atob(part.replace(/-/g, '+').replace(/_/g, '/')), (byte) => byte.charCodeAt(0));
+  return new TextDecoder().decode(bytes);
+};
+
 /** Who the token names, read without checking it: that's the API's job. */
 export const readPerson = (token: string | null): SignedInPerson | null => {
   if (!token) return null;
   try {
-    const claims = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+    const claims = JSON.parse(decodePart(token.split('.')[1]));
     return typeof claims.email === 'string' ? { email: claims.email, name: claims.name ?? '' } : null;
   } catch {
     return null;

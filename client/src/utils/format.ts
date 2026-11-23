@@ -16,11 +16,20 @@ export const dayLabel = (moment: Date, now: Date): 'Today' | 'Yesterday' | null 
 export const formatTime = (moment: Date): string =>
   moment.toLocaleTimeString(undefined, { hour: 'numeric', minute: '2-digit' });
 
+const formatDate = (moment: Date): string => moment.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
+
 /** "Today, 3:05 PM", "Yesterday, 9:40 AM" or "Oct 28, 6:15 PM" */
 export const formatWhen = (iso: string, now: Date = new Date()): string => {
   const moment = new Date(iso);
-  const day = dayLabel(moment, now) ?? moment.toLocaleDateString(undefined, { month: 'short', day: 'numeric' });
-  return `${day}, ${formatTime(moment)}`;
+  return `${dayLabel(moment, now) ?? formatDate(moment)}, ${formatTime(moment)}`;
+};
+
+/** Inside a sentence: "since 3:05 PM" (today), "since yesterday, 9:40 AM" or "since Oct 28, 6:15 PM" */
+export const formatSince = (iso: string, now: Date = new Date()): string => {
+  const moment = new Date(iso);
+  const day = dayLabel(moment, now);
+  if (day === 'Today') return `since ${formatTime(moment)}`;
+  return `since ${day === 'Yesterday' ? 'yesterday' : formatDate(moment)}, ${formatTime(moment)}`;
 };
 
 /** How long a sweep took: "45 s", "3 min 5 s", "1 h 2 min"; '' when it hasn't finished. */

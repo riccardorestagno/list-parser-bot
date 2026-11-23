@@ -25,6 +25,9 @@ export const readDetail = (payload: unknown, fallback: string): string => {
   return fallback;
 };
 
+/** What a request that got no answer at all says */
+export const API_UNREACHABLE = 'The API could not be reached';
+
 /**
  * fetch with the signed-in person's token. Every call to the API goes through here:
  * a 401 means the token is missing, expired or doesn't open this app, so the person
@@ -35,7 +38,15 @@ export const apiFetch = async (url: string, init: RequestInit = {}): Promise<Res
   const token = readToken();
   if (token) headers.set('Authorization', `Bearer ${token}`);
 
-  const response = await fetch(url, { ...init, headers });
+  let response: Response;
+  try {
+    response = await fetch(url, { ...init, headers });
+  } catch (problem) {
+    // fetch only rejects when nothing answered (offline, the API down), in words that differ by browser
+    // ("Failed to fetch", "Load failed"). A request the caller cancelled stays cancelled
+    if (problem instanceof DOMException && problem.name === 'AbortError') throw problem;
+    throw new Error(API_UNREACHABLE);
+  }
   if (response.status === 401) sendToSignIn();
   return response;
 };
@@ -54,8 +65,3 @@ export const requestJson = async <T>(
 
   return payload as T;
 };
-
-export const jsonBody = (body: unknown): RequestInit => ({
-  headers: { 'Content-Type': 'application/json' },
-  body: JSON.stringify(body),
-});

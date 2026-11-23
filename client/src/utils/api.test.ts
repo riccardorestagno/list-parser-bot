@@ -82,4 +82,16 @@ describe('requestJson', () => {
     apiAnswering(503, { detail: 'The database is locked' });
     await expect(requestJson('/api/runs')).rejects.toThrow('The database is locked');
   });
+
+  it("says the API couldn't be reached when nothing answered, whatever the browser calls it", async () => {
+    browserSignedInAs('a-token');
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new TypeError('Failed to fetch'))));
+    await expect(requestJson('/api/runs')).rejects.toThrow('The API could not be reached');
+  });
+
+  it('leaves a request the caller cancelled as cancelled', async () => {
+    browserSignedInAs('a-token');
+    vi.stubGlobal('fetch', vi.fn(async () => Promise.reject(new DOMException('Aborted', 'AbortError'))));
+    await expect(requestJson('/api/runs')).rejects.toThrow('Aborted');
+  });
 });
