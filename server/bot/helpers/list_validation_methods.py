@@ -1,7 +1,7 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from langdetect import detect, lang_detect_exception
+from langdetect import DetectorFactory, detect, lang_detect_exception
 
 from bot.config import post_previously_made_search_limit, reddit_max_post_text_length, subreddit, title_exclusion_words
 from bot.helpers.enums import ArticleType
@@ -9,6 +9,9 @@ from bot.helpers.reddit import connect_to_reddit
 
 ITEM_NUMBER = re.compile(r'^(\d+)\.', flags=re.MULTILINE)  # An item's number starts its line: "3. Foo"
 ITEM_START = re.compile(r'\n(?=\d+\.)')  # The line break before each numbered line
+
+DetectorFactory.seed = 0  # langdetect guesses at random otherwise: the same title could pass one sweep and fail the next
+MIN_WORDS_TO_DETECT = 5  # with fewer words langdetect guesses: "8 Pizza Hacks" reads as Polish
 
 
 def soup_session(link):
@@ -74,6 +77,22 @@ def get_article_list_count(article_title):
     return list_count
 
 
+def is_english_title(article_title):
+    """Whether a title reads as English. A title too short for langdetect to judge only needs
+    plain letters (no accents or other scripts), which still keeps out Japanese and most
+    Spanish, Portuguese or French titles. A title with no letters at all isn't English."""
+
+    words = [word for word in article_title.split() if not word.isdigit()]
+    if len(words) < MIN_WORDS_TO_DETECT:
+        letters = [character for character in article_title if character.isalpha()]
+        return bool(letters) and all(letter.isascii() for letter in letters)
+
+    try:
+        return detect(article_title) == 'en'
+    except lang_detect_exception.LangDetectException:
+        return False
+
+
 def article_title_meets_posting_requirements(website, article_title):
     """
     Validates that the article title meets all requirements to post the list to Reddit.
@@ -86,12 +105,8 @@ def article_title_meets_posting_requirements(website, article_title):
     Returns True if all validations are met. Returns False otherwise.
     """
 
-    if website == ArticleType.BuzzFeed:
-        try:
-            if not detect(article_title) == 'en':
-                return False
-        except lang_detect_exception.LangDetectException:
-            return False
+    if website == ArticleType.BuzzFeed and not is_english_title(article_title):
+        return False
 
     if get_article_list_count(article_title) == 0:
         return False

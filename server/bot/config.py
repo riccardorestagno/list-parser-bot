@@ -23,6 +23,7 @@ polygon_article_archive_link = "http://www.polygon.com/news"
 screen_rant_article_archive_link = "https://screenrant.com/lists/"
 
 # Maximum articles to search per parser method call
+business_insider_max_articles_to_search = 30
 buzzfeed_max_articles_to_search = 15
 cracked_max_articles_to_search = 10
 polygon_max_articles_to_search = 5
