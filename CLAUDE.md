@@ -17,7 +17,7 @@ server/                  FastAPI + SQLite (sqlite3)
   db/session.py          the connection every caller uses
   db/migrations.py       runs on startup: creates missing tables and columns
   dev/                   scripts a developer runs (sweep.py: one sweep by hand)
-  tests/                 pytest; shared setup in conftest.py
+  tests/                 pytest; shared fixtures in conftest.py and support.py
 client/src/              React 19 + TypeScript + Vite + Tailwind
   App.tsx                providers and the screen
   features/<feature>/    one folder per area of the screen

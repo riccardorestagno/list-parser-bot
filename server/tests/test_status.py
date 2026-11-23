@@ -1,3 +1,4 @@
+"""/status: where the bot posts and which sites it reads, as the dashboard shows them."""
 from bot.config import active_parsers
 from bot.helpers.enums import ArticleType
 

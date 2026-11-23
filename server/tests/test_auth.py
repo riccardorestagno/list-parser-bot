@@ -1,3 +1,4 @@
+"""Signing in: the tools dashboard's token, which every route but / and /health needs."""
 from datetime import timedelta
 
 import pytest
@@ -5,7 +6,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import Ed25519PrivateKey
 
 from services.auth import check_token
 from services.errors import AppError
-from tests.tokens import PUBLIC_KEY_PEM, make_token
+from support import PUBLIC_KEY_PEM, make_token
 
 
 def bearer(token: str) -> dict:

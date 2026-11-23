@@ -64,7 +64,7 @@ cd <worktree>/client && yarn install --frozen-lockfile && yarn test --run <chang
 ```
 
 - Test modules are in `server/tests/`, named for the route or service they cover.
-- `<python>` is the main clone's virtual environment: `server\venv\Scripts\python.exe` on Windows, `server/venv/bin/python` on Linux. In a cloud session there is none: use `python` after `pip install -r requirements.txt pytest pytest-xdist`.
+- `<python>` is the main clone's virtual environment: `server\venv\Scripts\python.exe` on Windows, `server/venv/bin/python` on Linux. In a cloud session there is none: use `python` after `pip install -r requirements.txt pytest`.
 - If a check can't run, say which and why. Don't call it passing.
 
 A failing test or a build that breaks is a **Critical** finding.

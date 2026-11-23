@@ -30,7 +30,7 @@ os.environ["LISTBOT_AUTH_DISABLED"] = "false"
 os.environ["LISTBOT_SCHEDULE_ENABLED"] = "false"  # the tests start the schedule themselves
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
-from tests.tokens import PUBLIC_KEY_PEM, make_token  # noqa: E402
+from support import PUBLIC_KEY_PEM, make_token  # noqa: E402
 
 # The tools dashboard's public key, as the deployed settings hold it
 os.environ["LISTBOT_AUTH_PUBLIC_KEY"] = PUBLIC_KEY_PEM

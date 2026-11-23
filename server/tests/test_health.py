@@ -1,3 +1,6 @@
+"""/health, which says the API is up and which release it runs."""
+
+
 def test_health_names_the_release(client):
     response = client.get("/health")
     assert response.status_code == 200
