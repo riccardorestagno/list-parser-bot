@@ -57,6 +57,7 @@ Each line is a kind of problem. Check the kind, not only one place.
 - **Anything that could post twice, or post when it shouldn't**: the earlier-post check skipped on some path, two sweeps at once, the schedule honoured when `LISTBOT_SCHEDULE_ENABLED` is off, a test or a hand-run parser that reaches Reddit.
 - **The gap between sweeps lost** over a restart, or a failure reported to the moderator every sweep instead of once.
 - **A parser that no longer respects its limit or its pause** between fetches, or fetches more pages than it reads.
+- **A list rule that matches text anywhere instead of where it belongs**: a number looked for with `in` (the "1." in "11." or "$1.99"), or a list handled line by line where an item can run over several lines. Anchor the pattern (`^` with `re.MULTILINE`) and compare the whole sequence, as `is_correctly_formatted_list` and `put_list_in_order` do.
 - **A thread and a request sharing state** without a lock: the scheduler's thread writes while a route reads.
 - **A credential or token in a log, an error detail or a response.**
 - **Scraped text shown unescaped** on the dashboard.

@@ -39,8 +39,32 @@ def test_a_list_must_have_as_many_points_as_its_title_says():
     assert not lvm.is_correctly_formatted_list("1. A\n3. C\n", 4)
 
 
-def test_a_list_counting_down_is_put_in_order():
-    assert lvm.reverse_list("3. C\n2. B\n1. A\n") == "1. A\n2. B\n3. C\n"
+@pytest.mark.parametrize("text, correct", [
+    ("1. A\n2. B\n3. C\n", True),
+    ("3. C\n2. B\n1. A\n", True),  # a countdown, put in order after the check
+    ("1. A\nmore about A\n2. B\n3. C\n", True),  # an item can run over more than one line
+    ("1. $1.99 deal\n2. B in 2024.\n3. C\n", True),  # numbers inside an item's text don't count
+    ("1. A\n3. C\n", False),  # 2 is missing
+    ("11. A\n2. B\n3. C\n", False),  # "1." only inside "11."
+    ("1. A\n3. B\n2. C\n", False),  # out of order
+    ("1. A\n1. B\n3. C\n", False),  # 1 twice, 2 missing
+    ("1. A\n2. B\n3. C\n4. D\n", False),  # one more than counted
+    ("Apples 1.\nPears 2.\nPlums 3.\n", False),  # numbers at the end of the line
+    ("Apples\nPears\nPlums\nPrices: 1.50, 2.25, 3.10\n", False),  # numbers only inside the text
+])
+def test_each_item_starts_with_its_own_number_once_and_in_order(text, correct):
+    assert lvm.is_correctly_formatted_list(text, 4) is correct
+
+
+@pytest.mark.parametrize("text, ordered", [
+    ("3. C\n2. B\n1. A\n", "1. A\n2. B\n3. C\n"),
+    ("3. C\n2. B\nmore about B\n1. A\n", "1. A\n2. B\nmore about B\n3. C\n"),  # an item keeps its own lines
+    ("1. A\n2. B\n3. C\n", "1. A\n2. B\n3. C\n"),
+    ("1.A\n2.B\n", "1.A\n2.B\n"),  # counting up without a space after the dot: left alone
+    ("1. Only\n", "1. Only\n"),
+])
+def test_a_list_counting_down_is_put_in_order(text, ordered):
+    assert lvm.put_list_in_order(text) == ordered
 
 
 def test_a_sweep_stops_at_the_first_site_with_a_new_list(monkeypatch):
