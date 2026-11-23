@@ -1,6 +1,6 @@
 import praw
 
-from bot.config import subreddit
+from bot.config import post_previously_made_search_limit, subreddit
 from bot.helpers.enums import convert_enum_to_string
 from settings import REDDIT_CLIENT_ID, REDDIT_CLIENT_SECRET, REDDIT_PASSWORD, REDDIT_USER_AGENT, REDDIT_USERNAME
 
@@ -19,10 +19,17 @@ def connect_to_reddit():
                        password=REDDIT_PASSWORD)
 
 
-def post_to_reddit(headline, main_text, link, website):
-    """Module that takes the title, main text and link to article and posts directly to Reddit. Returns the post's address."""
+def recent_posts(reddit, limit=post_previously_made_search_limit):
+    """The subreddit's newest posts, newest first, in one request."""
 
-    reddit = connect_to_reddit()
+    return list(reddit.subreddit(subreddit).new(limit=limit))
+
+
+def post_to_reddit(headline, main_text, link, website, reddit=None):
+    """Module that takes the title, main text and link to article and posts directly to Reddit. Returns the post's address.
+    A sweep passes the connection it already has; without one, this signs in."""
+
+    reddit = reddit or connect_to_reddit()
 
     submission = reddit.subreddit(subreddit).submit(title=headline, selftext=f"{main_text}\n[Link to article]({link})")
     submission.mod.flair(text=convert_enum_to_string(website))

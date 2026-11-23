@@ -1,37 +1,18 @@
 """The bot's own rules, without the network: what counts as a list article, the order a sweep tries the sites in,
-and what the bot sends to Reddit (to a Reddit the test makes)."""
+how a sweep carries on past a site that fails, and what the bot sends to Reddit (to a Reddit the test makes)."""
 from types import SimpleNamespace
 
+import prawcore
 import pytest
+import requests
 
 import bot.controller as controller
 import bot.helpers.list_validation_methods as lvm
 import bot.helpers.reddit as reddit_helper
 from bot import config
 from bot.helpers.enums import ArticleType, convert_enum_to_string, convert_string_to_articletype_enum, string_in_enum_list
-from bot.helpers.post import Post
-
-
-def fake_reddit(posts=()):
-    """Reddit as the bot uses it: the subreddit's newest posts (newest first), posting, and messaging someone."""
-    reddit = SimpleNamespace(asked=[], submitted=[], messages=[])
-
-    def subreddit(name):
-        def new(limit):
-            reddit.asked.append((name, limit))
-            return iter(list(posts)[:limit])
-
-        def submit(title, selftext):
-            post = SimpleNamespace(title=title, selftext=selftext, flair=None, permalink=f"/r/{name}/comments/new/")
-            post.mod = SimpleNamespace(flair=lambda text: setattr(post, "flair", text))
-            reddit.submitted.append(post)
-            return post
-
-        return SimpleNamespace(new=new, submit=submit)
-
-    reddit.subreddit = subreddit
-    reddit.redditor = lambda name: SimpleNamespace(message=lambda subject, text: reddit.messages.append((name, subject, text)))
-    return reddit
+from bot.helpers.post import Article, Post, SiteSearch
+from support import fake_reddit, reddit_post
 
 
 @pytest.mark.parametrize("title, count", [
@@ -39,6 +20,7 @@ def fake_reddit(posts=()):
     ("Five Movies That Changed Everything", 5),
     ("The Best Movies Of The Year, Ranked In 25 Steps", 25),
     ("Why Cats Are Great", 0),
+    ("", 0), ("   ", 0),  # a card whose link is only a picture
 ])
 def test_the_list_count_comes_from_the_title(title, count):
     assert lvm.get_article_list_count(title) == count
@@ -49,6 +31,7 @@ def test_the_list_count_comes_from_the_title(title, count):
     ("Owls Are Great", False),  # no number, so not a list
     ("15 Photos Of Owls", False),  # a list of pictures
     ("12 Must See Owl Videos", False),
+    ("", False),
 ])
 def test_title_requirements(title, meets):
     assert lvm.article_title_meets_posting_requirements(ArticleType.Cracked, title) is meets
@@ -94,15 +77,66 @@ def test_a_list_counting_down_is_put_in_order(text, ordered):
     assert lvm.put_list_in_order(text) == ordered
 
 
-def test_a_sweep_stops_at_the_first_site_with_a_new_list(monkeypatch):
-    post = Post("BuzzFeed", "21 Owls", "https://www.buzzfeed.com/owls", "https://www.reddit.com/r/buzzfeedbot/x/")
-    found = {ArticleType.Cracked: False, ArticleType.BuzzFeed: post, ArticleType.Screen_Rant: False}
-    monkeypatch.setattr(controller, "get_ordered_article_parsers", lambda: list(found))
-    monkeypatch.setattr(controller, "call_article_archive_parser", lambda parser, create_post=True: found[parser])
+FOUND = (Article("21 Owls", "https://www.buzzfeed.com/owls"), "1. A\n")
 
-    searched = []
-    assert controller.sweep(searched=searched) == post
-    assert searched == ["Cracked", "BuzzFeed"]
+
+def sweeping(monkeypatch, found, reddit=None):
+    """A sweep over these sites, in this order: each finds what ``found`` says (an article and its list, None, or an
+    error it raises). Returns the Reddit the sweep sees."""
+    reddit = reddit or fake_reddit()
+    monkeypatch.setattr(controller, "connect_to_reddit", lambda: reddit)
+    monkeypatch.setattr(controller, "get_ordered_article_parsers", lambda latest_posts: list(found))
+
+    def find_new_list(website, posted_before):
+        if isinstance(found[website], Exception):
+            raise found[website]
+        return found[website]
+
+    monkeypatch.setattr(controller, "find_new_list", find_new_list)
+    return reddit
+
+
+def test_a_sweep_stops_at_the_first_site_with_a_new_list_and_posts_it(monkeypatch):
+    reddit = sweeping(monkeypatch, {ArticleType.Cracked: None, ArticleType.BuzzFeed: FOUND, ArticleType.Screen_Rant: None})
+    sites = []
+    assert controller.sweep(sites=sites) == Post("BuzzFeed", "21 Owls", "https://www.buzzfeed.com/owls",
+                                                 "https://www.reddit.com/r/buzzfeedbot/comments/new/")
+    assert sites == [SiteSearch("Cracked"), SiteSearch("BuzzFeed")]
+    [post] = reddit.submitted
+    assert post.flair == "BuzzFeed"
+    # One look at the subreddit for the whole sweep, as many posts as one request gives
+    assert reddit.asked == [("buzzfeedbot", 100)]
+
+
+def test_a_site_that_fails_is_noted_and_the_next_one_searched(monkeypatch):
+    changed = AttributeError("'NoneType' object has no attribute 'text'")  # the site changed its HTML
+    down = requests.exceptions.ReadTimeout("Read timed out")
+    sweeping(monkeypatch, {ArticleType.Cracked: changed, ArticleType.Business_Insider: down,
+                           ArticleType.BuzzFeed: None, ArticleType.Screen_Rant: FOUND})
+    sites = []
+    assert controller.sweep(create_post=False, sites=sites).article_url == "https://www.buzzfeed.com/owls"
+    assert sites == [SiteSearch("Cracked", changed), SiteSearch("Business Insider", down),
+                     SiteSearch("BuzzFeed"), SiteSearch("Screen Rant")]
+
+
+def test_reddit_failing_ends_the_sweep(monkeypatch):
+    def submit(title, selftext):
+        raise prawcore.exceptions.ResponseException(SimpleNamespace(status_code=403))
+
+    reddit = fake_reddit()
+    reddit.subreddit = lambda name: SimpleNamespace(new=lambda limit: iter([]), submit=submit)
+    sweeping(monkeypatch, {ArticleType.Cracked: FOUND, ArticleType.BuzzFeed: FOUND}, reddit)
+    sites = []
+    with pytest.raises(prawcore.exceptions.ResponseException):
+        controller.sweep(sites=sites)
+    assert sites == [SiteSearch("Cracked")]  # how far it got
+
+
+def test_a_sweep_searches_only_the_sites_asked_for(monkeypatch):
+    sweeping(monkeypatch, {ArticleType.Cracked: None, ArticleType.Screen_Rant: None})
+    sites = []
+    controller.sweep(create_post=False, sites=sites, websites=[ArticleType.Screen_Rant])
+    assert sites == [SiteSearch("Screen Rant")]
 
 
 @pytest.mark.parametrize("title", [
@@ -160,43 +194,44 @@ def test_a_list_too_long_for_a_reddit_post_isnt_posted():
     assert not lvm.article_text_meets_posting_requirements(ArticleType.Cracked, "1. " + "o" * 40_000 + "\n", 2, 1)
 
 
-def test_an_article_in_a_recent_post_counts_as_posted(monkeypatch):
-    reddit = fake_reddit([SimpleNamespace(selftext="1. A\n[Link to article](https://www.cracked.com/owls)")])
-    monkeypatch.setattr(lvm, "connect_to_reddit", lambda: reddit)
-    assert lvm.post_previously_made("https://www.cracked.com/owls")
-    assert not lvm.post_previously_made("https://www.cracked.com/bats")
-    assert reddit.asked == [("buzzfeedbot", config.post_previously_made_search_limit)] * 2
+def test_an_article_in_a_recent_post_counts_as_posted():
+    posts = [reddit_post(selftext="1. A\n[Link to article](https://www.cracked.com/owls)")]
+    assert lvm.post_previously_made("https://www.cracked.com/owls", posts)
+    assert not lvm.post_previously_made("https://www.cracked.com/bats", posts)
+
+
+def test_the_subreddits_recent_posts_are_read_in_one_request():
+    reddit = fake_reddit([reddit_post("Cracked"), reddit_post("BuzzFeed")])
+    assert [post.link_flair_text for post in reddit_helper.recent_posts(reddit)] == ["Cracked", "BuzzFeed"]
+    assert reddit.asked == [("buzzfeedbot", config.post_previously_made_search_limit)]
 
 
 FOUR_SITES = {ArticleType.Business_Insider: True, ArticleType.BuzzFeed: True, ArticleType.Cracked: True,
-              ArticleType.Screen_Rant: True, ArticleType.Polygon: False}
+              ArticleType.Screen_Rant: True}
 
 
 def latest_posts(monkeypatch, *flairs):
     """The subreddit's newest posts, newest first, with these flairs."""
-    reddit = fake_reddit([SimpleNamespace(link_flair_text=flair) for flair in flairs])
-    monkeypatch.setattr(controller, "connect_to_reddit", lambda: reddit)
     monkeypatch.setattr(controller, "active_parsers", FOUR_SITES)
-    return reddit
+    return [reddit_post(flair) for flair in flairs]
 
 
 def test_the_sites_that_posted_last_are_tried_last(monkeypatch):
-    reddit = latest_posts(monkeypatch, "Cracked", "BuzzFeed", "Screen Rant")
-    assert controller.get_ordered_article_parsers() == [
+    # Only one post fewer than there are sites counts: the fourth newest says nothing more
+    posts = latest_posts(monkeypatch, "Cracked", "BuzzFeed", "Screen Rant", "Business Insider")
+    assert controller.get_ordered_article_parsers(posts) == [
         ArticleType.Business_Insider, ArticleType.Screen_Rant, ArticleType.BuzzFeed, ArticleType.Cracked]
-    assert reddit.asked == [("buzzfeedbot", 3)]  # one post fewer than there are sites
 
 
-def test_posts_without_a_flair_or_from_a_site_switched_off_dont_move_a_site(monkeypatch):
-    latest_posts(monkeypatch, "Polygon", None, "Cracked")
-    assert controller.get_ordered_article_parsers() == [
+def test_posts_without_a_flair_or_from_a_site_the_bot_doesnt_read_dont_move_a_site(monkeypatch):
+    posts = latest_posts(monkeypatch, "Polygon", None, "Cracked")
+    assert controller.get_ordered_article_parsers(posts) == [
         ArticleType.Business_Insider, ArticleType.BuzzFeed, ArticleType.Screen_Rant, ArticleType.Cracked]
 
 
-def test_with_one_site_switched_on_reddit_isnt_asked(monkeypatch):
+def test_with_one_site_switched_on_theres_nothing_to_order(monkeypatch):
     monkeypatch.setattr(controller, "active_parsers", {ArticleType.Cracked: True, ArticleType.BuzzFeed: False})
-    monkeypatch.setattr(controller, "connect_to_reddit", lambda: pytest.fail("Reddit was asked"))
-    assert controller.get_ordered_article_parsers() == [ArticleType.Cracked]
+    assert controller.get_ordered_article_parsers([reddit_post("Cracked")]) == [ArticleType.Cracked]
 
 
 @pytest.mark.parametrize("site", [site for site in ArticleType if site != ArticleType.All])
@@ -206,13 +241,28 @@ def test_a_posts_flair_leads_back_to_its_site(site):
     assert string_in_enum_list([site], flair)
 
 
-def test_every_site_in_the_config_has_a_parser(monkeypatch):
-    for name in ("business_insider", "buzzfeed", "collegehumor", "cracked", "polygon", "screen_rant"):
-        monkeypatch.setattr(controller, f"parse_{name}_archive", lambda create_post, name=name: (name, create_post))
-    for site in config.active_parsers:
-        assert controller.call_article_archive_parser(site, create_post=False) is not False
-    assert controller.call_article_archive_parser(ArticleType.Cracked, create_post=False) == ("cracked", False)
-    assert controller.call_article_archive_parser(ArticleType.All) is False
+def test_every_site_in_the_config_has_a_parser():
+    assert set(config.active_parsers) == set(controller.PARSERS)
+    for parser in controller.PARSERS.values():
+        assert callable(parser.find_articles) and callable(parser.get_article_list_text)
+
+
+def page_answering(status, url="https://www.cracked.com/funny-articles.html"):
+    response = requests.Response()
+    response.status_code, response.url, response._content = status, url, b"<article class='content-card'></article>"
+    return response
+
+
+def test_a_page_is_read_when_it_loads(monkeypatch):
+    monkeypatch.setattr(lvm._session, "get", lambda link, timeout: page_answering(200))
+    assert lvm.soup_session("https://www.cracked.com/funny-articles.html").find("article") is not None
+
+
+@pytest.mark.parametrize("status", [403, 404, 503])
+def test_an_error_page_raises_rather_than_reading_as_a_page_without_articles(monkeypatch, status):
+    monkeypatch.setattr(lvm._session, "get", lambda link, timeout: page_answering(status))
+    with pytest.raises(requests.exceptions.HTTPError):
+        lvm.soup_session("https://www.cracked.com/funny-articles.html")
 
 
 def test_without_its_reddit_account_the_bot_names_the_settings_not_their_values(monkeypatch):

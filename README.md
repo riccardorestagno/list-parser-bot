@@ -13,8 +13,9 @@ latest sweeps: what each posted, or why it didn't.
 
 Each **sweep** goes through the sites in turn, starting with the one posted from least
 recently (the flairs of the subreddit's latest posts say which), and stops at the first
-that has a list article not posted yet. Which sites are read, their archive pages and the
-words that keep an article out are in `server/bot/config.py`.
+that has a list article not posted yet. It reads the subreddit's latest 100 posts once, at
+the start, and never opens an article one of them already links to. Which sites are read,
+their archive pages and the words that keep an article out are in `server/bot/config.py`.
 
 The API sweeps on a **schedule** (`server/services/scheduler.py`): a thread in the API's
 process starts one every `LISTBOT_SWEEP_MINUTES` (90), timed from the start of the last
@@ -22,12 +23,20 @@ one, so a restart or a deploy neither sweeps early nor skips one. App Service's 
 keeps the API, and so the schedule, running. Every sweep is recorded in a small SQLite
 database (`runs.db`), which the page reads; the latest 500 are kept.
 
-When a sweep fails:
+Each site is searched on its own, so one that fails doesn't stop the others:
 
-  - **Reddit or a site couldn't be reached** (Reddit answering 500, 502 or 503, a connection
-    error or a timeout): it's recorded, and the next sweep tries again.
-  - **Anything else**: it's recorded with its traceback, and the moderator gets a Reddit
-    message, once when sweeps start failing rather than on every sweep after.
+  - **A site couldn't be reached** (a 429 or 5xx, a connection error or a timeout): it's
+    noted against that site, and the next sweep tries it again.
+  - **A site is failing** (an error page such as 403 or 404, an archive page with no
+    articles on it because its HTML changed, or a parser error): it's noted with its
+    traceback, and the moderator gets a Reddit message.
+  - **Reddit couldn't be reached** (500, 502 or 503, a connection error or a timeout): the
+    sweep stops, and the next one tries again. **Anything else** that stops the sweep is
+    recorded with its traceback, and the moderator gets a Reddit message.
+
+The moderator hears once when something starts failing, not on every sweep after: the
+sweeps where it couldn't be reached in between don't count. The page marks each site whose
+latest search went wrong, since when, until a sweep finds it working again.
 
 ## Quick Start
 
@@ -52,7 +61,7 @@ The API doesn't sweep on your computer unless `LISTBOT_SCHEDULE_ENABLED=true` is
 cd server
 python -m dev.sweep --dry-run     # finds what it would post, posts and records nothing
 python -m dev.sweep               # posts it, and records the run like the schedule does
-python -m bot.parsers.cracked     # one site's parser alone, without posting
+python -m dev.sweep --dry-run --site Cracked   # one site alone, without posting
 ```
 
 ### Client

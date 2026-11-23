@@ -1,72 +1,36 @@
-import time
-
 import bot.helpers.list_validation_methods as lvm
 from bot.config import buzzfeed_article_archive_link as archive_link
 from bot.config import buzzfeed_max_articles_to_search as max_articles_to_search
 from bot.helpers.enums import *
-from bot.helpers.post import Post
-from bot.helpers.reddit import post_to_reddit
+from bot.helpers.post import Article
 
 
-def paragraph_article_text(link_to_check, total_list_elements):
-    """Parses BuzzFeed list articles that are in paragraph form (has the 'p' HTML tag)."""
+def find_articles():
+    """The latest articles in BuzzFeed's archive, up to its limit."""
 
-    list_counter = 1
-    full_list = ""
-
-    soup = lvm.soup_session(link_to_check)
-
-    for list_element in soup.find_all('p'):
-        if list_element.text and list_element.text[0].isdigit():
-            full_list += list_element.text.replace(') ', '. ', 1) + '\n'
-            list_counter += 1
-
-    if lvm.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
-        return lvm.put_list_in_order(full_list)
-
-
-def find_article_to_parse(create_post=True):
-    """Finds a list article in BuzzFeed's latest article archive and posts the list article to Reddit.
-    Returns the Post made, or False when no list article was found."""
-
-    website = ArticleType.BuzzFeed
-    website_name = convert_enum_to_string(website)
-
-    print(f"Searching {website_name}'s archive.")
     soup = lvm.soup_session(archive_link)
+    articles = []
 
-    for link in soup.find_all('article', attrs={'data-buzzblock': 'story-card'}, limit=max_articles_to_search):
+    for card in soup.find_all('article', attrs={'data-buzzblock': 'story-card'}, limit=max_articles_to_search):
+        link = card.find('a', href=True)
+        if link:
+            articles.append(Article(link.text.strip(), link['href']))
 
-        article_title = link.find('a', href=True)
-        article_link = article_title['href']
-        print("Parsing article: " + article_link)
-        time.sleep(1)
-
-        if not lvm.article_title_meets_posting_requirements(website, article_title.text):
-            continue
-
-        no_of_elements = lvm.get_article_list_count(article_title.text)
-
-        article_list_text = get_article_list_text(article_link, no_of_elements)
-        if not article_list_text:
-            article_list_text = paragraph_article_text(article_link, no_of_elements)
-
-        if article_list_text and not lvm.post_previously_made(article_link):
-            print(f"{website_name} list article found: " + article_title.text)
-            reddit_url = post_to_reddit(article_title.text, article_list_text, article_link, website) if create_post else None
-            return Post(website_name, article_title.text, article_link, reddit_url)
-
-    print(f"No {website_name} list articles were found to parse at this time.")
-    return False
+    return articles
 
 
 def get_article_list_text(link_to_check, total_list_elements):
-    """Concatenates the list elements of the article into a single string. Ensures proper list formatting before making a post."""
+    """The article's list, from its numbered headings or, failing that, its numbered paragraphs: one fetch for both."""
+
+    soup = lvm.soup_session(link_to_check)
+    return heading_list_text(soup, total_list_elements) or paragraph_list_text(soup, total_list_elements)
+
+
+def heading_list_text(soup, total_list_elements):
+    """Reads BuzzFeed list articles whose points are numbered headings (the 'h2' HTML tag)."""
 
     list_counter = 1
     full_list = ""
-
-    soup = lvm.soup_session(link_to_check)
 
     for article in soup.find_all('h2'):
 
@@ -104,7 +68,16 @@ def get_article_list_text(link_to_check, total_list_elements):
         return lvm.put_list_in_order(full_list)
 
 
-if __name__ == "__main__":
-    start_time = round(time.time(), 2)
-    find_article_to_parse(create_post=False)
-    print("BuzzFeed script ran for " + str(round((time.time()-start_time), 2)) + " seconds.")
+def paragraph_list_text(soup, total_list_elements):
+    """Reads BuzzFeed list articles that are in paragraph form (has the 'p' HTML tag)."""
+
+    list_counter = 1
+    full_list = ""
+
+    for list_element in soup.find_all('p'):
+        if list_element.text and list_element.text[0].isdigit():
+            full_list += list_element.text.replace(') ', '. ', 1) + '\n'
+            list_counter += 1
+
+    if lvm.article_text_meets_posting_requirements(ArticleType.BuzzFeed, full_list, list_counter, total_list_elements):
+        return lvm.put_list_in_order(full_list)

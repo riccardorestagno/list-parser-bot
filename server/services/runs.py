@@ -3,9 +3,11 @@
 ``services/sweep.py`` starts a run before each sweep and finishes it after; the
 dashboard reads them back. Only the latest KEEP_RUNS are kept.
 """
+import itertools
+import json
 import sqlite3
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any, Dict, List, Optional, Set, Tuple
 
 from bot.helpers.post import Post
 from db.session import connect
@@ -41,6 +43,8 @@ def row_to_run(row: sqlite3.Row) -> Dict[str, Any]:
         "finished_at": row["finished_at"],
         "status": row["status"],
         "sites_searched": [site for site in row["sites_searched"].split(",") if site],
+        # NULL on runs from before sites were recorded one by one
+        "site_errors": json.loads(row["site_errors"]) if row["site_errors"] else [],
         "post": post,
         "error": row["error"],
         "error_details": row["error_details"],
@@ -60,21 +64,26 @@ def start_run(started_at: Optional[datetime] = None) -> int:
 
 
 def finish_run(run_id: int, status: RunStatus, sites_searched: List[str], post: Optional[Post] = None,
-               error: Optional[str] = None, error_details: Optional[str] = None) -> None:
-    """Record how a sweep ended, and let the oldest runs go."""
+               error: Optional[str] = None, error_details: Optional[str] = None,
+               site_errors: Optional[List[Dict[str, str]]] = None) -> None:
+    """Record how a sweep ended, and let the oldest runs go.
+
+    ``error`` is what stopped the sweep as a whole; ``site_errors`` the sites it couldn't search to the end
+    (site, status, error), each searched site without one having gone fine.
+    """
     conn = connect()
     try:
         conn.execute(
             """
             UPDATE runs
             SET finished_at = ?, status = ?, sites_searched = ?, site = ?, title = ?, article_url = ?,
-                reddit_url = ?, error = ?, error_details = ?
+                reddit_url = ?, error = ?, error_details = ?, site_errors = ?
             WHERE id = ?
             """,
             (timestamp(utc_now()), status.value, ",".join(sites_searched),
              post.site if post else None, post.title if post else None,
              post.article_url if post else None, post.reddit_url if post else None,
-             error, error_details, run_id),
+             error, error_details, json.dumps(site_errors or []), run_id),
         )
         conn.execute("DELETE FROM runs WHERE id <= (SELECT id FROM runs ORDER BY id DESC LIMIT 1 OFFSET ?)",
                      (KEEP_RUNS,))
@@ -130,15 +139,76 @@ def last_started_at() -> Optional[datetime]:
     return datetime.fromisoformat(row["started_at"]) if row else None
 
 
-def previous_status(run_id: int) -> Optional[RunStatus]:
-    """How the sweep before this one ended, if there was one.
+def sweep_failed_before(run_id: int) -> bool:
+    """Whether the sweep before this one failed as a whole (Reddit refusing the bot, or a bug), rather than a site.
 
-    A sweep a restart cut short says nothing about whether the bot works, so it's passed over.
+    Sweeps that say nothing about it are passed over: one a restart cut short, and one Reddit was out of reach for.
     """
     conn = connect()
     try:
-        row = conn.execute("SELECT status FROM runs WHERE id < ? AND error IS NOT ? ORDER BY id DESC LIMIT 1",
-                           (run_id, INTERRUPTED)).fetchone()
+        row = conn.execute(
+            "SELECT status, error FROM runs"
+            " WHERE id < ? AND status != ? AND error IS NOT ? AND NOT (status = ? AND error IS NOT NULL)"
+            " ORDER BY id DESC LIMIT 1",
+            (run_id, RunStatus.RUNNING.value, INTERRUPTED, RunStatus.UNREACHABLE.value),
+        ).fetchone()
     finally:
         conn.close()
-    return RunStatus(row["status"]) if row else None
+    return row is not None and row["status"] == RunStatus.FAILED.value and row["error"] is not None
+
+
+# A site's search, as site_history gives it: when the sweep began, and the site's error then (None when it went fine)
+SiteSearched = Tuple[str, Optional[Dict[str, str]]]
+
+
+def site_history(before_id: Optional[int] = None) -> Dict[str, List[SiteSearched]]:
+    """Each site's searches, newest first, from the runs that recorded how each site went (not those from before)."""
+    conn = connect()
+    try:
+        query = "SELECT started_at, sites_searched, site_errors FROM runs WHERE site_errors IS NOT NULL"
+        params: Tuple[Any, ...] = ()
+        if before_id is not None:
+            query += " AND id < ?"
+            params = (before_id,)
+        rows = conn.execute(query + " ORDER BY id DESC", params).fetchall()
+    finally:
+        conn.close()
+
+    history: Dict[str, List[SiteSearched]] = {}
+    for row in rows:
+        errors = {error["site"]: error for error in json.loads(row["site_errors"])}
+        for site in row["sites_searched"].split(","):
+            if site:
+                history.setdefault(site, []).append((row["started_at"], errors.get(site)))
+    return history
+
+
+def sites_failing_before(run_id: int, sites: List[str]) -> Set[str]:
+    """Which of these sites were failing the last time a sweep before this one searched them.
+
+    The times a site couldn't be reached are passed over: they say nothing about whether its parser works.
+    """
+    if not sites:
+        return set()
+    history = site_history(before_id=run_id)
+    failing = set()
+    for site in sites:
+        for _, error in history.get(site, []):
+            if error is not None and error["status"] == RunStatus.UNREACHABLE.value:
+                continue
+            if error is not None:
+                failing.add(site)
+            break
+    return failing
+
+
+def site_problems(sites: List[str]) -> List[Dict[str, str]]:
+    """The sites whose latest search went wrong: how (that search's error), and since when (the first of the
+    searches in a row that went wrong). A site whose latest search went fine, or that no sweep recorded, has none."""
+    history = site_history()
+    problems = []
+    for site in sites:
+        streak = list(itertools.takewhile(lambda search: search[1] is not None, history.get(site, [])))
+        if streak:
+            problems.append({**streak[0][1], "since": streak[-1][0]})
+    return problems
