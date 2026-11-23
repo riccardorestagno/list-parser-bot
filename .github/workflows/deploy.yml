@@ -116,11 +116,13 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
         run: |
-          # The CLI's own startup tracking can keep polling long after the site is up; the health check decides
-          az webapp deploy -g "$RESOURCE_GROUP" -n "$API_APP" --src-path api.zip --type zip --track-status false -o none
+          # Returns once the package is uploaded: waiting on Kudu for the restart can outlast Azure's
+          # ~230 s gateway timeout on a B1 plan and fail with a 504 while the deploy still succeeds.
+          # The health check below decides whether it worked.
+          az webapp deploy -g "$RESOURCE_GROUP" -n "$API_APP" --src-path api.zip --type zip --async true --track-status false -o none
 
-          # Up, and running this version rather than the one before it
-          for try in $(seq 20); do
+          # Up, and running this version rather than the one before it (up to 10 minutes)
+          for try in $(seq 40); do
             running=$(curl --silent --max-time 30 "$API_URL/health" | jq -r '.version // empty' 2> /dev/null || true)
             if [ "$running" = "$VERSION" ]; then echo "The API is up, running $VERSION"; exit 0; fi
             sleep 15

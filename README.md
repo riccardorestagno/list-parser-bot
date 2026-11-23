@@ -148,6 +148,13 @@ Until then, every request is refused, or every sweep fails.
 The API runs on the tools dashboard's App Service plan, `tools-prod-plan`, which every tool
 shares; this repository has no plan of its own.
 
+**The API must stay on one instance.** Each instance runs its own schedule, so two would both
+post, and its SQLite database sits on `/home`, a network share where two writers lock each other
+out or corrupt it. The plan has per-site scaling on, so other tools can scale out while
+`provision.ps1` pins this app to one instance (`siteConfig.numberOfWorkers=1`). With per-site
+scaling off, the script refuses to run if the plan can have more than one instance, and warns
+otherwise.
+
 ### Environment Variables
 
 Every setting is optional but the Reddit account; put them in `server/.env` (see

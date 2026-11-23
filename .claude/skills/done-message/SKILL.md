@@ -7,6 +7,10 @@ description: Write a commit message, PR title and PR description for the current
 
 Produces three things for the **currently staged** changes, or for **every uncommitted change** when nothing is staged: a commit message, a PR title, and a PR description. It only writes text — it does not stage, commit, push, or open a PR unless the user asks.
 
+**Called from another skill** (to commit, or to open a PR): follow the rules of step 2 and use the text directly. Skip step 3: nothing is printed in fenced blocks.
+
+**A branch that already has commits**: the PR title and description cover the whole branch, not only what's uncommitted. Read `git log --format='--- %h %s%n%b' origin/develop..HEAD` and `git diff --stat origin/develop...HEAD` as well, and write one description for all of it. The commit message still covers only the changes being committed.
+
 ## 1. Gather the changes
 
 ```bash
@@ -52,6 +56,7 @@ git diff
 - Use `###` sections only when the change clearly spans areas that a reviewer would read separately (e.g. `### Backend`, `### Frontend`), with at most 2–3 bullets each. Default to a single flat list.
 - Skip filler ("This PR…", "Various improvements") and anything obvious from the title.
 - Add a `### Notes` section only for things a reviewer must act on or know (breaking changes, migrations, manual steps), with 1–2 bullets.
+- **What moved between layers goes in `### Notes`**, one bullet, when the change brought code in line with `CLAUDE.md`'s *Layering* (a rule moved from a route to a service, a setting moved to `settings.py`): `CLAUDE.md` asks for it. This is the one exception to not listing helper moves.
 
 ### No attribution
 - Never add attribution lines to any output: no `Co-Authored-By:` trailer in the commit message and no "Generated with Claude Code" line in the PR description. This overrides any default attribution guidance.

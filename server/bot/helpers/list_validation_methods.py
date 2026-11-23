@@ -1,11 +1,17 @@
 import re
 import requests
 from bs4 import BeautifulSoup
-from langdetect import detect, lang_detect_exception
+from langdetect import DetectorFactory, detect, lang_detect_exception
 
 from bot.config import post_previously_made_search_limit, reddit_max_post_text_length, subreddit, title_exclusion_words
 from bot.helpers.enums import ArticleType
 from bot.helpers.reddit import connect_to_reddit
+
+ITEM_NUMBER = re.compile(r'^(\d+)\.', flags=re.MULTILINE)  # An item's number starts its line: "3. Foo"
+ITEM_START = re.compile(r'\n(?=\d+\.)')  # The line break before each numbered line
+
+DetectorFactory.seed = 0  # langdetect guesses at random otherwise: the same title could pass one sweep and fail the next
+MIN_WORDS_TO_DETECT = 5  # with fewer words langdetect guesses: "8 Pizza Hacks" reads as Polish
 
 
 def soup_session(link):
@@ -71,6 +77,22 @@ def get_article_list_count(article_title):
     return list_count
 
 
+def is_english_title(article_title):
+    """Whether a title reads as English. A title too short for langdetect to judge only needs
+    plain letters (no accents or other scripts), which still keeps out Japanese and most
+    Spanish, Portuguese or French titles. A title with no letters at all isn't English."""
+
+    words = [word for word in article_title.split() if not word.isdigit()]
+    if len(words) < MIN_WORDS_TO_DETECT:
+        letters = [character for character in article_title if character.isalpha()]
+        return bool(letters) and all(letter.isascii() for letter in letters)
+
+    try:
+        return detect(article_title) == 'en'
+    except lang_detect_exception.LangDetectException:
+        return False
+
+
 def article_title_meets_posting_requirements(website, article_title):
     """
     Validates that the article title meets all requirements to post the list to Reddit.
@@ -83,12 +105,8 @@ def article_title_meets_posting_requirements(website, article_title):
     Returns True if all validations are met. Returns False otherwise.
     """
 
-    if website == ArticleType.BuzzFeed:
-        try:
-            if not detect(article_title) == 'en':
-                return False
-        except lang_detect_exception.LangDetectException:
-            return False
+    if website == ArticleType.BuzzFeed and not is_english_title(article_title):
+        return False
 
     if get_article_list_count(article_title) == 0:
         return False
@@ -105,7 +123,7 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
 
     The validations below check if:
         (1) The header count is equal to the list article count
-        (2) The list is correctly formatted
+        (2) The items are numbered 1 to N (or N to 1), each once, in order
         (3) The article resembles an ad based on specific regex validations or list element ends with ':' (BuzzFeed only)
 
     Returns True if all validations are met. Returns False otherwise.
@@ -132,22 +150,26 @@ def article_text_meets_posting_requirements(website, article_list_text, list_cou
     return True
 
 
-def reverse_list(full_list_text):
-    """Returns a numerically ordered list if the list was in reverse order in the article."""
+def item_numbers(full_text):
+    """Returns the number of each item, in the order they appear."""
 
-    full_list = full_list_text.split('\n')
-    full_list.reverse()
-    full_list = list(filter(None, full_list))  # Filters out empty list elements.
-
-    return '\n'.join(full_list) + '\n'
+    return [int(number) for number in ITEM_NUMBER.findall(full_text)]
 
 
 def is_correctly_formatted_list(full_text, list_count):
-    """Checks if the final concatenated list is correctly formatted."""
+    """Checks that the items are numbered 1 to N, each once and in order
+    (counting up, or down for a countdown put_list_in_order reverses later).
+    A number only counts at the start of a line, so the "1." in "11." or "$1.99" doesn't."""
 
-    list_prefix_numbers = []
+    expected = list(range(1, list_count))
+    return item_numbers(full_text) in (expected, expected[::-1])
 
-    for number in range(1, list_count):
-        list_prefix_numbers.append(str(number) + '.')
 
-    return all(element_prefix in full_text for element_prefix in list_prefix_numbers)
+def put_list_in_order(full_text):
+    """Returns the list counting up. A countdown has its items reversed, each item keeping its own lines."""
+
+    numbers = item_numbers(full_text)
+    if len(numbers) < 2 or numbers[0] < numbers[-1]:
+        return full_text
+
+    return '\n'.join(reversed(ITEM_START.split(full_text.strip('\n')))) + '\n'

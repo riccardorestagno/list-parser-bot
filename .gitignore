@@ -20,6 +20,7 @@ __pycache__/
 /server/venv
 /server/.env
 /server/.pytest_cache
+/server/.coverage
 # The record of sweeps
 /server/data/
 

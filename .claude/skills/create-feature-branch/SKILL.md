@@ -24,7 +24,8 @@ git diff --cached
 
 - Derive the description from the **staged** changes (`git diff --cached`). For large diffs, read `--stat` first and sample the most significant files rather than the whole diff.
 - If nothing is staged, fall back to unstaged + untracked changes (`git diff --stat`, `git status --short`) and tell the user you did so.
-- If there are no changes at all, stop and ask the user for a description (the branch would otherwise be empty).
+- If there are no changes at all, as when the branch is made before the work starts, name it from the task at hand: what the user asked for, or what you're about to change. Ask the user for a description only when there's no task to name it from.
+- **Commits don't come along.** Only uncommitted work moves to the new branch. If the current branch has commits `develop` doesn't (`git log --oneline origin/develop..HEAD`, after the fetch in step 3), and it isn't `develop` or `main`, tell the user they stay on that branch and ask whether that's what they want before going on.
 
 ## 2. Build the branch name
 

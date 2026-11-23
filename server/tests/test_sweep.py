@@ -1,3 +1,4 @@
+"""A sweep as the server records it: what was posted, found or failed, and when the moderator hears."""
 from types import SimpleNamespace
 
 import prawcore
