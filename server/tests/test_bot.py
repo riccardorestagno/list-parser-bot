@@ -276,6 +276,14 @@ def test_a_page_is_read_when_it_loads(monkeypatch):
     assert lvm.soup_session("https://www.cracked.com/funny-articles.html").find("article") is not None
 
 
+def test_pages_are_asked_for_as_a_browser_asks_for_them():
+    # BuzzFeed answers 406 at times to requests' own "Accept: */*" with no language
+    headers = lvm._session.headers
+    assert headers["Accept"].startswith("text/html")
+    assert headers["Accept-Language"].startswith("en")
+    assert "gzip" in headers["Accept-Encoding"]  # requests' own: only what it can decode
+
+
 @pytest.mark.parametrize("status", [403, 404, 503])
 def test_an_error_page_raises_rather_than_reading_as_a_page_without_articles(monkeypatch, status):
     monkeypatch.setattr(lvm._session, "get", lambda link, timeout: page_answering(status))
