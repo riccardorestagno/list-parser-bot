@@ -96,23 +96,27 @@ def sweep(create_post=True, sites=None, websites=None):
     """
 
     sites = [] if sites is None else sites
-    reddit = connect_to_reddit()
-    # One request for the whole sweep: it orders the sites, and tells which articles were posted before
-    latest_posts = recent_posts(reddit)
+    try:
+        reddit = connect_to_reddit()
+        # One request for the whole sweep: it orders the sites, and tells which articles were posted before
+        latest_posts = recent_posts(reddit)
 
-    for website in websites or get_ordered_article_parsers(latest_posts):
-        website_name = convert_enum_to_string(website)
-        try:
-            found = find_new_list(website, lambda link: lvm.post_previously_made(link, latest_posts))
-        except Exception as error:
-            # This site alone: the next may well have something to post
-            sites.append(SiteSearch(website_name, error))
-            continue
+        for website in websites or get_ordered_article_parsers(latest_posts):
+            website_name = convert_enum_to_string(website)
+            try:
+                found = find_new_list(website, lambda link: lvm.post_previously_made(link, latest_posts))
+            except Exception as error:
+                # This site alone: the next may well have something to post
+                sites.append(SiteSearch(website_name, error))
+                continue
 
-        sites.append(SiteSearch(website_name))
-        if found:
-            article, article_list_text = found
-            reddit_url = post_to_reddit(article.title, article_list_text, article.link, website, reddit) if create_post else None
-            return Post(website_name, article.title, article.link, reddit_url)
+            sites.append(SiteSearch(website_name))
+            if found:
+                article, article_list_text = found
+                reddit_url = post_to_reddit(article.title, article_list_text, article.link, website, reddit) if create_post else None
+                return Post(website_name, article.title, article.link, reddit_url)
 
-    return None
+        return None
+    finally:
+        # However it ends: a connection left until the next sweep is dead by then, and waits out the timeout
+        lvm.close_connections()
