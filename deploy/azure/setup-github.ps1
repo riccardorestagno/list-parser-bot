@@ -18,7 +18,11 @@ powershell -ExecutionPolicy Bypass -File deploy\azure\setup-github.ps1
 param(
     [string]$Name = "list-parser-bot-prod",
     # owner/repository; read from the origin remote when empty
-    [string]$Repository
+    [string]$Repository,
+    # GitHub's numeric ids for the owner and the repository; asked of the gh CLI when empty.
+    # Shown in a failed sign-in's subject: repo:<owner>@<OwnerId>/<repository>@<RepositoryId>:ref:...
+    [string]$OwnerId,
+    [string]$RepositoryId
 )
 
 . "$PSScriptRoot\common.ps1"
@@ -44,15 +48,33 @@ if (-not ((Invoke-Az identity list -g $rg --query "[].name" -o tsv) -contains $i
 }
 $info = Invoke-Az identity show -g $rg -n $identity -o json | Out-String | ConvertFrom-Json
 
-# Only workflow runs of this repository on main can sign in; any other credential
-# on the identity (such as an earlier one for a "production" environment) is removed
-$subject = "repo:${Repository}:ref:refs/heads/main"
-$credentials = Invoke-Az identity federated-credential list -g $rg --identity-name $identity -o json | Out-String | ConvertFrom-Json
-if (-not ($credentials | Where-Object { $_.subject -eq $subject })) {
-    Invoke-Az identity federated-credential create -g $rg --identity-name $identity -n github-main `
-        --issuer "https://token.actions.githubusercontent.com" --subject $subject --audiences "api://AzureADTokenExchange" -o none
+# Only workflow runs of this repository on main can sign in. GitHub names the repository in
+# its sign-in either by name alone (older repositories) or by name and numeric ids (newer
+# ones), so both are allowed. Any other credential on the identity (such as an earlier one
+# for a "production" environment) is removed
+$owner, $repositoryName = $Repository -split "/", 2
+if (-not ($OwnerId -and $RepositoryId) -and (Get-Command gh -ErrorAction SilentlyContinue)) {
+    $OwnerId = "$(gh api "repos/$Repository" --jq .owner.id)".Trim()
+    $RepositoryId = "$(gh api "repos/$Repository" --jq .id)".Trim()
 }
-foreach ($other in $credentials | Where-Object { $_.subject -ne $subject }) {
+$subjects = [ordered]@{ "github-main" = "repo:${Repository}:ref:refs/heads/main" }
+if ($OwnerId -match '^\d+$' -and $RepositoryId -match '^\d+$') {
+    $subjects["github-main-ids"] = "repo:${owner}@${OwnerId}/${repositoryName}@${RepositoryId}:ref:refs/heads/main"
+}
+else {
+    Write-Warning ("Couldn't get the repository's ids (sign in with: gh auth login, or pass -OwnerId and -RepositoryId). " +
+        "If GitHub names it by id, deploys fail with AADSTS700213, whose subject shows both ids.")
+}
+
+$credentials = Invoke-Az identity federated-credential list -g $rg --identity-name $identity -o json | Out-String | ConvertFrom-Json
+foreach ($entry in $subjects.GetEnumerator()) {
+    if (-not ($credentials | Where-Object { $_.subject -eq $entry.Value })) {
+        Write-Host "  Allowing $($entry.Value)"
+        Invoke-Az identity federated-credential create -g $rg --identity-name $identity -n $entry.Key `
+            --issuer "https://token.actions.githubusercontent.com" --subject $entry.Value --audiences "api://AzureADTokenExchange" -o none
+    }
+}
+foreach ($other in $credentials | Where-Object { $subjects.Values -notcontains $_.subject }) {
     Write-Host "  Removing sign-in for $($other.subject)"
     Invoke-Az identity federated-credential delete -g $rg --identity-name $identity -n $other.name --yes -o none
 }
