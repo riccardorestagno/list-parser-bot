@@ -132,6 +132,24 @@ def test_reddit_failing_ends_the_sweep(monkeypatch):
     assert sites == [SiteSearch("Cracked")]  # how far it got
 
 
+def test_a_sweep_closes_its_connections_however_it_ends(monkeypatch):
+    # Kept until the next sweep, a connection Azure has forgotten waits out the whole timeout
+    closed = []
+    monkeypatch.setattr(lvm._session, "close", lambda: closed.append(True))
+
+    sweeping(monkeypatch, {ArticleType.Cracked: FOUND})
+    controller.sweep(create_post=False)
+    assert closed == [True]
+
+    def out_of_reach(reddit):
+        raise prawcore.exceptions.RequestException(OSError("Network is unreachable"), (), {})
+
+    monkeypatch.setattr(controller, "recent_posts", out_of_reach)
+    with pytest.raises(prawcore.exceptions.RequestException):
+        controller.sweep()  # Reddit out of reach before any site is searched
+    assert closed == [True, True]
+
+
 def test_a_sweep_searches_only_the_sites_asked_for(monkeypatch):
     sweeping(monkeypatch, {ArticleType.Cracked: None, ArticleType.Screen_Rant: None})
     sites = []
