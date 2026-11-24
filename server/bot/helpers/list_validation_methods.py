@@ -13,10 +13,29 @@ DetectorFactory.seed = 0  # langdetect guesses at random otherwise: the same tit
 MIN_WORDS_TO_DETECT = 5  # with fewer words langdetect guesses: "8 Pizza Hacks" reads as Polish
 
 
-# One session for every page: a site's archive and its articles share a host, so its connection is kept between
-# them rather than opened again for each. Only the schedule's thread (or dev/sweep.py) fetches
+# One session for every page of a sweep: a site's archive and its articles share a host, so its connection is kept
+# between them rather than opened again for each. Only the schedule's thread (or dev/sweep.py) fetches
 _session = requests.Session()
-_session.headers['User-Agent'] = 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.75 Safari/537.36'
+# Asked for as Chrome asks for a page it's opening: BuzzFeed answers 406 at times to requests' bare "Accept: */*".
+# Accept-Encoding stays requests' own, which lists only what it can decode
+_session.headers.update({
+    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/140.0.0.0 Safari/537.36',
+    'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8',
+    'Accept-Language': 'en-US,en;q=0.9',
+    'Upgrade-Insecure-Requests': '1',
+    'Sec-Fetch-Dest': 'document',
+    'Sec-Fetch-Mode': 'navigate',
+    'Sec-Fetch-Site': 'none',
+    'Sec-Fetch-User': '?1',
+})
+
+
+def close_connections():
+    """Close the connections a sweep kept open; the next sweep opens its own. Kept until then (90 minutes), Azure's
+    outbound NAT forgets a connection idle for 4 minutes without telling either end, so reusing it would send a
+    request no site receives and wait the whole timeout for the answer."""
+
+    _session.close()
 
 
 def soup_session(link):

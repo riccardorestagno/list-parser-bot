@@ -132,6 +132,24 @@ def test_reddit_failing_ends_the_sweep(monkeypatch):
     assert sites == [SiteSearch("Cracked")]  # how far it got
 
 
+def test_a_sweep_closes_its_connections_however_it_ends(monkeypatch):
+    # Kept until the next sweep, a connection Azure has forgotten waits out the whole timeout
+    closed = []
+    monkeypatch.setattr(lvm._session, "close", lambda: closed.append(True))
+
+    sweeping(monkeypatch, {ArticleType.Cracked: FOUND})
+    controller.sweep(create_post=False)
+    assert closed == [True]
+
+    def out_of_reach(reddit):
+        raise prawcore.exceptions.RequestException(OSError("Network is unreachable"), (), {})
+
+    monkeypatch.setattr(controller, "recent_posts", out_of_reach)
+    with pytest.raises(prawcore.exceptions.RequestException):
+        controller.sweep()  # Reddit out of reach before any site is searched
+    assert closed == [True, True]
+
+
 def test_a_sweep_searches_only_the_sites_asked_for(monkeypatch):
     sweeping(monkeypatch, {ArticleType.Cracked: None, ArticleType.Screen_Rant: None})
     sites = []
@@ -256,6 +274,14 @@ def page_answering(status, url="https://www.cracked.com/funny-articles.html"):
 def test_a_page_is_read_when_it_loads(monkeypatch):
     monkeypatch.setattr(lvm._session, "get", lambda link, timeout: page_answering(200))
     assert lvm.soup_session("https://www.cracked.com/funny-articles.html").find("article") is not None
+
+
+def test_pages_are_asked_for_as_a_browser_asks_for_them():
+    # BuzzFeed answers 406 at times to requests' own "Accept: */*" with no language
+    headers = lvm._session.headers
+    assert headers["Accept"].startswith("text/html")
+    assert headers["Accept-Language"].startswith("en")
+    assert "gzip" in headers["Accept-Encoding"]  # requests' own: only what it can decode
 
 
 @pytest.mark.parametrize("status", [403, 404, 503])
