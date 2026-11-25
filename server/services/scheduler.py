@@ -7,8 +7,9 @@ sweep that fails is recorded and the next one runs on time.
 """
 import logging
 import threading
+from collections.abc import Callable
 from datetime import datetime, timedelta
-from typing import Any, Callable, Dict, Optional
+from typing import Any
 
 from services import runs
 from services.sweep import run_sweep
@@ -17,7 +18,7 @@ from settings import SWEEP_MINUTES
 log = logging.getLogger(__name__)
 
 
-def next_sweep_at(last_started: Optional[datetime], now: datetime, interval: timedelta) -> datetime:
+def next_sweep_at(last_started: datetime | None, now: datetime, interval: timedelta) -> datetime:
     """An interval after the last sweep began, or now when that has passed (or there was none)."""
     if last_started is None:
         return now
@@ -29,8 +30,8 @@ class Scheduler:
         self.interval = interval
         self._sweep = sweep
         self._stop = threading.Event()
-        self._thread: Optional[threading.Thread] = None
-        self.next_run_at: Optional[datetime] = None
+        self._thread: threading.Thread | None = None
+        self.next_run_at: datetime | None = None
 
     @property
     def running(self) -> bool:
@@ -59,7 +60,7 @@ class Scheduler:
                 self._thread = None
         self.next_run_at = None
 
-    def describe(self) -> Dict[str, Any]:
+    def describe(self) -> dict[str, Any]:
         next_run_at = self.next_run_at
         return {
             "enabled": self.running and not self._stop.is_set(),
