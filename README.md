@@ -42,9 +42,11 @@ latest search went wrong, since when, until a sweep finds it working again.
 
 ### Server
 
+Needs Python 3.15 (`lazy import` doesn't parse on older versions): `uv python install 3.15`, or python.org.
+
 ```bash
 cd server
-python -m venv venv
+py -3.15 -m venv venv             # or: python3.15 -m venv venv
 venv\Scripts\activate             # or: source venv/bin/activate
 pip install -r requirements.txt
 
@@ -123,7 +125,7 @@ there. Its `docs/apps.md` is the contract this app follows.
 
   - **Page**: the site belongs to the tools dashboard, which deploys it to Azure Static
     Web Apps with this app's latest `web.zip` at `/tools/list-parser-bot/`.
-  - **API**: Azure App Service, Python 3.14 (`list-parser-bot-prod-api`), at
+  - **API**: Azure App Service, Python 3.15 (`list-parser-bot-prod-api`), at
     `https://list-parser-bot-prod-api.azurewebsites.net`. It sweeps on the schedule; the
     record of sweeps lives in `/home/data`, which outlives redeploys.
 

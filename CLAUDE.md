@@ -51,6 +51,7 @@ cd client && yarn build                # type-check + build; CI runs this
 - The client calls `API_BASE_URL` (`utils/constants.ts`) through `apiFetch` (`utils/api.ts`), never a bare `fetch` or a hard-coded host, and links nothing to `/`: the app is served under `VITE_BASE_PATH`. The dashboard's pages are `LOGIN_URL` and `DASHBOARD_URL`.
 - A new router is included in `main.py` with `dependencies=signed_in`: only `/` and `/health` answer without a sign-in.
 - Match the surrounding style: short docstrings and comments that say why, in plain words.
+- Python 3.15. Defer an import with `lazy import` / `lazy from` (PEP 810) at the module's top, never an import inside a function (a circular import too); nothing at module level may use the name (constants, class bodies, decorators, default arguments), or it loads at once. The bot stays out of the API's start (`services/sweep.py`, held by `tests/test_startup.py`).
 - Scripts a developer runs (`server/dev/`, `deploy/`, package scripts) work on Windows in PowerShell as well as on Linux, where CI runs them: build paths with `path`/`pathlib`. Commands given to the user to run locally are for PowerShell, each saying which folder it runs from.
 
 ## Layering: fix it where you touch it
