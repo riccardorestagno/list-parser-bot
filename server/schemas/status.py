@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel
 
 from schemas.run import SiteError
@@ -9,7 +7,7 @@ class Schedule(BaseModel):
     # Off on a server that doesn't sweep (LISTBOT_SCHEDULE_ENABLED), such as your own computer
     enabled: bool
     interval_minutes: int
-    next_run_at: Optional[str] = None
+    next_run_at: str | None = None
 
 
 class SiteProblem(SiteError):
@@ -20,6 +18,6 @@ class SiteProblem(SiteError):
 
 class Status(BaseModel):
     subreddit: str
-    sites: List[str]
-    site_problems: List[SiteProblem] = []
+    sites: list[str]
+    site_problems: list[SiteProblem] = []
     schedule: Schedule

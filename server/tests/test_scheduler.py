@@ -1,13 +1,13 @@
 """The schedule: when the next sweep is due, and the thread that starts sweeps on time."""
 import threading
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 
 from schemas.enums import RunStatus
 from services import runs
 from services.scheduler import Scheduler, next_sweep_at
 
 INTERVAL = timedelta(minutes=90)
-NOW = datetime(2026, 11, 1, 12, 0, tzinfo=timezone.utc)
+NOW = datetime(2026, 11, 1, 12, 0, tzinfo=UTC)
 
 
 def test_the_first_sweep_is_right_away():

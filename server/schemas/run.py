@@ -1,5 +1,3 @@
-from typing import List, Optional
-
 from pydantic import BaseModel
 
 from schemas.enums import RunStatus
@@ -9,7 +7,7 @@ class PostedArticle(BaseModel):
     site: str
     title: str
     article_url: str
-    reddit_url: Optional[str] = None
+    reddit_url: str | None = None
 
 
 class SiteError(BaseModel):
@@ -23,14 +21,14 @@ class SiteError(BaseModel):
 class Run(BaseModel):
     id: int
     started_at: str
-    finished_at: Optional[str] = None
+    finished_at: str | None = None
     status: RunStatus
-    sites_searched: List[str]
-    site_errors: List[SiteError] = []
-    post: Optional[PostedArticle] = None
-    error: Optional[str] = None
-    error_details: Optional[str] = None
+    sites_searched: list[str]
+    site_errors: list[SiteError] = []
+    post: PostedArticle | None = None
+    error: str | None = None
+    error_details: str | None = None
 
 
 class RunList(BaseModel):
-    runs: List[Run]
+    runs: list[Run]

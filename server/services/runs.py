@@ -6,8 +6,8 @@ dashboard reads them back. Only the latest KEEP_RUNS are kept.
 import itertools
 import json
 import sqlite3
-from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Set, Tuple
+from datetime import datetime, UTC
+from typing import Any
 
 from bot.helpers.post import Post
 from db.session import connect
@@ -25,14 +25,14 @@ class RunNotFound(AppError):
 
 
 def utc_now() -> datetime:
-    return datetime.now(timezone.utc)
+    return datetime.now(UTC)
 
 
 def timestamp(moment: datetime) -> str:
-    return moment.astimezone(timezone.utc).isoformat(timespec="seconds")
+    return moment.astimezone(UTC).isoformat(timespec="seconds")
 
 
-def row_to_run(row: sqlite3.Row) -> Dict[str, Any]:
+def row_to_run(row: sqlite3.Row) -> dict[str, Any]:
     post = None
     if row["status"] == RunStatus.POSTED.value:
         post = {"site": row["site"], "title": row["title"], "article_url": row["article_url"],
@@ -51,7 +51,7 @@ def row_to_run(row: sqlite3.Row) -> Dict[str, Any]:
     }
 
 
-def start_run(started_at: Optional[datetime] = None) -> int:
+def start_run(started_at: datetime | None = None) -> int:
     """Record a sweep that's beginning. Its id is what finish_run takes."""
     conn = connect()
     try:
@@ -63,9 +63,9 @@ def start_run(started_at: Optional[datetime] = None) -> int:
         conn.close()
 
 
-def finish_run(run_id: int, status: RunStatus, sites_searched: List[str], post: Optional[Post] = None,
-               error: Optional[str] = None, error_details: Optional[str] = None,
-               site_errors: Optional[List[Dict[str, str]]] = None) -> None:
+def finish_run(run_id: int, status: RunStatus, sites_searched: list[str], post: Post | None = None,
+               error: str | None = None, error_details: str | None = None,
+               site_errors: list[dict[str, str]] | None = None) -> None:
     """Record how a sweep ended, and let the oldest runs go.
 
     ``error`` is what stopped the sweep as a whole; ``site_errors`` the sites it couldn't search to the end
@@ -108,7 +108,7 @@ def close_interrupted_runs() -> int:
         conn.close()
 
 
-def get_run(run_id: int) -> Dict[str, Any]:
+def get_run(run_id: int) -> dict[str, Any]:
     conn = connect()
     try:
         row = conn.execute("SELECT * FROM runs WHERE id = ?", (run_id,)).fetchone()
@@ -119,7 +119,7 @@ def get_run(run_id: int) -> Dict[str, Any]:
     return row_to_run(row)
 
 
-def list_runs(limit: int) -> List[Dict[str, Any]]:
+def list_runs(limit: int) -> list[dict[str, Any]]:
     """The latest runs, newest first."""
     conn = connect()
     try:
@@ -129,7 +129,7 @@ def list_runs(limit: int) -> List[Dict[str, Any]]:
         conn.close()
 
 
-def last_started_at() -> Optional[datetime]:
+def last_started_at() -> datetime | None:
     """When the latest sweep began, so the schedule keeps its rhythm across a restart."""
     conn = connect()
     try:
@@ -158,15 +158,15 @@ def sweep_failed_before(run_id: int) -> bool:
 
 
 # A site's search, as site_history gives it: when the sweep began, and the site's error then (None when it went fine)
-SiteSearched = Tuple[str, Optional[Dict[str, str]]]
+type SiteSearched = tuple[str, dict[str, str] | None]
 
 
-def site_history(before_id: Optional[int] = None) -> Dict[str, List[SiteSearched]]:
+def site_history(before_id: int | None = None) -> dict[str, list[SiteSearched]]:
     """Each site's searches, newest first, from the runs that recorded how each site went (not those from before)."""
     conn = connect()
     try:
         query = "SELECT started_at, sites_searched, site_errors FROM runs WHERE site_errors IS NOT NULL"
-        params: Tuple[Any, ...] = ()
+        params: tuple[Any, ...] = ()
         if before_id is not None:
             query += " AND id < ?"
             params = (before_id,)
@@ -174,7 +174,7 @@ def site_history(before_id: Optional[int] = None) -> Dict[str, List[SiteSearched
     finally:
         conn.close()
 
-    history: Dict[str, List[SiteSearched]] = {}
+    history: dict[str, list[SiteSearched]] = {}
     for row in rows:
         errors = {error["site"]: error for error in json.loads(row["site_errors"])}
         for site in row["sites_searched"].split(","):
@@ -183,7 +183,7 @@ def site_history(before_id: Optional[int] = None) -> Dict[str, List[SiteSearched
     return history
 
 
-def sites_failing_before(run_id: int, sites: List[str]) -> Set[str]:
+def sites_failing_before(run_id: int, sites: list[str]) -> set[str]:
     """Which of these sites were failing the last time a sweep before this one searched them.
 
     The times a site couldn't be reached are passed over: they say nothing about whether its parser works.
@@ -202,7 +202,7 @@ def sites_failing_before(run_id: int, sites: List[str]) -> Set[str]:
     return failing
 
 
-def site_problems(sites: List[str]) -> List[Dict[str, str]]:
+def site_problems(sites: list[str]) -> list[dict[str, str]]:
     """The sites whose latest search went wrong: how (that search's error), and since when (the first of the
     searches in a row that went wrong). A site whose latest search went fine, or that no sweep recorded, has none."""
     history = site_history()

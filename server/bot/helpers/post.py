@@ -1,5 +1,4 @@
 from dataclasses import dataclass
-from typing import Optional
 
 
 @dataclass(frozen=True)
@@ -17,7 +16,7 @@ class Post:
     site: str
     title: str
     article_url: str
-    reddit_url: Optional[str] = None
+    reddit_url: str | None = None
 
 
 @dataclass(frozen=True)
@@ -25,4 +24,4 @@ class SiteSearch:
     """One site a sweep searched, by its name as the post's flair, and the error that stopped it, if one did."""
 
     site: str
-    error: Optional[Exception] = None
+    error: Exception | None = None
