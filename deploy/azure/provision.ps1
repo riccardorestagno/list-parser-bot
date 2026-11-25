@@ -7,7 +7,7 @@ dashboard's key changes).
 
 .DESCRIPTION
 Resources, all in the resource group named -Name:
-  <Name>-api    API (App Service, Python 3.14), which sweeps on a schedule; its record of sweeps lives in /home/data
+  <Name>-api    API (App Service, Python 3.15), which sweeps on a schedule; its record of sweeps lives in /home/data
   keep-data     Lock: nobody can delete the resource group or anything in it until it's removed
 
 People use the bot's page at https://www.<Domain>/tools/list-parser-bot/. That site, and
@@ -65,8 +65,12 @@ Invoke-Az group create -n $rg -l $Location -o none
 
 Write-Host "API web app..."
 if (-not ((Invoke-Az webapp list -g $rg --query "[].name" -o tsv) -contains $api)) {
-    Invoke-Az webapp create -g $rg -p $planId -n $api --runtime "PYTHON:3.14" -o none
+    Invoke-Az webapp create -g $rg -p $planId -n $api --runtime "PYTHON:3.15" -o none
 }
+# Also on an API that exists: deploys don't change the runtime, and the code needs 3.15 (lazy import is a syntax error before)
+# On Windows az.cmd hands it to cmd.exe, which reads a bare | as a pipe: the quotes go along with it there
+$runtime = if ($env:OS -eq "Windows_NT") { '"PYTHON|3.15"' } else { "PYTHON|3.15" }
+Invoke-Az webapp config set -g $rg -n $api --linux-fx-version $runtime -o none
 Invoke-Az webapp update -g $rg -n $api --https-only true -o none
 # One instance, and one uvicorn process on it (no --workers): one schedule, and SQLite takes one writer
 Set-OneInstance $planId $rg $api

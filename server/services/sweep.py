@@ -8,12 +8,14 @@ import logging
 import traceback
 from typing import Dict, List, Optional
 
-import prawcore
-import requests
+# Lazy: the bot (praw, BeautifulSoup, langdetect, requests) is a third of the API's start, and only a sweep uses it,
+# so it loads with the first sweep rather than before the API can answer (tests/test_startup.py)
+lazy import prawcore
+lazy import requests
 
-from bot.controller import NoArticlesFound, sweep
+lazy from bot.controller import NoArticlesFound, sweep
 from bot.helpers.post import SiteSearch
-from bot.helpers.reddit import send_error_message
+lazy from bot.helpers.reddit import send_error_message
 from schemas.enums import RunStatus
 from services import runs
 
