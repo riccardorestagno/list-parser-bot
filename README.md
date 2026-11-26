@@ -159,7 +159,6 @@ Until then, every request is refused, or every sweep fails.
 The API runs on the tools dashboard's App Service plan, `tools-prod-plan`, which every tool
 shares; this repository has no plan of its own.
 
-
 **Release one app at a time.** A deploy restarts its API, and on the shared B1 plan a restart is
 heavy: when several apps deploy together, each API takes minutes to start, Azure gives up after
 230 seconds (`Container did not respond to startup probe`) and starts it again, and the retries
