@@ -2,9 +2,9 @@
 they find, what they post and when they stop. No test reaches a website or Reddit: the pages come from the test and
 Reddit is one the test makes."""
 import time
+from collections.abc import Callable
 from dataclasses import dataclass
 from types import ModuleType, SimpleNamespace
-from typing import Callable
 
 import pytest
 import requests

@@ -4,7 +4,6 @@ The dashboard signs tokens with its private key; this checks them with its
 public key, so this API can tell a token is genuine but can't make one. A token
 opens this API only when its audience names this app.
 """
-from typing import Optional
 
 import jwt
 from jwt import InvalidTokenError
@@ -19,7 +18,7 @@ class NotSignedIn(AppError):
     status = 401
 
 
-def check_token(token: Optional[str], public_key: str = AUTH_PUBLIC_KEY, disabled: bool = AUTH_DISABLED) -> dict:
+def check_token(token: str | None, public_key: str = AUTH_PUBLIC_KEY, disabled: bool = AUTH_DISABLED) -> dict:
     """The token's claims (``sub``, ``email``, ``name``), or ``NotSignedIn``.
 
     With sign-in turned off (``LISTBOT_AUTH_DISABLED``) anyone gets through, as nobody.

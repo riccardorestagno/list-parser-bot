@@ -81,6 +81,7 @@ Each line is a kind of problem. Check the kind, not only one place.
 - **A layering rule broken in a way that causes a bug**, not only one that's untidy: see `CLAUDE.md`'s *Layering*.
 
 **Inefficiencies**
+- **A heavy import at startup that only some work uses**, or an import inside a function: `python -X importtime -c "import main" 2>&1 | sort -t'|' -k2 -n | tail`. Make it `lazy import` / `lazy from` at the module's top, with no module-level use of the name, and hold it with `tests/test_startup.py` (the bot stays out of the API's start). One inside a function to dodge a circular import becomes `lazy from` too.
 - **One query per row**: `.execute(` inside a loop, in a list route or what serializes its rows.
 - **A filter the index can't serve**: a function around the column (`lower(x)`, `strftime(...)`), `LIKE '%x'`.
 - **A missing index** on a column filtered or grouped on every page load.

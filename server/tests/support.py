@@ -1,6 +1,6 @@
 """Helpers shared by the tests (``conftest.py`` sets up the app): tokens like the tools dashboard signs,
 with a key made for the tests, and a Reddit the tests make."""
-from datetime import datetime, timedelta, timezone
+from datetime import datetime, timedelta, UTC
 from types import SimpleNamespace
 
 import jwt
@@ -16,7 +16,7 @@ PUBLIC_KEY_PEM = _KEY.public_key().public_bytes(
 
 def make_token(audience=("tools-dashboard", "list-parser-bot"), issuer: str = ISSUER,
                expires_in: timedelta = timedelta(hours=1), key: Ed25519PrivateKey = _KEY) -> str:
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     claims = {"iss": issuer, "sub": "1", "email": "person@example.com", "name": "Person",
               "aud": list(audience), "ver": 0, "iat": now, "exp": now + expires_in}
     return jwt.encode(claims, key, algorithm="EdDSA")

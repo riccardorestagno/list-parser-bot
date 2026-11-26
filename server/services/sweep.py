@@ -6,14 +6,15 @@ starts failing rather than on every sweep after.
 """
 import logging
 import traceback
-from typing import Dict, List, Optional
 
-import prawcore
-import requests
+# Lazy: the bot (praw, BeautifulSoup, langdetect, requests) is a third of the API's start, and only a sweep uses it,
+# so it loads with the first sweep rather than before the API can answer (tests/test_startup.py)
+lazy import prawcore
+lazy import requests
 
-from bot.controller import NoArticlesFound, sweep
+lazy from bot.controller import NoArticlesFound, sweep
 from bot.helpers.post import SiteSearch
-from bot.helpers.reddit import send_error_message
+lazy from bot.helpers.reddit import send_error_message
 from schemas.enums import RunStatus
 from services import runs
 
@@ -54,7 +55,7 @@ def format_error(error: Exception) -> str:
     return "".join(traceback.format_exception(type(error), error, error.__traceback__))
 
 
-def site_errors(sites: List[SiteSearch]) -> List[Dict[str, str]]:
+def site_errors(sites: list[SiteSearch]) -> list[dict[str, str]]:
     """Each site the sweep couldn't search to the end, as the run records it."""
     return [{"site": search.site,
              "status": (RunStatus.UNREACHABLE if is_temporary(search.error) else RunStatus.FAILED).value,
@@ -62,12 +63,12 @@ def site_errors(sites: List[SiteSearch]) -> List[Dict[str, str]]:
             for search in sites if search.error is not None]
 
 
-def failing_sites(sites: List[SiteSearch]) -> List[SiteSearch]:
+def failing_sites(sites: list[SiteSearch]) -> list[SiteSearch]:
     """The sites that failed for more than a moment."""
     return [search for search in sites if search.error is not None and not is_temporary(search.error)]
 
 
-def error_details(sites: List[SiteSearch], error: Optional[Exception] = None) -> Optional[str]:
+def error_details(sites: list[SiteSearch], error: Exception | None = None) -> str | None:
     """The tracebacks behind the failures, each site's under its name, for the dashboard's Details."""
     parts = [f"{search.site}:\n{format_error(search.error)}" for search in failing_sites(sites)]
     if error is not None:
@@ -75,7 +76,7 @@ def error_details(sites: List[SiteSearch], error: Optional[Exception] = None) ->
     return "\n\n".join(parts) or None
 
 
-def ending(sites: List[SiteSearch]) -> RunStatus:
+def ending(sites: list[SiteSearch]) -> RunStatus:
     """How a sweep that posted nothing ended: nothing new, unless no site could be searched to the end."""
     errors = [search.error for search in sites if search.error is not None]
     if not sites or len(errors) < len(sites):
@@ -93,7 +94,7 @@ def notify_moderator(message: str) -> None:
         log.exception("Couldn't message the moderator about a failed sweep")
 
 
-def tell_moderator(run_id: int, sites: List[SiteSearch], error: Optional[Exception] = None) -> None:
+def tell_moderator(run_id: int, sites: list[SiteSearch], error: Exception | None = None) -> None:
     """Message the moderator about what started failing with this sweep: the sweep itself, or a site.
 
     What was already failing the last time it was tried isn't sent again. A sweep a restart cut short, or one where
@@ -114,7 +115,7 @@ def run_sweep() -> int:
     """Search the sites, post the first new list article found, and record how it went. Returns the run's id."""
     run_id = runs.start_run()
     # The sweep adds each site as it goes, so a sweep Reddit cuts short still shows how far it got
-    sites: List[SiteSearch] = []
+    sites: list[SiteSearch] = []
     try:
         found = sweep(sites=sites)
     except Exception as error:
