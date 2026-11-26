@@ -97,12 +97,13 @@ jobs:
           fi
           yarn build
 
-      # Only committed files, so no .env, data or virtual environment, plus the version for /health
+      # The committed server/ with its packages built for App Service, which installs nothing (dev/package.py)
       - name: Package the server
         if: inputs.package
         env:
           VERSION: ${{ inputs.version }}
-        run: git archive --format=zip -o api.zip --add-virtual-file="version.txt:$VERSION" HEAD:server
+        working-directory: server
+        run: python -m dev.package ../api.zip --version "$VERSION"
       # The tools dashboard puts this at /tools/list-parser-bot/ on the site (its docs/apps.md):
       # every file under tools/list-parser-bot/, nothing else
       - name: Package the web app
