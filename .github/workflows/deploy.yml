@@ -116,10 +116,19 @@ jobs:
         env:
           VERSION: ${{ needs.version.outputs.version }}
         run: |
+          # The zip carries its packages (server/dev/package.py): Azure installs nothing, and Python finds
+          # them on PYTHONPATH. An API made before that is switched once here; provision.ps1 sets the same
+          startup="python -m uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers"
+          if [ "$(az webapp config show -g "$RESOURCE_GROUP" -n "$API_APP" --query appCommandLine -o tsv)" != "$startup" ]; then
+            az webapp config appsettings set -g "$RESOURCE_GROUP" -n "$API_APP" -o none \
+              --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false PYTHONPATH=/home/site/wwwroot/.python_packages
+            az webapp config set -g "$RESOURCE_GROUP" -n "$API_APP" --startup-file "$startup" -o none
+          fi
           # Returns once the package is uploaded: waiting on Kudu for the restart can outlast Azure's
           # ~230 s gateway timeout on a B1 plan and fail with a 504 while the deploy still succeeds.
           # The health check below decides whether it worked.
-          az webapp deploy -g "$RESOURCE_GROUP" -n "$API_APP" --src-path api.zip --type zip --async true --track-status false -o none
+          # --clean empties wwwroot first, so nothing an earlier build on Azure left there starts instead
+          az webapp deploy -g "$RESOURCE_GROUP" -n "$API_APP" --src-path api.zip --type zip --clean true --async true --track-status false -o none
 
           # Up, and running this version rather than the one before it (up to 10 minutes)
           for try in $(seq 40); do

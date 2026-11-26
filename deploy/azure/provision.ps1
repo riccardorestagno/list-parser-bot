@@ -77,7 +77,7 @@ Set-OneInstance $planId $rg $api
 # Always On keeps the API, and so its schedule, running: without it App Service stops an idle app.
 # uvicorn reads FORWARDED_ALLOW_IPS (set below) to see requests came over HTTPS
 Invoke-Az webapp config set -g $rg -n $api --always-on true --min-tls-version 1.2 --ftps-state Disabled `
-    --startup-file "uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers" -o none
+    --startup-file $ApiStartup -o none
 Invoke-Az webapp log config -g $rg -n $api --docker-container-logging filesystem -o none
 # Deploys sign in with your Azure account; no FTP or deployment passwords
 foreach ($policy in "scm", "ftp") {
@@ -132,7 +132,9 @@ $settings = [ordered]@{
     LISTBOT_AUTH_PUBLIC_KEY        = ($auth.public_key.Trim() -replace "`r?`n", "\n")
     LISTBOT_AUTH_ISSUER            = $auth.issuer
     LISTBOT_API_DOCS               = "false"
-    SCM_DO_BUILD_DURING_DEPLOYMENT = "true"
+    # The zip carries its packages (server/dev/package.py): Azure installs nothing
+    SCM_DO_BUILD_DURING_DEPLOYMENT = "false"
+    PYTHONPATH                     = $ApiPackages
     FORWARDED_ALLOW_IPS            = "*"
     TZ                             = "America/Toronto"
 }

@@ -67,3 +67,24 @@ function Read-EnvFile([string]$Path) {
     }
     $values
 }
+
+# The API runs its zip as built (server/dev/package.py): Azure installs nothing, and Python finds the
+# packages on PYTHONPATH. provision.ps1 sets these on a new API; a deploy switches an older one once
+$ApiPackages = "/home/site/wwwroot/.python_packages"
+$ApiStartup = "python -m uvicorn main:app --host 0.0.0.0 --port 8000 --proxy-headers"
+function Set-ApiStartup([string]$ResourceGroup, [string]$App) {
+    $current = "$(Invoke-Az webapp config show -g $ResourceGroup -n $App --query appCommandLine -o tsv)".Trim()
+    if ($current -eq $ApiStartup) { return }
+    Invoke-Az webapp config appsettings set -g $ResourceGroup -n $App -o none --settings `
+        SCM_DO_BUILD_DURING_DEPLOYMENT=false PYTHONPATH=$ApiPackages
+    Invoke-Az webapp config set -g $ResourceGroup -n $App --startup-file $ApiStartup -o none
+}
+
+# The Python that builds the API's zip: server/'s virtual environment, else python on the PATH
+function Get-ServerPython {
+    foreach ($candidate in @("server\venv\Scripts\python.exe", "server/venv/bin/python")) {
+        $path = Join-Path $RepoRoot $candidate
+        if (Test-Path $path) { return $path }
+    }
+    "python"
+}

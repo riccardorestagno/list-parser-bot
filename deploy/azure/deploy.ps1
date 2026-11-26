@@ -5,7 +5,8 @@ Deploys the committed server/ to the API from your computer.
 .DESCRIPTION
 The API gets server/ as of the current commit (git archive), so uncommitted
 changes, server/.env, server/data and the virtual environment are never sent.
-Azure installs requirements.txt during the deploy.
+The zip carries the packages too, built for App Service (server/dev/package.py),
+so Azure installs nothing.
 
 The web app isn't deployed from here: the site belongs to the tools dashboard, which
 puts this app's web.zip from its latest GitHub Release in place. Merging into main
@@ -38,10 +39,14 @@ if (git -C $RepoRoot status --porcelain -- server) {
 Write-Host "`nAPI -> $apiUrl"
 $zip = Join-Path ([IO.Path]::GetTempPath()) "$api.zip"
 try {
-    git -C $RepoRoot archive --format=zip -o $zip --add-virtual-file="version.txt:$version" HEAD:server
-    if ($LASTEXITCODE -ne 0) { throw "git archive failed" }
+    # The committed server/ with its packages built for App Service (server/dev/package.py)
+    Push-Location (Join-Path $RepoRoot "server")
+    try { & (Get-ServerPython) -m dev.package $zip --version $version }
+    finally { Pop-Location }
+    if ($LASTEXITCODE -ne 0) { throw "Building the API's zip failed" }
+    Set-ApiStartup $rg $api
     # The CLI's own startup tracking can keep polling long after the site is up; the health check below decides
-    Invoke-Az webapp deploy -g $rg -n $api --src-path $zip --type zip --track-status false -o none
+    Invoke-Az webapp deploy -g $rg -n $api --src-path $zip --type zip --clean true --track-status false -o none
 }
 finally {
     if (Test-Path $zip) { Remove-Item $zip -Force }
