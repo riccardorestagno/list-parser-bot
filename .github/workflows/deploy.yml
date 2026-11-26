@@ -123,6 +123,8 @@ jobs:
             az webapp config appsettings set -g "$RESOURCE_GROUP" -n "$API_APP" -o none \
               --settings SCM_DO_BUILD_DURING_DEPLOYMENT=false PYTHONPATH=/home/site/wwwroot/.python_packages
             az webapp config set -g "$RESOURCE_GROUP" -n "$API_APP" --startup-file "$startup" -o none
+            # Both restart the deployment service (Kudu): a deploy sent while it restarts is stopped
+            sleep 120
           fi
           # Returns once the package is uploaded: waiting on Kudu for the restart can outlast Azure's
           # ~230 s gateway timeout on a B1 plan and fail with a 504 while the deploy still succeeds.
