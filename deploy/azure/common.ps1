@@ -78,6 +78,9 @@ function Set-ApiStartup([string]$ResourceGroup, [string]$App) {
     Invoke-Az webapp config appsettings set -g $ResourceGroup -n $App -o none --settings `
         SCM_DO_BUILD_DURING_DEPLOYMENT=false PYTHONPATH=$ApiPackages
     Invoke-Az webapp config set -g $ResourceGroup -n $App --startup-file $ApiStartup -o none
+    # Both restart the deployment service (Kudu): a deploy sent while it restarts is stopped
+    Write-Host "Waiting two minutes for the deployment service to restart..."
+    Start-Sleep -Seconds 120
 }
 
 # The Python that builds the API's zip: server/'s virtual environment, else python on the PATH
