@@ -159,6 +159,15 @@ Until then, every request is refused, or every sweep fails.
 The API runs on the tools dashboard's App Service plan, `tools-prod-plan`, which every tool
 shares; this repository has no plan of its own.
 
+**Release one app at a time.** A deploy restarts its API, and on the shared B1 plan a restart is
+heavy: when several apps deploy together, each API takes minutes to start, Azure gives up after
+230 seconds (`Container did not respond to startup probe`) and starts it again, and the retries
+keep the plan busy for all of them. Merge release pull requests a few minutes apart, each after the
+one before is live. If several deploys fail at once, start the failing APIs one at a time before
+reading any one error as the cause (the tools dashboard's README, *When several deploys fail at
+once*, has the commands): on 26 November 2026 six deploys failed together, with errors that looked
+like a broken build and a broken start, and every API came up once started alone.
+
 **The API must stay on one instance.** Each instance runs its own schedule, so two would both
 post, and its SQLite database sits on `/home`, a network share where two writers lock each other
 out or corrupt it. The plan has per-site scaling on, so other tools can scale out while
