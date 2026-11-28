@@ -619,10 +619,10 @@
   resolved "https://registry.yarnpkg.com/@types/json-schema/-/json-schema-7.0.15.tgz#596a1747233694d50f6ad8a7869fcb6f56cf5841"
   integrity sha512-5+fP8P8MFNC+AyZCDxrB2pkZFPGzqQWUzpSeuuVLvm8VMcorNYavBqoFcxK8bQz4Qsbn4oUEEem4wDLfcysGHA==
 
-"@types/node@^26.6.5":
-  version "26.6.6"
-  resolved "https://registry.yarnpkg.com/@types/node/-/node-26.6.6.tgz#9ed7b5817e728ed9216ef7c5b7d373fe3b777104"
-  integrity sha512-MzQj+8Kx3XI40OmUAE6Qoh58ZMNstNNMwn2nfd3qWsfe7nDNSqJNzes4njhz6AHwrSHOffSLwXU6yb474Q4aog==
+"@types/node@^26.6.7":
+  version "26.6.7"
+  resolved "https://registry.yarnpkg.com/@types/node/-/node-26.6.7.tgz#882494202d3e60d3b83829bc4f9be7039458874a"
+  integrity sha512-tovuRfrUILu6v46bMG+BgXxMvsqPBx2WO2as8Rpln+JTff1dbexMtAM4KFTejmL0axsnSWViCW7MecUQpLuBRA==
   dependencies:
     undici-types "~8.9.0"
 
@@ -631,10 +631,10 @@
   resolved "https://registry.yarnpkg.com/@types/react-dom/-/react-dom-19.3.0.tgz#90294a9266efd928a5266f2110d60d5dba5015d2"
   integrity sha512-ZI7bU42mZXXKHn/qNLEw2IrbiINU7X5+vfgdixBHkCNpYWXjKgfQ/P+uyGb5CjOLB9UcnTeg3rylQtV2hym44Q==
 
-"@types/react@^19.3.0":
-  version "19.3.0"
-  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.3.0.tgz#3b3ce8d8c1627fb5ccd4dadd57ef445c5a153b77"
-  integrity sha512-N0rFCuH9YoxG9/m61l9MfpJKfmLOVU0em7ipIz6TRgSSkvReLB9vL85GB+yr8Bs5leqpvg96JSwF4ZS1s4viQg==
+"@types/react@^19.3.1":
+  version "19.3.1"
+  resolved "https://registry.yarnpkg.com/@types/react/-/react-19.3.1.tgz#a858eaa8a6dad5f3df8bb37204e4c9decad6119c"
+  integrity sha512-HNTkBIm8zmHX8LUXX2vtZ/ONzehrV1J3abl2fUIiZ5qxTYRCj/z+rDeFwOltqCLl9lRdUTKWT41OLtYuFV/Arg==
   dependencies:
     csstype "^3.2.2"
 
@@ -745,20 +745,20 @@
   dependencies:
     "@rolldown/pluginutils" "^1.0.1"
 
-"@vitest/mocker@5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@vitest/mocker/-/mocker-5.1.0.tgz#fba68dd77810c2f053b2ad7ea7ffc56e8d94eb8e"
-  integrity sha512-5umB9/jlWcqVS6fsrFmv5Gdnpu6wAUio/lEOwAmvB7v+lFo/IW2B9FhAD0p19GCULTgMzLCdUmuCDCnAzWgppQ==
+"@vitest/mocker@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/@vitest/mocker/-/mocker-5.1.1.tgz#47b7815458abceb17e3b12218a7868376e02db56"
+  integrity sha512-b2OgTB4+3ImWIVafXKazJXwLKwQxUNnix6b3xUvUTMh7RyXlrtzoxfZr8aEz9zkHOMAS4K5lu3TvFWoiVeVTQg==
   dependencies:
     "@jridgewell/trace-mapping" "0.3.31"
-    "@vitest/spy" "5.1.0"
+    "@vitest/spy" "5.1.1"
     estree-walker "^3.0.3"
-    magic-string "^1.4.3"
+    magic-string "^1.4.5"
 
-"@vitest/spy@5.1.0":
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/@vitest/spy/-/spy-5.1.0.tgz#0a10d0ca39c0df70951715ba1081dd186a451c23"
-  integrity sha512-2DPO5OMHWKrBngC+fCmTQqemNF0gidRhp3lxbBmRhW+M1XJrfgPpqNqWVevXtn2f2ufD5ZaR1B6B641aAlcX5A==
+"@vitest/spy@5.1.1":
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/@vitest/spy/-/spy-5.1.1.tgz#9bdbcaf0b0d60486a10a03c3ba5a752ec80b3ca9"
+  integrity sha512-6K8C6alQG1/Yc8/ZI22iJS7JEsxPdVzqtqDq+/xM4Z0mGVykemMVjLhqMy/q6/IHYG3kKD8hKSwRen/ZdyI9vQ==
 
 acorn-jsx@^5.3.2:
   version "5.3.2"
@@ -1280,12 +1280,12 @@ lru-cache@^5.1.1:
   dependencies:
     yallist "^3.0.2"
 
-lucide-react@^1.74.0:
-  version "1.74.0"
-  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.74.0.tgz#b537db2e3db7cdc63e71f2b3f0cb24d61d410ed2"
-  integrity sha512-A1doIs/1fj1WnPbtIT7WRiM6Kvw5NUg+BtkoOh3Shpr4obwSDVt6WxCEcNH56EWprzuCoKle1OF0RqIkojwL1A==
+lucide-react@^1.79.0:
+  version "1.79.0"
+  resolved "https://registry.yarnpkg.com/lucide-react/-/lucide-react-1.79.0.tgz#f3546d45a9173c415e058877fbe1ebf6dd7e176e"
+  integrity sha512-MDHKxzUobPRyQgt4hHO1z+pUQJKYMvenh8qw+ndWQE0Wg+Hbjli/ZrkZXBGmRBrMvvqDRjkmQj0Z5RbeL/ogNw==
 
-magic-string@^1.1.0, magic-string@^1.4.3:
+magic-string@^1.1.0, magic-string@^1.4.5:
   version "1.4.5"
   resolved "https://registry.yarnpkg.com/magic-string/-/magic-string-1.4.5.tgz#201c852d51eb0664d6f66cf7ab93b20b416e48d9"
   integrity sha512-oLLC2+YvQUfAa+vxoufE/yc1icb87M9iXIRqAoR/2EhE/8cb3SF/+Gi0c2By1B+5Vz2e2vQtUvHiu1+63Znh+w==
@@ -1476,10 +1476,10 @@ tapable@^2.3.3:
   resolved "https://registry.yarnpkg.com/tapable/-/tapable-2.3.3.tgz#5da7c9992c46038221267985ab28421a8879f160"
   integrity sha512-uxc/zpqFg6x7C8vOE7lh6Lbda8eEL9zmVm/PLeTPBRhh1xCgdWaQ+J1CUieGpIfm2HdtsUpRv+HshiasBMcc6A==
 
-tinybench@^6.2.2:
-  version "6.2.2"
-  resolved "https://registry.yarnpkg.com/tinybench/-/tinybench-6.2.2.tgz#e03ffd4d46fabebae1d5bb292bd25e39505551ee"
-  integrity sha512-nIZ2N2dFpjBsg2hgitKu7mA+FvsIJuGJOwysRngmVRRmWgR/UyPjwJj8c/fT/dhm8EkHnF5EOogRf+0Z2qrimA==
+tinybench@^6.2.3:
+  version "6.2.5"
+  resolved "https://registry.yarnpkg.com/tinybench/-/tinybench-6.2.5.tgz#b7be4ab85a6a2d82f32ecaeea5e76a3a7cfb1b9c"
+  integrity sha512-b/8GRMdnY4cqkfCLyaFpTGIv1qwfi3oT0mWaepwT++6Z/ZrYehNfZZ2JDKVLKGhNoEkS3IIB1ELtCT0XS5DtOA==
 
 tinyexec@^1.3.1:
   version "1.3.1"
@@ -1565,21 +1565,21 @@ vite@^8.3.8:
   optionalDependencies:
     fsevents "~2.3.3"
 
-vitest@^5.1.0:
-  version "5.1.0"
-  resolved "https://registry.yarnpkg.com/vitest/-/vitest-5.1.0.tgz#5c6d94179dcb84bb153e87c3fc4e73cf7f29f9a0"
-  integrity sha512-MzmNFnrwa8v8lF1bLxw3UJ4EREwVOVb75VqJZmUDRjJ6EluK/x9th7qTbaeDk41WxE1GxWqmTXcdsfobfH5sOA==
+vitest@^5.1.1:
+  version "5.1.1"
+  resolved "https://registry.yarnpkg.com/vitest/-/vitest-5.1.1.tgz#6e823eba09e832ccdf85c00b9702e6eef9dab370"
+  integrity sha512-trVmzUFOSraCZcI3uZIMD5FqBh4atFkC/XuJP/IU7qtyQay0FCs3Ia+0QiQ2JJwGyWG/xrcBoJNel2+O7kEZ0g==
   dependencies:
     "@types/chai" "^5.2.2"
-    "@vitest/mocker" "5.1.0"
+    "@vitest/mocker" "5.1.1"
     chai "^6.3.0"
     es-module-lexer "^2.3.2"
     expect-type "^1.4.0"
-    magic-string "^1.4.3"
+    magic-string "^1.4.5"
     obug "^3.0.0"
     picomatch "^4.0.7"
     std-env "^4.3.0"
-    tinybench "^6.2.2"
+    tinybench "^6.2.3"
     tinyexec "^1.3.1"
     tinyglobby "^0.2.17"
     why-is-node-running "3.2.1"
