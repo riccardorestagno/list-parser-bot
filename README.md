@@ -104,7 +104,7 @@ git config core.hooksPath .githooks
     (`web.zip`). Then it asks the tools dashboard to deploy the site, which puts
     that build in place. A release from `develop` raises the minor number, a
     `hotfix/` the patch, and a pull request labelled `release:major` the major.
-  - **Dependabot** opens weekly update pull requests into `develop`.
+  - **Dependabot** opens weekly update pull requests into `develop`, for versions at least 5 days old (14 for a major).
 
 ## Sign-in
 

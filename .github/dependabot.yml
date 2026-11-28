@@ -1,5 +1,8 @@
 # Weekly dependency updates as pull requests into develop, one per ecosystem,
 # so they go through CI and reach main with the next release.
+# A version must be 5 days old (14 for a major) before it's proposed, transitive
+# packages in the lockfile included, so a broken or compromised release has time
+# to be pulled first.
 version: 2
 updates:
   - package-ecosystem: pip
@@ -7,6 +10,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
     groups:
       server:
         patterns: ["*"]
@@ -16,6 +22,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
     groups:
       client:
         patterns: ["*"]
@@ -25,6 +34,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    cooldown:
+      default-days: 5
+      semver-major-days: 14
     groups:
       actions:
         patterns: ["*"]
