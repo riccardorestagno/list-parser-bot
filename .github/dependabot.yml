@@ -34,9 +34,9 @@ updates:
     target-branch: develop
     schedule:
       interval: weekly
+    # Dependabot takes no semver cooldown for actions: 5 days for every version
     cooldown:
       default-days: 5
-      semver-major-days: 14
     groups:
       actions:
         patterns: ["*"]
